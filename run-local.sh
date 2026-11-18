@@ -240,9 +240,7 @@ run_video_render() {
   # headless-Chromium download is blocked by the network allowlist
   # (see documentation/09-phase6-rendering.md) — fall back to a
   # Playwright Chromium already installed there instead. This glob
-  # only ever matches that one specific sandbox path, so on macOS/a
-  # normal Linux machine it stays empty and Remotion manages its own
-  # bundled browser as usual.
+  # only ever matches that one specific sandbox path.
   BROWSER_EXECUTABLE=""
   for candidate in /opt/pw-browsers/chromium-*/chrome-linux64/chrome; do
     if [ -x "$candidate" ]; then
@@ -250,6 +248,40 @@ run_video_render() {
       break
     fi
   done
+
+  # On macOS, Remotion's own downloaded Chrome Headless Shell is a
+  # common source of the "Target closed" crash (see
+  # https://remotion.dev/docs/target-closed) — Intel Macs in
+  # particular aren't covered by Remotion's browser-fix build, and a
+  # Gatekeeper-quarantined or partially-downloaded binary fails the
+  # same way. Remotion's own documented workaround is
+  # --browser-executable pointing at a real, already-installed
+  # browser, so prefer one if we can find it.
+  if [ -z "$BROWSER_EXECUTABLE" ] && [ "$(uname -s)" = "Darwin" ]; then
+    for candidate in \
+      "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" \
+      "/Applications/Chromium.app/Contents/MacOS/Chromium" \
+      "/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge" \
+      "/Applications/Brave Browser.app/Contents/MacOS/Brave Browser"
+    do
+      if [ -x "$candidate" ]; then
+        BROWSER_EXECUTABLE="$candidate"
+        echo "Using locally installed browser for rendering: $candidate"
+        break
+      fi
+    done
+    if [ -z "$BROWSER_EXECUTABLE" ]; then
+      echo "No local Chrome/Chromium/Edge/Brave found — falling back to" >&2
+      echo "Remotion's own downloaded browser. If the render crashes with" >&2
+      echo "\"Target closed\", install Google Chrome and re-run, or set" >&2
+      echo "REMOTION_BROWSER_EXECUTABLE to a Chrome/Chromium binary path." >&2
+    fi
+  fi
+
+  # Always allow an explicit override, regardless of platform.
+  if [ -n "${REMOTION_BROWSER_EXECUTABLE:-}" ]; then
+    BROWSER_EXECUTABLE="$REMOTION_BROWSER_EXECUTABLE"
+  fi
 
   # Default to a single concurrent browser tab. Remotion's headless
   # Chromium can crash mid-render ("Target closed" — see
@@ -270,13 +302,23 @@ run_video_render() {
     cd "$PROJECT_ROOT"
     echo "" >&2
     echo "Video render failed. This is almost always Remotion's headless" >&2
-    echo "Chromium crashing mid-render (see https://remotion.dev/docs/target-closed)," >&2
-    echo "not a bug in the pipeline's output. Things to try:" >&2
-    echo "  1. Verify/reinstall Remotion's own browser:" >&2
-    echo "       cd render-app && npx remotion browser ensure" >&2
-    echo "  2. Re-run with full Chromium logs to see what actually happened:" >&2
+    echo "Chromium crashing on launch or mid-render (see" >&2
+    echo "https://remotion.dev/docs/target-closed), not a bug in the" >&2
+    echo "pipeline's output. Currently using browser executable:" >&2
+    echo "  ${BROWSER_EXECUTABLE:-<the Chrome Headless Shell that Remotion itself downloaded>}" >&2
+    echo "Things to try, in order:" >&2
+    echo "  1. Point at a real, already-installed Chrome/Chromium/Edge/Brave" >&2
+    echo "     (this is Remotion's own documented workaround for this error" >&2
+    echo "     and is usually the fix on macOS):" >&2
+    echo "       REMOTION_BROWSER_EXECUTABLE=\"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome\" \\" >&2
+    echo "         ./run-local.sh --skip-docs-server" >&2
+    echo "  2. Clear Remotion's own cached browser download and let it" >&2
+    echo "     re-fetch a fresh copy (fixes a corrupted/partial download):" >&2
+    echo "       rm -rf render-app/node_modules/.remotion" >&2
+    echo "       cd render-app && npx remotion browser ensure && cd .." >&2
+    echo "  3. Re-run with full Chromium logs to see what actually happened:" >&2
     echo "       RUN_LOCAL_VERBOSE=1 ./run-local.sh --skip-docs-server" >&2
-    echo "  3. If it's a low-memory machine, close other apps and retry — the" >&2
+    echo "  4. If it's a low-memory machine, close other apps and retry — the" >&2
     echo "     render already uses --concurrency=1 to use as little as possible." >&2
     exit 1
   fi
