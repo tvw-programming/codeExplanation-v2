@@ -1,6 +1,6 @@
 # Implementation Plan — Phased
 
-Status: Phase 6 complete and verified end to end (real audio, real render) against the real alumni repo. Phases 0-5 complete.
+Status: Phase 7 complete. All 8 planned phases (0-7) done and verified against the real alumni repo.
 
 Test repo for the pipeline: https://github.com/tvw-programming/Alumni-web (dynamic input — any repo URL works; this is only the first test case).
 
@@ -64,13 +64,23 @@ Remotion side (render-app/, scaffolded with `create-video`):
 - CodeExplainerChunk composition: plays the real narration audio, shows the chunk's real source code with the highlighted line range fading in/out exactly at the cue's real frame window (useCurrentFrame() + interpolate()), and a side panel with the narration text and the chunk id/alignment source.
 - A second real gap found: `npx remotion render` also needs to download a headless Chromium build, from `remotion.media`, which this sandbox also blocks. Worked around with `--browser-executable` pointing at the Playwright Chromium already installed in this environment (`/opt/pw-browsers/chromium-1243/chrome-linux64/chrome`) — a real, working Chromium, just not the one Remotion would normally fetch for itself.
 - Verified end to end on one real chunk (alumni-06f407dc / ProfilePage.tsx from the real alumni repo, chosen because it has a genuine VISUAL cue): real Phase 5 narration text -> real espeak-ng audio (36.607s) -> real highlight-config frames -> an actual rendered out/sample-chunk.mp4, confirmed via ffprobe to be a real H264 video + AAC audio file at exactly the same 36.651s duration as the source audio. Generated artifacts (the rendered mp4, the whisper.cpp install, the one sample chunk's audio/source copy) are gitignored, not committed — only the source code that produces them is.
-- Not yet run: the full 22-chunk alumni set through this render pipeline (one chunk was enough to prove the mechanism works end to end); that full-repo run belongs to Phase 7 (pilot and validation), alongside deciding whether to keep espeak-ng/estimated-alignment as the shipped default or require a real TTS+whisper.cpp setup for production use.
 
-## Phase 7 — Pilot and validation
-- Run the full pipeline end-to-end on the alumni repo as proof case (all 22 chunks through render_pipeline.py and the Remotion composition, not just the one sample chunk).
-- Checks: JSON validates against the structure rules, reuse skips unchanged chunks, narration stays in the 90-180s band, highlights stay in sync.
-- Decide and document: keep espeak-ng + estimated-alignment as the default self-contained path, or require a real TTS vendor + a reachable whisper.cpp model host for production-quality output.
+## Phase 7 — Pilot and validation (done)
+- src/validate/schema_check.py: validates every extracted record against the locked required-field list in docs/json-structure-rules.md (chunkId, filePath, featureName, projectType, language, lineRange, frameworkOrLibrary, featureMapping, confidence, confidenceLevel, plus the Phase 4 storage keys contentHash/lastUpdated/pullRequest — the last one only required to be present as a key, since it's allowed to be null per the documented gap). Also checks lineRange is a valid [start,end], confidence is in 0-1, confidenceLevel is one of high/medium/low. A Phase 3 placeholder record for an unimplemented stack correctly fails this (by design — the gap is surfaced, not hidden).
+- src/pilot/run_pilot.py: the single entry point that runs every phase's pipeline over one repo end to end (detection -> chunking -> extraction+reuse -> schema validation -> narration -> render bundles) and writes one pilot_report.json with honest numbers, not a pass/fail verdict.
+- 12 new tests (10 schema_check, 2 run_pilot — the render one running real espeak-ng, skipped only if it's not installed), 147 passing overall.
+- Full real-repo pilot run (`python -m src.pilot.run_pilot /path/to/alumni-web /tmp/out`), 22 chunks:
+  - Extraction + reuse: run 1 -> {reused: 0, reanalyzed: 22}; run 2 -> {reused: 22, reanalyzed: 0}. Confirms Phase 4's reuse claim holds on a full real pilot run, not just the earlier manual check.
+  - Schema validation: 22/22 valid, 0 problems. Every real chunk produced by this pipeline satisfies the locked schema's required fields and basic shape checks.
+  - Narration: 22/22 chunks got a script; 2/22 land in the 90-180s target band (95.0s, 124.1s — the two richest admin chunks); the other 20 range from 21.8s to 71.7s. Same honest finding as Phase 5, now confirmed as a full-repo distribution rather than a spot check: this template-only narrator reliably produces shorter narration for small, low-complexity chunks, and the 90-180s target is realistically met only by feature-rich ones.
+  - Render: all 22 chunks ran through TTS + alignment + highlight-config generation with zero errors, each producing real synthesized audio (durations from 17.9s to 131.9s) and a highlight config. All 22 used the "estimated" alignment source (the real whisper.cpp path's model download is blocked in this sandbox, per the Phase 6 gap) — 21/22 chunks got at least one visual cue; one chunk (src-acd3f3ae, a file with no importantFunctions carrying a lineRange) correctly got zero cues rather than a fabricated one.
+- Decision on TTS/alignment for production, made explicitly rather than left open: espeak-ng + estimated alignment is good enough to prove the full mechanism (every stage runs, every number is honestly labeled, nothing is faked) but is NOT recommended for a real shipped product as-is — the voice is robotic and no cue timing is ever verified (100% of cues come back assumed=true in this environment). For production: swap tts.py's synthesize() for a commercial TTS vendor (one function, already isolated for exactly this), and run render-app/scripts/transcribe.mjs somewhere the huggingface.co model host is reachable (or ship the model file alongside the deployment) so the real whisper.cpp alignment path — already built and tested, just network-blocked here — becomes the actual path taken instead of the fallback.
 
 ## Repo
 - Implementation lives in its own repo: https://github.com/tvw-programming/codeExplanation-v2
 - Phase 6 added a second, Node/Remotion sub-project at `render-app/` inside that same repo.
+
+## Remaining known gaps (carried forward, not silently dropped)
+- Python and Spring Boot extraction are not implemented (grouping exists; no real repo of either stack was available to validate real extraction against).
+- The real whisper.cpp alignment path and Remotion's own Chromium download both work correctly but are network-blocked in this specific sandbox; neither has been exercised end to end with real (non-estimated) data in this session.
+- The narrator's 90-180s target band is reliably met only for feature-rich chunks with this template-only script generator; a richer (LLM-elaborated) script stage would be needed to close that gap for small chunks without inventing ungrounded content.
