@@ -93,6 +93,11 @@ const NARRATION_CHAR_WIDTH = 7.7;
 const ACCENT = "#60a5fa";
 const DIM_TEXT = "#8b9099";
 
+// Width of the bar down the left of a selected block.
+const SELECTION_BAR_WIDTH = 4;
+// How far unselected code fades back while a block is selected.
+const UNSELECTED_DIM = 0.45;
+
 export function bundleDurationInFrames(bundle: Bundle, fps: number = FPS): number {
   return Math.max(1, Math.ceil((bundle.durationMs / 1000) * fps));
 }
@@ -208,13 +213,18 @@ export const ChunkView: React.FC<{ chunkDir: string }> = ({ chunkDir }) => {
   let highlightRange: [number, number] | null = null;
   if (activeCue) {
     const [from, to] = cueWindow(activeCue);
-    const fadeFrames = Math.max(1, Math.min(8, Math.floor((to - from) / 3)));
-    highlightFade = interpolate(
-      frame,
-      monotonic([from, from + fadeFrames, to - fadeFrames, to]),
-      [0, 1, 1, 0],
-      { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
-    );
+    // Fade in only. Cue windows are butted up against each other, so
+    // fading back out at the end of one would dip the selection to
+    // nothing for a few frames at every single transition — the code
+    // would look unhighlighted exactly when the narration moves from
+    // one item to the next. Holding full strength until the window
+    // ends makes the selection appear to jump to the next block, which
+    // is what a selection moving actually looks like.
+    const fadeIn = Math.max(1, Math.min(6, Math.floor((to - from) / 2)));
+    highlightFade = interpolate(frame, monotonic([from, from + fadeIn]), [0, 1], {
+      extrapolateLeft: "clamp",
+      extrapolateRight: "clamp",
+    });
     highlightRange = activeCue.lineRange;
   }
 
@@ -326,14 +336,39 @@ export const ChunkView: React.FC<{ chunkDir: string }> = ({ chunkDir }) => {
                 lineNumber >= highlightRange[0] &&
                 lineNumber <= highlightRange[1];
               const opacity = isHighlighted ? highlightFade : 0;
+
+              // The selected block is drawn like a text selection: a
+              // solid fill, a bar down the left, and a rule closing it
+              // off at the top and bottom so it reads as one region
+              // rather than a few tinted rows. All of it is painted
+              // with inset shadows rather than borders — a real border
+              // would add height and break the line-height arithmetic
+              // the scroll position depends on.
+              const shadows: string[] = [];
+              if (isHighlighted) {
+                shadows.push(`inset ${SELECTION_BAR_WIDTH}px 0 0 0 rgba(147, 197, 253, ${opacity})`);
+                if (lineNumber === highlightRange![0]) {
+                  shadows.push(`inset 0 2px 0 0 rgba(147, 197, 253, ${0.8 * opacity})`);
+                }
+                if (lineNumber === highlightRange![1]) {
+                  shadows.push(`inset 0 -2px 0 0 rgba(147, 197, 253, ${0.8 * opacity})`);
+                }
+              }
+
               return (
                 <Box
                   key={lineNumber}
                   sx={{
                     display: "flex",
                     height: `${LINE_HEIGHT}px`,
-                    bgcolor: `rgba(96, 165, 250, ${0.18 * opacity})`,
-                    boxShadow: `inset 3px 0 0 0 rgba(96, 165, 250, ${opacity})`,
+                    bgcolor: isHighlighted
+                      ? `rgba(37, 99, 195, ${0.55 * opacity})`
+                      : "transparent",
+                    boxShadow: shadows.join(", "),
+                    // Everything outside the selection recedes while a
+                    // selection is up, so the block being talked about
+                    // is unmistakable without becoming unreadable.
+                    opacity: isHighlighted ? 1 : 1 - UNSELECTED_DIM * highlightFade,
                   }}
                 >
                   <Box
@@ -344,7 +379,7 @@ export const ChunkView: React.FC<{ chunkDir: string }> = ({ chunkDir }) => {
                       pr: 1.5,
                       boxSizing: "border-box",
                       color: isHighlighted
-                        ? `rgba(191, 219, 254, ${0.45 + 0.55 * opacity})`
+                        ? `rgba(219, 234, 254, ${0.5 + 0.5 * opacity})`
                         : "#4b5057",
                       fontWeight: isHighlighted && opacity > 0.5 ? 700 : 400,
                     }}
@@ -354,9 +389,8 @@ export const ChunkView: React.FC<{ chunkDir: string }> = ({ chunkDir }) => {
                   <Box
                     sx={{
                       pl: `${CODE_PAD_X - 12}px`,
-                      color: isHighlighted
-                        ? `rgba(255,255,255,${0.78 + 0.22 * opacity})`
-                        : "#c8ccd2",
+                      color: isHighlighted ? "#ffffff" : "#c8ccd2",
+                      fontWeight: isHighlighted && opacity > 0.5 ? 600 : 400,
                     }}
                   >
                     {line}
