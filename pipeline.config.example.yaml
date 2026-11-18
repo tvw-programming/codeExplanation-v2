@@ -1,0 +1,45 @@
+# Example pipeline configuration.
+# Copy to pipeline.config.yaml and fill in real values. Never commit secrets.
+
+source:
+  # Dynamic input: any repo URL or local path. Nothing is hardcoded.
+  type: git            # git | local_path
+  git: "https://github.com/tvw-programming/Alumni-web"
+  local_path: null
+  prefer: git           # which to use if both are set
+
+detection:
+  # Marker files used in Phase 1 to detect project type. Extend as new stacks are added.
+  markers:
+    react_or_angular: ["package.json"]
+    python: ["requirements.txt", "pyproject.toml", "setup.py"]
+    go: ["go.mod"]
+    spring_boot: ["pom.xml", "build.gradle"]
+    docker: ["Dockerfile", "docker-compose.yml"]
+
+chunking:
+  small_max_lines: 200
+  medium_max_lines: 800
+  target_narration_seconds: [90, 180]
+
+storage:
+  mirror_root: "./output/chunks"   # dummy folder mirroring the client repo's structure
+  required_fields: ["contentHash", "lastUpdated", "pullRequest"]
+
+llm:
+  provider: anthropic          # anthropic | gemini | openai
+  api_key_env: ANTHROPIC_API_KEY
+
+security:
+  never_read_patterns:
+    - ".env*"
+    - "*.pem"
+    - "*secrets*"
+  secret_scan_before_write: true
+
+audio:
+  tts_provider: null   # fill in when Phase 5/6 begins
+
+video:
+  fps: 30
+  resolution: "1280x720"

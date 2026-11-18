@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+pipeline.config.yaml
+.env
+.env.*
+*.pem
+*secrets*
+output/
+.venv/
+venv/
+node_modules/
