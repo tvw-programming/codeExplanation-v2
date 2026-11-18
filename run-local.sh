@@ -236,11 +236,13 @@ run_video_render() {
 
   cd "$PROJECT_ROOT/render-app"
 
-  # Remotion's own headless-Chromium download is blocked by this
-  # environment's network allowlist (see
-  # documentation/09-phase6-rendering.md and
-  # documentation/13-known-gaps-and-roadmap.md) — point it at the
-  # Playwright Chromium already installed here instead.
+  # In some sandboxed Linux CI/dev environments, Remotion's own
+  # headless-Chromium download is blocked by the network allowlist
+  # (see documentation/09-phase6-rendering.md) — fall back to a
+  # Playwright Chromium already installed there instead. This glob
+  # only ever matches that one specific sandbox path, so on macOS/a
+  # normal Linux machine it stays empty and Remotion manages its own
+  # bundled browser as usual.
   BROWSER_EXECUTABLE=""
   for candidate in /opt/pw-browsers/chromium-*/chrome-linux64/chrome; do
     if [ -x "$candidate" ]; then
@@ -249,12 +251,35 @@ run_video_render() {
     fi
   done
 
-  RENDER_ARGS=(CodeExplainerChunk "$OUTPUT_VIDEO")
+  # Default to a single concurrent browser tab. Remotion's headless
+  # Chromium can crash mid-render ("Target closed" — see
+  # https://remotion.dev/docs/target-closed) when several tabs compete
+  # for memory/CPU; rendering one frame batch at a time is slower but
+  # far more reliable on a laptop. Override with REMOTION_CONCURRENCY.
+  RENDER_CONCURRENCY="${REMOTION_CONCURRENCY:-1}"
+
+  RENDER_ARGS=(CodeExplainerChunk "$OUTPUT_VIDEO" "--concurrency=$RENDER_CONCURRENCY")
   if [ -n "$BROWSER_EXECUTABLE" ]; then
     RENDER_ARGS+=(--browser-executable="$BROWSER_EXECUTABLE")
   fi
+  if [ "${RUN_LOCAL_VERBOSE:-0}" = "1" ]; then
+    RENDER_ARGS+=(--log=verbose)
+  fi
 
-  npx remotion render "${RENDER_ARGS[@]}"
+  if ! npx remotion render "${RENDER_ARGS[@]}"; then
+    cd "$PROJECT_ROOT"
+    echo "" >&2
+    echo "Video render failed. This is almost always Remotion's headless" >&2
+    echo "Chromium crashing mid-render (see https://remotion.dev/docs/target-closed)," >&2
+    echo "not a bug in the pipeline's output. Things to try:" >&2
+    echo "  1. Verify/reinstall Remotion's own browser:" >&2
+    echo "       cd render-app && npx remotion browser ensure" >&2
+    echo "  2. Re-run with full Chromium logs to see what actually happened:" >&2
+    echo "       RUN_LOCAL_VERBOSE=1 ./run-local.sh --skip-docs-server" >&2
+    echo "  3. If it's a low-memory machine, close other apps and retry — the" >&2
+    echo "     render already uses --concurrency=1 to use as little as possible." >&2
+    exit 1
+  fi
   cd "$PROJECT_ROOT"
 
   echo "Video written to: $OUTPUT_VIDEO"
