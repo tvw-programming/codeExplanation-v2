@@ -10,3 +10,8 @@ output/
 .venv/
 venv/
 node_modules/
+
+# Phase 6 render app — generated proof artifacts, not source.
+render-app/out/
+render-app/public/sample-chunk/
+render-app/.whisper-cpp/
