@@ -20,6 +20,16 @@
 #                                     # so step 4 is skipped too
 #   ./run-local.sh --backend-only   # step 1 only
 #   ./run-local.sh --skip-docs-server   # steps 1, 2, 4 — no web server
+#   ./run-local.sh --preview            # first 120s only, for a fast look
+#   ./run-local.sh --preview=30         # first 30s only
+#
+# --preview renders only the opening stretch of the same video, to
+# output/video-preview.mp4, so you can check a change in a minute or
+# two instead of waiting out the full render. It limits the frame range
+# only: the repo is still detected, chunked, extracted, narrated and
+# staged in full, and the composition still reports its true duration,
+# so a preview shows exactly what the real video's opening looks like.
+# It is never written over output/video.mp4.
 #   ./run-local.sh --stop-docs-server   # stop a server from a previous run
 #   ./run-local.sh --help
 #
@@ -49,6 +59,14 @@ DOCS_PID_FILE="$LOCAL_RUN_DIR/docs-server.pid"
 DOCS_LOG_FILE="$LOCAL_RUN_DIR/docs-server.log"
 OUTPUT_DIR="$PROJECT_ROOT/output"
 OUTPUT_VIDEO="$OUTPUT_DIR/video.mp4"
+OUTPUT_PREVIEW="$OUTPUT_DIR/video-preview.mp4"
+
+# Frames per second the render-app compositions are defined at
+# (render-app/src/ChunkView.tsx). Only used to turn --preview seconds
+# into a frame range.
+VIDEO_FPS=30
+# Empty means "render the whole video"; set by --preview.
+PREVIEW_SECONDS=""
 
 for arg in "$@"; do
   case "$arg" in
@@ -63,6 +81,20 @@ for arg in "$@"; do
       RUN_VIDEO_RENDER=0
       ;;
     --skip-docs-server) RUN_DOCS_SERVER=0 ;;
+    --preview) PREVIEW_SECONDS=120 ;;
+    --preview=*)
+      PREVIEW_SECONDS="${arg#*=}"
+      case "$PREVIEW_SECONDS" in
+        ''|*[!0-9]*)
+          echo "--preview takes a whole number of seconds, e.g. --preview=120" >&2
+          exit 2
+          ;;
+      esac
+      if [ "$PREVIEW_SECONDS" -lt 1 ]; then
+        echo "--preview needs at least 1 second." >&2
+        exit 2
+      fi
+      ;;
     --stop-docs-server)
       stop_docs_server() {
         if [ -f "$DOCS_PID_FILE" ] && kill -0 "$(cat "$DOCS_PID_FILE")" 2>/dev/null; then
@@ -231,7 +263,15 @@ run_docs_server() {
 # 4) Render the pipeline's output to a real video file at a fixed path
 # ---------------------------------------------------------------------
 run_video_render() {
-  log "[4/4] Video: rendering output/video.mp4"
+  # A preview is written beside the real video rather than over it, so a
+  # truncated clip can never be mistaken for the finished deliverable.
+  if [ -n "$PREVIEW_SECONDS" ]; then
+    RENDER_TARGET="$OUTPUT_PREVIEW"
+    log "[4/4] Video: rendering a ${PREVIEW_SECONDS}s PREVIEW to output/video-preview.mp4"
+  else
+    RENDER_TARGET="$OUTPUT_VIDEO"
+    log "[4/4] Video: rendering output/video.mp4"
+  fi
 
   if [ ! -f render-app/public/chunks/manifest.json ]; then
     echo "No rendered chunks are staged at render-app/public/chunks/ —" >&2
@@ -298,9 +338,22 @@ run_video_render() {
   # far more reliable on a laptop. Override with REMOTION_CONCURRENCY.
   RENDER_CONCURRENCY="${REMOTION_CONCURRENCY:-1}"
 
-  RENDER_ARGS=(FullVideo "$OUTPUT_VIDEO" "--concurrency=$RENDER_CONCURRENCY")
+  RENDER_ARGS=(FullVideo "$RENDER_TARGET" "--concurrency=$RENDER_CONCURRENCY")
   if [ -n "$BROWSER_EXECUTABLE" ]; then
     RENDER_ARGS+=(--browser-executable="$BROWSER_EXECUTABLE")
+  fi
+  # Preview mode renders only the opening stretch of the SAME video, by
+  # limiting the frame range Remotion is asked for. Nothing upstream
+  # changes: the repo is chunked, narrated and staged in full, and the
+  # composition still reports its full duration — so what you see in a
+  # preview is exactly what the first PREVIEW_SECONDS of the real video
+  # look like, just produced in a fraction of the time.
+  if [ -n "$PREVIEW_SECONDS" ]; then
+    LAST_PREVIEW_FRAME=$(( PREVIEW_SECONDS * VIDEO_FPS - 1 ))
+    if [ "$LAST_PREVIEW_FRAME" -lt 0 ]; then
+      LAST_PREVIEW_FRAME=0
+    fi
+    RENDER_ARGS+=("--frames=0-$LAST_PREVIEW_FRAME")
   fi
   if [ "${RUN_LOCAL_VERBOSE:-0}" = "1" ]; then
     RENDER_ARGS+=(--log=verbose)
@@ -332,7 +385,13 @@ run_video_render() {
   fi
   cd "$PROJECT_ROOT"
 
-  echo "Video written to: $OUTPUT_VIDEO"
+  if [ -n "$PREVIEW_SECONDS" ]; then
+    echo "Preview written to: $RENDER_TARGET (first ${PREVIEW_SECONDS}s only)"
+    echo "This is a preview, not the finished video — re-run without"
+    echo "--preview to produce the complete output/video.mp4."
+  else
+    echo "Video written to: $RENDER_TARGET"
+  fi
 }
 
 if [ "$RUN_BACKEND" = "1" ]; then run_backend; fi
@@ -342,6 +401,12 @@ if [ "$RUN_VIDEO_RENDER" = "1" ]; then run_video_render; fi
 
 log "Done."
 if [ "$RUN_DOCS_SERVER" = "1" ]; then echo "Documentation: http://localhost:$DOCS_PORT/docs-viewer/"; fi
-if [ "$RUN_VIDEO_RENDER" = "1" ]; then echo "Video:         $OUTPUT_VIDEO"; fi
+if [ "$RUN_VIDEO_RENDER" = "1" ]; then
+  if [ -n "$PREVIEW_SECONDS" ]; then
+    echo "Preview:       $OUTPUT_PREVIEW (first ${PREVIEW_SECONDS}s)"
+  else
+    echo "Video:         $OUTPUT_VIDEO"
+  fi
+fi
 
 exit 0
