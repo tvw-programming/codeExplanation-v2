@@ -20,6 +20,7 @@ import json as json_mod
 from pathlib import Path
 
 from src.chunk.chunk_splitter import ChunkPlan
+from src.storage.mirror_store import EXTRACTOR_VERSION
 from .common import (
     detect_language, read_lines, content_hash, now_iso,
     confidence_from_flags, confidence_level,
@@ -131,6 +132,14 @@ def build_frontend_chunk_record(
             "signature": h.signature,
             "description": None,
             "eventType": h.event_type,
+            # The extractor already knows which line each handler sits
+            # on (ExtractedEventHandler.line); carrying it through as a
+            # lineRange is what lets Phase 5 generate a VISUAL cue for
+            # the handler, so the narration's "the X handler responds
+            # to..." sentence can actually highlight the line it is
+            # talking about. Single-line range: regex extraction knows
+            # where the handler is bound, not where its body ends.
+            "lineRange": [h.line, h.line],
             "assumed": h.assumed,
             "notes": h.note,
         }
@@ -203,6 +212,9 @@ def build_frontend_chunk_record(
         "confidenceLevel": confidence_level(confidence),
         "notes": " ".join(notes) if notes else None,
         "contentHash": content_hash(root, chunk.file_path),
+        # Lets the reuse cache tell a record written by an older
+        # extractor from a current one (see storage/mirror_store.py).
+        "extractorVersion": EXTRACTOR_VERSION,
         "lastUpdated": now_iso(),
         "pullRequest": None,
         "pullRequestNote": "Not determined: a shallow git clone has no PR metadata, and this phase "
@@ -308,6 +320,9 @@ def build_backend_go_chunk_record(
         "confidenceLevel": confidence_level(confidence),
         "notes": " ".join(notes) if notes else None,
         "contentHash": content_hash(root, chunk.file_path),
+        # Lets the reuse cache tell a record written by an older
+        # extractor from a current one (see storage/mirror_store.py).
+        "extractorVersion": EXTRACTOR_VERSION,
         "lastUpdated": now_iso(),
         "pullRequest": None,
         "pullRequestNote": "Not determined: a shallow git clone has no PR metadata, and this phase "

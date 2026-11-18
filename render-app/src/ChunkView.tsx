@@ -17,10 +17,31 @@ import Typography from "@mui/material/Typography";
 // FullVideo.tsx). `useCurrentFrame()` here is relative to whichever
 // <Series.Sequence> this instance is mounted inside, so the same
 // highlight-timing logic works unchanged in both places.
+//
+// Layout is a fixed grid rather than flow layout because the code
+// panel's scroll position is computed in pixels from a known line
+// height — the panel has to scroll to whichever line the narrator is
+// talking about, and that math only holds if every line is exactly
+// LINE_HEIGHT tall.
 
 export type HighlightCue = {
   id: string;
   lineRange: [number, number];
+  fromFrame: number;
+  toFrame: number;
+  // Window the highlight is actually shown for: held for a readable
+  // minimum and until the next cue starts (see highlight_config.py).
+  // Older bundles have only the anchor frames, hence the fallback.
+  displayFromFrame?: number;
+  displayToFrame?: number;
+  displayShifted?: boolean;
+  assumed: boolean;
+  note: string | null;
+};
+
+export type NarrationSegment = {
+  label: string;
+  text: string;
   fromFrame: number;
   toFrame: number;
   assumed: boolean;
@@ -29,13 +50,48 @@ export type HighlightCue = {
 
 export type Bundle = {
   chunkId: string;
+  filePath?: string | null;
+  featureName?: string | null;
   durationMs: number;
   alignmentSource: string;
+  ttsEngine?: string;
   cleanText: string;
+  narrationSegments?: NarrationSegment[];
   highlightConfig: HighlightCue[];
 };
 
 const FPS = 30;
+
+const WIDTH = 1280;
+const HEIGHT = 720;
+const HEADER_HEIGHT = 56;
+const NARRATION_WIDTH = 400;
+
+const CODE_FONT_SIZE = 15;
+const LINE_HEIGHT = 24;
+const CODE_PAD_Y = 20;
+const CODE_PAD_X = 22;
+const GUTTER_WIDTH = 46;
+
+const CODE_VIEWPORT_HEIGHT = HEIGHT - HEADER_HEIGHT - CODE_PAD_Y * 2;
+const VISIBLE_LINES = Math.floor(CODE_VIEWPORT_HEIGHT / LINE_HEIGHT);
+
+// Frames spent easing from one scroll position to the next.
+const SCROLL_RAMP = 14;
+
+const NARRATION_PAD = 22;
+const NARRATION_VIEWPORT_HEIGHT = HEIGHT - HEADER_HEIGHT - NARRATION_PAD * 2;
+const NARRATION_FONT_SIZE = 15;
+const NARRATION_LINE_HEIGHT = 21;
+const NARRATION_ITEM_GAP = 13;
+const NARRATION_BADGE_COLUMN = 30;
+// Rough average advance width of the sans-serif face at
+// NARRATION_FONT_SIZE, used only to predict how many lines a segment
+// wraps to so the list can scroll the active item into view.
+const NARRATION_CHAR_WIDTH = 7.7;
+
+const ACCENT = "#60a5fa";
+const DIM_TEXT = "#8b9099";
 
 export function bundleDurationInFrames(bundle: Bundle, fps: number = FPS): number {
   return Math.max(1, Math.ceil((bundle.durationMs / 1000) * fps));
@@ -44,6 +100,46 @@ export function bundleDurationInFrames(bundle: Bundle, fps: number = FPS): numbe
 export async function fetchBundle(chunkDir: string): Promise<Bundle> {
   const res = await fetch(staticFile(`${chunkDir}/bundle.json`));
   return res.json();
+}
+
+function cueWindow(cue: HighlightCue): [number, number] {
+  const from = cue.displayFromFrame ?? cue.fromFrame;
+  const to = cue.displayToFrame ?? cue.toFrame;
+  return [from, Math.max(to, from + 1)];
+}
+
+/** Scroll offset, in pixels, that brings a cue's lines into view:
+ *  centred when the range fits on screen, top-aligned with a couple of
+ *  lines of lead-in when it is taller than the viewport. */
+function scrollForCue(cue: HighlightCue, totalLines: number): number {
+  const [start, end] = cue.lineRange;
+  const span = Math.max(1, end - start + 1);
+  const firstVisible =
+    span >= VISIBLE_LINES
+      ? start - 1 - 2
+      : start - 1 - Math.floor((VISIBLE_LINES - span) / 2);
+  const maxScroll = Math.max(0, totalLines - VISIBLE_LINES);
+  return Math.min(Math.max(firstVisible, 0), maxScroll) * LINE_HEIGHT;
+}
+
+/** Builds strictly-increasing interpolate() inputs; equal or
+ *  out-of-order frames (cues packed tighter than the ramp) would make
+ *  interpolate throw. */
+function monotonic(frames: number[]): number[] {
+  const out: number[] = [];
+  frames.forEach((f, i) => {
+    out.push(i === 0 ? f : Math.max(f, out[i - 1] + 1));
+  });
+  return out;
+}
+
+function estimateSegmentHeight(text: string): number {
+  const charsPerLine = Math.max(
+    1,
+    Math.floor((NARRATION_WIDTH - NARRATION_PAD * 2 - NARRATION_BADGE_COLUMN) / NARRATION_CHAR_WIDTH),
+  );
+  const lines = Math.max(1, Math.ceil(text.length / charsPerLine));
+  return lines * NARRATION_LINE_HEIGHT + NARRATION_ITEM_GAP;
 }
 
 export const ChunkView: React.FC<{ chunkDir: string }> = ({ chunkDir }) => {
@@ -75,60 +171,280 @@ export const ChunkView: React.FC<{ chunkDir: string }> = ({ chunkDir }) => {
     return null;
   }
 
+  const cues = [...bundle.highlightConfig].sort(
+    (a, b) => cueWindow(a)[0] - cueWindow(b)[0],
+  );
+
+  const activeCue =
+    cues.find((c) => {
+      const [from, to] = cueWindow(c);
+      return frame >= from && frame < to;
+    }) ?? null;
+
+  // Scroll the code panel so the narrated line is actually on screen.
+  let scrollTop = 0;
+  if (cues.length === 1) {
+    scrollTop = scrollForCue(cues[0], sourceLines.length);
+  } else if (cues.length > 1) {
+    const rawFrames: number[] = [];
+    const values: number[] = [];
+    cues.forEach((cue, i) => {
+      const target = scrollForCue(cue, sourceLines.length);
+      const [from] = cueWindow(cue);
+      rawFrames.push(from, from + SCROLL_RAMP);
+      if (i === 0) {
+        values.push(target, target);
+      } else {
+        values.push(values[values.length - 1], target);
+      }
+    });
+    scrollTop = interpolate(frame, monotonic(rawFrames), values, {
+      extrapolateLeft: "clamp",
+      extrapolateRight: "clamp",
+    });
+  }
+
+  let highlightFade = 0;
+  let highlightRange: [number, number] | null = null;
+  if (activeCue) {
+    const [from, to] = cueWindow(activeCue);
+    const fadeFrames = Math.max(1, Math.min(8, Math.floor((to - from) / 3)));
+    highlightFade = interpolate(
+      frame,
+      monotonic([from, from + fadeFrames, to - fadeFrames, to]),
+      [0, 1, 1, 0],
+      { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
+    );
+    highlightRange = activeCue.lineRange;
+  }
+
+  const segments = bundle.narrationSegments ?? [];
+  const activeSegmentIndex = segments.findIndex(
+    (s) => frame >= s.fromFrame && frame < s.toFrame,
+  );
+
+  // Keep the active narration item in view once the list runs past the
+  // bottom of the panel.
+  let narrationScroll = 0;
+  if (segments.length > 0 && activeSegmentIndex >= 0) {
+    const heights = segments.map((s) => estimateSegmentHeight(s.text));
+    const totalHeight = heights.reduce((a, b) => a + b, 0);
+    const offsetOfActive = heights
+      .slice(0, activeSegmentIndex)
+      .reduce((a, b) => a + b, 0);
+    const maxScroll = Math.max(0, totalHeight - NARRATION_VIEWPORT_HEIGHT);
+    // Park the active item a third of the way down the panel.
+    const desired = offsetOfActive - NARRATION_VIEWPORT_HEIGHT / 3;
+    narrationScroll = Math.min(Math.max(desired, 0), maxScroll);
+  }
+
+  const headerTitle = bundle.filePath || bundle.chunkId;
+
   return (
-    <AbsoluteFill style={{ backgroundColor: "#1e1e1e", flexDirection: "row" }}>
+    <AbsoluteFill style={{ backgroundColor: "#15171c" }}>
       <Audio src={staticFile(`${chunkDir}/narration.wav`)} />
+
+      {/* Header: the file this section is explaining. */}
       <Box
         sx={{
-          flex: 1,
-          fontFamily: "Menlo, monospace",
-          fontSize: 16,
-          color: "#d4d4d4",
-          p: 3,
-          overflow: "hidden",
-          whiteSpace: "pre",
+          height: `${HEADER_HEIGHT}px`,
+          px: `${CODE_PAD_X}px`,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          bgcolor: "#101217",
+          borderBottom: "1px solid rgba(255,255,255,0.08)",
         }}
       >
-        {sourceLines.map((line, idx) => {
-          const lineNumber = idx + 1;
-          const cue = bundle.highlightConfig.find(
-            (c) => lineNumber >= c.lineRange[0] && lineNumber <= c.lineRange[1],
-          );
-          const highlightOpacity = cue
-            ? interpolate(
-                frame,
-                [cue.fromFrame - 5, cue.fromFrame, cue.toFrame, cue.toFrame + 5],
-                [0, 0.35, 0.35, 0],
-                { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
-              )
-            : 0;
-          return (
-            <Box
-              key={lineNumber}
-              sx={{ bgcolor: `rgba(110, 168, 254, ${highlightOpacity})` }}
-            >
-              {String(lineNumber).padStart(3, " ")}  {line}
-            </Box>
-          );
-        })}
+        <Box sx={{ display: "flex", alignItems: "baseline", gap: 1.5, minWidth: 0 }}>
+          <Box
+            sx={{
+              width: 8,
+              height: 8,
+              borderRadius: "50%",
+              bgcolor: ACCENT,
+              flexShrink: 0,
+              alignSelf: "center",
+            }}
+          />
+          <Typography
+            sx={{
+              fontFamily: "Menlo, monospace",
+              fontSize: 19,
+              fontWeight: 600,
+              color: "#f3f4f6",
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+            }}
+          >
+            {headerTitle}
+          </Typography>
+        </Box>
+        {bundle.featureName ? (
+          <Typography
+            sx={{
+              fontFamily: "Helvetica, Arial, sans-serif",
+              fontSize: 14,
+              color: DIM_TEXT,
+              textTransform: "uppercase",
+              letterSpacing: "0.08em",
+              flexShrink: 0,
+              ml: 2,
+            }}
+          >
+            {bundle.featureName}
+          </Typography>
+        ) : null}
       </Box>
-      <Box
-        sx={{
-          width: 420,
-          p: 3,
-          color: "text.primary",
-          fontFamily: "Helvetica, Arial, sans-serif",
-          fontSize: 18,
-          lineHeight: 1.5,
-          bgcolor: "background.paper",
-        }}
-      >
-        <Typography variant="caption" sx={{ opacity: 0.7, display: "block", mb: 1.5 }}>
-          chunk: {bundle.chunkId} · alignment: {bundle.alignmentSource}
-        </Typography>
-        <Typography component="div" sx={{ fontSize: "inherit", lineHeight: "inherit" }}>
-          {bundle.cleanText}
-        </Typography>
+
+      <Box sx={{ display: "flex", height: `${HEIGHT - HEADER_HEIGHT}px` }}>
+        {/* Code panel — scrolls to whichever line is being narrated. */}
+        <Box
+          sx={{
+            width: `${WIDTH - NARRATION_WIDTH}px`,
+            height: "100%",
+            overflow: "hidden",
+            position: "relative",
+            py: `${CODE_PAD_Y}px`,
+            boxSizing: "border-box",
+          }}
+        >
+          <Box
+            sx={{
+              transform: `translateY(${-scrollTop}px)`,
+              fontFamily: "Menlo, monospace",
+              fontSize: `${CODE_FONT_SIZE}px`,
+              lineHeight: `${LINE_HEIGHT}px`,
+              whiteSpace: "pre",
+            }}
+          >
+            {sourceLines.map((line, idx) => {
+              const lineNumber = idx + 1;
+              const isHighlighted =
+                highlightRange !== null &&
+                lineNumber >= highlightRange[0] &&
+                lineNumber <= highlightRange[1];
+              const opacity = isHighlighted ? highlightFade : 0;
+              return (
+                <Box
+                  key={lineNumber}
+                  sx={{
+                    display: "flex",
+                    height: `${LINE_HEIGHT}px`,
+                    bgcolor: `rgba(96, 165, 250, ${0.18 * opacity})`,
+                    boxShadow: `inset 3px 0 0 0 rgba(96, 165, 250, ${opacity})`,
+                  }}
+                >
+                  <Box
+                    sx={{
+                      width: `${GUTTER_WIDTH}px`,
+                      flexShrink: 0,
+                      textAlign: "right",
+                      pr: 1.5,
+                      boxSizing: "border-box",
+                      color: isHighlighted
+                        ? `rgba(191, 219, 254, ${0.45 + 0.55 * opacity})`
+                        : "#4b5057",
+                      fontWeight: isHighlighted && opacity > 0.5 ? 700 : 400,
+                    }}
+                  >
+                    {lineNumber}
+                  </Box>
+                  <Box
+                    sx={{
+                      pl: `${CODE_PAD_X - 12}px`,
+                      color: isHighlighted
+                        ? `rgba(255,255,255,${0.78 + 0.22 * opacity})`
+                        : "#c8ccd2",
+                    }}
+                  >
+                    {line}
+                  </Box>
+                </Box>
+              );
+            })}
+          </Box>
+        </Box>
+
+        {/* Narration panel — one lettered item per sentence, the one
+            being spoken is bright and the rest are dimmed. */}
+        <Box
+          sx={{
+            width: `${NARRATION_WIDTH}px`,
+            height: "100%",
+            bgcolor: "#1b1e25",
+            borderLeft: "1px solid rgba(255,255,255,0.08)",
+            overflow: "hidden",
+            p: `${NARRATION_PAD}px`,
+            boxSizing: "border-box",
+          }}
+        >
+          {segments.length === 0 ? (
+            <Typography
+              component="div"
+              sx={{
+                fontFamily: "Helvetica, Arial, sans-serif",
+                fontSize: `${NARRATION_FONT_SIZE}px`,
+                lineHeight: `${NARRATION_LINE_HEIGHT}px`,
+                color: "#e5e7eb",
+              }}
+            >
+              {bundle.cleanText}
+            </Typography>
+          ) : (
+            <Box sx={{ transform: `translateY(${-narrationScroll}px)` }}>
+              {segments.map((segment, i) => {
+                const isActive = i === activeSegmentIndex;
+                return (
+                  <Box
+                    key={segment.label}
+                    sx={{
+                      display: "flex",
+                      mb: `${NARRATION_ITEM_GAP}px`,
+                      alignItems: "flex-start",
+                    }}
+                  >
+                    <Box
+                      sx={{
+                        width: 21,
+                        height: 21,
+                        mr: `${NARRATION_BADGE_COLUMN - 21}px`,
+                        flexShrink: 0,
+                        borderRadius: "4px",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontFamily: "Helvetica, Arial, sans-serif",
+                        fontSize: 12,
+                        fontWeight: 700,
+                        bgcolor: isActive ? ACCENT : "transparent",
+                        color: isActive ? "#0b1020" : DIM_TEXT,
+                        border: isActive
+                          ? "1px solid transparent"
+                          : "1px solid rgba(139,144,153,0.4)",
+                      }}
+                    >
+                      {segment.label}
+                    </Box>
+                    <Typography
+                      component="div"
+                      sx={{
+                        fontFamily: "Helvetica, Arial, sans-serif",
+                        fontSize: `${NARRATION_FONT_SIZE}px`,
+                        lineHeight: `${NARRATION_LINE_HEIGHT}px`,
+                        color: isActive ? "#ffffff" : DIM_TEXT,
+                        fontWeight: isActive ? 600 : 400,
+                      }}
+                    >
+                      {segment.text}
+                    </Typography>
+                  </Box>
+                );
+              })}
+            </Box>
+          )}
+        </Box>
       </Box>
     </AbsoluteFill>
   );

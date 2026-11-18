@@ -22,6 +22,7 @@ from .tts import synthesize, TTSError
 from .timing import TranscriptWord, TimedCue, align_cues_to_words
 from .estimated_alignment import build_estimated_words
 from .highlight_config import build_highlight_config
+from .narration_segments import build_narration_segments
 
 RENDER_APP_DIR = Path(__file__).resolve().parents[2] / "render-app"
 TRANSCRIBE_SCRIPT = RENDER_APP_DIR / "scripts" / "transcribe.mjs"
@@ -56,8 +57,14 @@ def _try_real_transcription(wav_path: Path, out_json: Path) -> list[TranscriptWo
             for w in data.get("words", [])]
 
 
-def build_render_bundle(script: NarrationScript, output_dir: Path, fps: int = 30) -> dict:
+def build_render_bundle(
+    script: NarrationScript,
+    output_dir: Path,
+    fps: int = 30,
+    record: dict | None = None,
+) -> dict:
     output_dir = Path(output_dir)
+    record = record or {}
     output_dir.mkdir(parents=True, exist_ok=True)
 
     full_text = concat_beats(script.purpose, script.connections, script.flow, script.recap)
@@ -89,15 +96,21 @@ def build_render_bundle(script: NarrationScript, output_dir: Path, fps: int = 30
             cue.note = (cue.note or "") + " Word timing is estimated (even spacing across " \
                                             "measured audio duration), not from real transcription."
 
-    highlight_config = build_highlight_config(timed_cues, fps)
+    highlight_config = build_highlight_config(timed_cues, fps, duration_ms)
+    narration_segments = build_narration_segments(clean_text, words, fps, duration_ms)
 
     bundle = {
         "chunkId": script.chunk_id,
+        # Carried through so the video can title each section with the
+        # file it is actually explaining, rather than the chunk id.
+        "filePath": record.get("filePath"),
+        "featureName": record.get("featureName"),
         "durationMs": duration_ms,
         "alignmentSource": alignment_source,
         "ttsEngine": tts_result.engine,
         "narrationAudio": str(wav_path),
         "cleanText": clean_text,
+        "narrationSegments": narration_segments,
         "highlightConfig": highlight_config,
     }
     (output_dir / "bundle.json").write_text(json.dumps(bundle, indent=2), encoding="utf-8")

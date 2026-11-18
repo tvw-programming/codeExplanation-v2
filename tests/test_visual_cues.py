@@ -44,3 +44,42 @@ def test_slugify_handles_punctuation_and_case():
 def test_no_cues_when_no_important_functions():
     assert generate_visual_cues({"chunkId": "x", "importantFunctions": []}) == []
     assert generate_visual_cues({"chunkId": "x"}) == []
+
+
+def test_event_handlers_with_a_line_range_get_their_own_cue():
+    """The narration says "the inline_onClose_L50 handler responds to..."
+    — without a cue, nothing on screen points at line 50."""
+    record = {
+        "chunkId": "alumni-06f407dc",
+        "importantFunctions": [{"name": "ProfilePage", "lineRange": [17, 70]}],
+        "eventHandlers": [
+            {"name": "handleSubmit", "lineRange": [21, 21]},
+            {"name": "inline_onClose_L50", "lineRange": [50, 50]},
+        ],
+    }
+    cues = generate_visual_cues(record)
+    by_label = {c.label: c for c in cues}
+    assert by_label["inline_onClose_L50"].line_range == [50, 50]
+    assert by_label["inline_onClose_L50"].source_field == "eventHandlers"
+    assert by_label["handleSubmit"].line_range == [21, 21]
+
+
+def test_entries_without_a_line_range_still_produce_no_cue():
+    """An honest gap stays a gap rather than a fabricated line number."""
+    record = {
+        "chunkId": "x",
+        "eventHandlers": [{"name": "mystery"}, {"name": "partial", "lineRange": [7]}],
+    }
+    assert generate_visual_cues(record) == []
+
+
+def test_a_handler_and_a_function_sharing_a_name_get_separate_cues():
+    record = {
+        "chunkId": "x",
+        "importantFunctions": [{"name": "submit", "lineRange": [1, 5]}],
+        "eventHandlers": [{"name": "submit", "lineRange": [20, 20]}],
+    }
+    cues = generate_visual_cues(record)
+    assert len(cues) == 2
+    assert cues[0].id != cues[1].id
+    assert {c.source_field for c in cues} == {"importantFunctions", "eventHandlers"}

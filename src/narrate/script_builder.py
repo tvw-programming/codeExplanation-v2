@@ -93,25 +93,40 @@ def build_flow_sentences(record: dict, cues: list[VisualCue]) -> list[str]:
     """One sentence per flow item (function, route, handler, API call),
     each confidence-gated and carrying its VISUAL cue token when one
     exists for that item."""
-    cues_by_label = {cue.label: cue for cue in cues}
+    # Cues are looked up per source field, so a handler and a function
+    # that happen to share a name can't steal each other's cue.
+    cues_by_field: dict[str, dict[str, VisualCue]] = {}
+    for cue in cues:
+        cues_by_field.setdefault(cue.source_field, {})[cue.label] = cue
+
+    def token_for(source_field: str, label: str) -> str:
+        """The token is emitted *before* its sentence, so the cue's
+        anchor word is the last word spoken before the sentence starts.
+        Appending it instead would anchor the highlight to the sentence's
+        final word — the line would light up just as the narrator
+        finished talking about it, a whole sentence late."""
+        cue = cues_by_field.get(source_field, {}).get(label)
+        return f"{cue.token} " if cue else ""
+
     sentences: list[str] = []
 
     for fn in record.get("importantFunctions") or []:
         name = fn.get("name", "a function")
-        cue = cues_by_label.get(name)
-        token = f" {cue.token}" if cue else ""
         # importantFunctions are taken directly from the extracted code,
         # so there is no "assumed" flag on them; they are always spoken
         # plainly.
-        sentences.append(f"The {name} function runs next.{token}")
+        sentences.append(f"{token_for('importantFunctions', name)}The {name} function runs next.")
 
     for route in record.get("routes") or []:
         sentence = f"A {route.get('method', '')} request to {route.get('path', '')} is handled here."
-        sentences.append(_hedge(sentence, bool(route.get("assumed"))))
+        token = token_for("routes", route.get("path") or route.get("name") or "")
+        sentences.append(token + _hedge(sentence, bool(route.get("assumed"))))
 
     for handler in record.get("eventHandlers") or []:
-        sentence = f"The {handler.get('name', 'handler')} handler responds to a {handler.get('eventType', 'user')} event."
-        sentences.append(_hedge(sentence, bool(handler.get("assumed"))))
+        name = handler.get("name", "handler")
+        sentence = f"The {name} handler responds to a {handler.get('eventType', 'user')} event."
+        token = token_for("eventHandlers", name)
+        sentences.append(token + _hedge(sentence, bool(handler.get("assumed"))))
 
     for call in record.get("apiCalls") or []:
         sentence = f"A {call.get('method', '')} call goes out to {call.get('url', '')}."

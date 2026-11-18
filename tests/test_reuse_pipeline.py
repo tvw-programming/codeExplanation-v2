@@ -106,3 +106,36 @@ def test_output_path_mirrors_source_structure(tmp_path):
     assert expected.is_file()
     assert str(expected).startswith(str(output))
     assert "src/features/widgets/WidgetList.tsx" in str(expected)
+
+
+def test_a_record_from_an_older_extractor_is_reanalyzed(tmp_path):
+    """Reuse keyed on the source hash alone would mean an extractor
+    improvement never reaches a chunk already in the store: the user's
+    files haven't changed, so every chunk is reused and the fix is
+    silently dead. The stored extractorVersion is what breaks that."""
+    from src.storage.mirror_store import EXTRACTOR_VERSION, write_stored
+
+    root = tmp_path / "repo"
+    out = tmp_path / "out"
+    _build_repo(root)
+    project_type = detect_project_type(root)
+
+    records, first = extract_repo_with_reuse(root, project_type, out)
+    assert first["reanalyzed"] == first["total"]
+
+    # Unchanged source re-runs as pure reuse.
+    _, second = extract_repo_with_reuse(root, project_type, out)
+    assert second["reused"] == second["total"]
+
+    # Age one stored record back to the previous extractor version.
+    stale = read_stored(out, records[0]["filePath"])
+    assert stale is not None, "expected a stored record to age"
+    stale["extractorVersion"] = EXTRACTOR_VERSION - 1
+    write_stored(out, stale["filePath"], stale)
+
+    _, third = extract_repo_with_reuse(root, project_type, out)
+    assert third["reanalyzed"] == 1, "the aged record should be re-extracted"
+    assert third["reused"] == third["total"] - 1
+
+    refreshed = read_stored(out, stale["filePath"])
+    assert refreshed["extractorVersion"] == EXTRACTOR_VERSION

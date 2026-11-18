@@ -138,3 +138,31 @@ def test_build_narration_script_reports_out_of_range_without_erroring():
     script = build_narration_script(record, [], [])
     assert script.within_target_range is False
     assert script.estimated_seconds < 90
+
+
+def test_cue_token_precedes_its_sentence_so_the_highlight_is_not_late():
+    """The token's position decides the cue's anchor word. Appended, the
+    line would light up as the narrator finished the sentence about it."""
+    record = {
+        "chunkId": "c",
+        "featureName": "alumni",
+        "importantFunctions": [{"name": "ProfilePage", "lineRange": [17, 70]}],
+    }
+    script = build_narration_script(record, [], [])
+    cue = script.visual_cues[0]
+    flow = " ".join(script.flow)
+    assert flow.index(cue.token) < flow.index("The ProfilePage function runs next.")
+
+
+def test_event_handler_sentences_carry_their_cue_token():
+    record = {
+        "chunkId": "c",
+        "featureName": "alumni",
+        "eventHandlers": [
+            {"name": "inline_onClose_L50", "lineRange": [50, 50],
+             "eventType": "user_action", "assumed": True},
+        ],
+    }
+    script = build_narration_script(record, [], [])
+    assert len(script.visual_cues) == 1
+    assert script.visual_cues[0].token in " ".join(script.flow)

@@ -40,7 +40,11 @@ def run_pilot(repo_root: str | Path, output_root: str | Path, render: bool = Tru
     render_results = []
     if render:
         for chunk_id, entry in narration.items():
-            bundle = build_render_bundle(entry["script"], output_root / "render" / chunk_id)
+            bundle = build_render_bundle(
+                entry["script"],
+                output_root / "render" / chunk_id,
+                record=entry.get("record"),
+            )
             if "error" in bundle:
                 render_results.append({"chunkId": chunk_id, "error": bundle["error"]})
             else:

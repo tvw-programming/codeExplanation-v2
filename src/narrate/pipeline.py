@@ -74,6 +74,10 @@ def generate_narration_for_repo(records: list[dict]) -> dict[str, dict]:
         results[chunk_id] = {
             "script": script,
             "pronunciationTable": pronunciation_table,
+            # Phase 6 needs a few record fields (filePath, featureName)
+            # to title the rendered section; carry the record rather
+            # than re-reading it from disk downstream.
+            "record": record,
         }
 
     return results

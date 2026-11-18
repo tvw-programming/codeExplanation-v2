@@ -34,31 +34,42 @@ class VisualCue:
     source_field: str
 
 
+CUE_SOURCE_FIELDS = ("importantFunctions", "eventHandlers", "routes")
+
+
 def generate_visual_cues(record: dict) -> list[VisualCue]:
-    """Builds one cue per importantFunctions entry that has a usable
-    lineRange. Ids are de-duplicated against the chunk's own chunkId so
-    cues stay unique within and across chunks."""
+    """Builds one cue per record entry that carries a usable lineRange,
+    across every field in CUE_SOURCE_FIELDS. Ids are de-duplicated
+    against the chunk's own chunkId so cues stay unique within and
+    across chunks.
+
+    An entry with no lineRange still produces no cue — that remains an
+    honest gap rather than a fabricated line number. dataModels carry
+    only a snippet in the locked schema, so they are still excluded.
+    """
     chunk_id = record.get("chunkId", "chunk")
     seen: set[str] = set()
     cues: list[VisualCue] = []
 
-    for fn in record.get("importantFunctions", []) or []:
-        line_range = fn.get("lineRange")
-        if not line_range or len(line_range) != 2:
-            continue
-        base_id = f"{chunk_id}-{slugify(fn.get('name', 'function'))}"
-        cue_id = base_id
-        suffix = 1
-        while cue_id in seen:
-            suffix += 1
-            cue_id = f"{base_id}-{suffix}"
-        seen.add(cue_id)
-        cues.append(VisualCue(
-            id=cue_id,
-            token=f"VISUAL[HIGHLIGHT:{cue_id}]",
-            line_range=list(line_range),
-            label=fn.get("name", ""),
-            source_field="importantFunctions",
-        ))
+    for source_field in CUE_SOURCE_FIELDS:
+        for entry in record.get(source_field, []) or []:
+            line_range = entry.get("lineRange")
+            if not line_range or len(line_range) != 2:
+                continue
+            label = entry.get("name") or entry.get("path") or ""
+            base_id = f"{chunk_id}-{slugify(label or source_field)}"
+            cue_id = base_id
+            suffix = 1
+            while cue_id in seen:
+                suffix += 1
+                cue_id = f"{base_id}-{suffix}"
+            seen.add(cue_id)
+            cues.append(VisualCue(
+                id=cue_id,
+                token=f"VISUAL[HIGHLIGHT:{cue_id}]",
+                line_range=list(line_range),
+                label=label,
+                source_field=source_field,
+            ))
 
     return cues
