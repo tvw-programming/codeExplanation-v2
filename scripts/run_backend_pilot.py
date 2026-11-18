@@ -3,14 +3,15 @@ points at (any git URL or local path — see src/detect/source_resolver.py)
 and runs the full Phase 7 pilot (src/pilot/run_pilot.py) against it with
 one default configuration, no manual CLI arguments required.
 
-When rendering is on (the default), it also stages one successfully
+When rendering is on (the default), it stages EVERY successfully
 -rendered chunk's bundle.json/narration.wav/source file into
-render-app/public/sample-chunk/ — the exact fixed path the
-CodeExplainerChunk Remotion composition reads from (see
-render-app/src/CodeExplainerChunk.tsx) — so run-local.sh's subsequent
-`npx remotion render` step always has real data to render, for
-whichever repo pipeline.config.yaml happens to point at, not just the
-one chunk that was committed as a fixed proof sample.
+render-app/public/chunks/<chunkId>/, plus a manifest.json listing them
+in order — the fixed path the FullVideo Remotion composition reads
+from (see render-app/src/FullVideo.tsx) to render one continuous video
+covering the whole repository, not just a single sample chunk. It also
+stages the first chunk into the older render-app/public/sample-chunk/
+path for the single-chunk CodeExplainerChunk composition, kept for
+quick single-chunk demos/debugging.
 
 Usage (always run from the repo root, which run-local.sh does for you):
     python scripts/run_backend_pilot.py [--no-render]
@@ -31,6 +32,7 @@ from src.detect.source_resolver import resolve_source, SourceResolutionError  # 
 from src.pilot.run_pilot import run_pilot  # noqa: E402
 
 SAMPLE_CHUNK_DIR = REPO_ROOT / "render-app" / "public" / "sample-chunk"
+CHUNKS_DIR = REPO_ROOT / "render-app" / "public" / "chunks"
 
 
 def _chunk_id_to_file_path(output_root: Path) -> dict[str, str]:
@@ -54,39 +56,65 @@ def _chunk_id_to_file_path(output_root: Path) -> dict[str, str]:
     return mapping
 
 
-def _stage_sample_chunk(report: dict, resolved_root: Path, output_root: Path) -> str | None:
-    """Picks the first chunk whose render bundle has no error, and
-    copies its bundle.json/narration.wav/source file to
-    render-app/public/sample-chunk/ (the fixed path the Remotion
-    composition reads). Returns the chosen chunkId, or None if nothing
-    rendered successfully."""
-    render_results = report.get("render")
-    if not isinstance(render_results, list):
-        return None
-
-    chosen = next((r for r in render_results if "error" not in r), None)
-    if chosen is None:
-        return None
-    chunk_id = chosen["chunkId"]
-
+def _stage_one_chunk(chunk_id: str, dest_dir: Path, resolved_root: Path, output_root: Path) -> bool:
+    """Copies one chunk's bundle.json/narration.wav/source file into
+    dest_dir. Returns False (and copies nothing) if any of the three
+    expected files can't be found."""
     file_path = _chunk_id_to_file_path(output_root).get(chunk_id)
     if not file_path:
-        return None
+        return False
 
     bundle_src = output_root / "render" / chunk_id / "bundle.json"
     audio_src = output_root / "render" / chunk_id / "narration.wav"
     source_src = resolved_root / file_path
     if not (bundle_src.is_file() and audio_src.is_file() and source_src.is_file()):
-        return None
+        return False
 
-    SAMPLE_CHUNK_DIR.mkdir(parents=True, exist_ok=True)
-    shutil.copyfile(bundle_src, SAMPLE_CHUNK_DIR / "bundle.json")
-    shutil.copyfile(audio_src, SAMPLE_CHUNK_DIR / "narration.wav")
-    # The composition always fetches "source.tsx" by that fixed name,
+    dest_dir.mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(bundle_src, dest_dir / "bundle.json")
+    shutil.copyfile(audio_src, dest_dir / "narration.wav")
+    # The compositions always fetch "source.tsx" by that fixed name,
     # regardless of the real file's extension (Go, Python, ... source
     # displays exactly as well as TSX does — it's shown as plain text).
-    shutil.copyfile(source_src, SAMPLE_CHUNK_DIR / "source.tsx")
-    return chunk_id
+    shutil.copyfile(source_src, dest_dir / "source.tsx")
+    return True
+
+
+def _stage_all_chunks(report: dict, resolved_root: Path, output_root: Path) -> list[str]:
+    """Stages EVERY successfully-rendered chunk into
+    render-app/public/chunks/<chunkId>/, in the same order run_pilot
+    processed them, and writes render-app/public/chunks/manifest.json
+    listing them in that order — what the FullVideo composition reads
+    to render the complete, multi-chunk video. Also stages the first
+    one into the older render-app/public/sample-chunk/ path for the
+    single-chunk CodeExplainerChunk composition.
+
+    Returns the list of chunkIds actually staged (in order)."""
+    render_results = report.get("render")
+    if not isinstance(render_results, list):
+        return []
+
+    # Start from a clean slate: a previous run's chunks for a
+    # different repo/subset shouldn't linger and end up in this run's
+    # video.
+    if CHUNKS_DIR.is_dir():
+        shutil.rmtree(CHUNKS_DIR)
+
+    staged: list[str] = []
+    for result in render_results:
+        if "error" in result:
+            continue
+        chunk_id = result["chunkId"]
+        if _stage_one_chunk(chunk_id, CHUNKS_DIR / chunk_id, resolved_root, output_root):
+            staged.append(chunk_id)
+
+    if staged:
+        (CHUNKS_DIR / "manifest.json").write_text(
+            json.dumps({"chunkIds": staged}, indent=2), encoding="utf-8",
+        )
+        _stage_one_chunk(staged[0], SAMPLE_CHUNK_DIR, resolved_root, output_root)
+
+    return staged
 
 
 def main() -> int:
@@ -121,10 +149,10 @@ def main() -> int:
     print(f"[backend] Full report written to: {output_root / 'pilot_report.json'}")
 
     if render:
-        staged_chunk_id = _stage_sample_chunk(report, resolved.local_root, output_root)
-        if staged_chunk_id:
-            print(f"[backend] Staged chunk '{staged_chunk_id}' for video rendering "
-                  f"-> {SAMPLE_CHUNK_DIR}")
+        staged_chunk_ids = _stage_all_chunks(report, resolved.local_root, output_root)
+        if staged_chunk_ids:
+            print(f"[backend] Staged {len(staged_chunk_ids)}/{report['chunkCount']} "
+                  f"chunk(s) for the full video -> {CHUNKS_DIR}")
         else:
             print("[backend] No successfully-rendered chunk to stage for video "
                   "rendering.", file=sys.stderr)

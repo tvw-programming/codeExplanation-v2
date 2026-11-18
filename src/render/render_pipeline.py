@@ -65,7 +65,7 @@ def build_render_bundle(script: NarrationScript, output_dir: Path, fps: int = 30
 
     wav_path = output_dir / "narration.wav"
     try:
-        synthesize(clean_text, wav_path)
+        tts_result = synthesize(clean_text, wav_path)
     except TTSError as exc:
         return {"chunkId": script.chunk_id, "error": f"TTS failed: {exc}"}
 
@@ -95,6 +95,7 @@ def build_render_bundle(script: NarrationScript, output_dir: Path, fps: int = 30
         "chunkId": script.chunk_id,
         "durationMs": duration_ms,
         "alignmentSource": alignment_source,
+        "ttsEngine": tts_result.engine,
         "narrationAudio": str(wav_path),
         "cleanText": clean_text,
         "highlightConfig": highlight_config,

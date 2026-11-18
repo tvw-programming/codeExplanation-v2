@@ -14,9 +14,14 @@ node_modules/
 # Phase 6 render app — generated proof artifacts, not source.
 render-app/out/
 render-app/public/sample-chunk/
+render-app/public/chunks/
 render-app/.whisper-cpp/
 
 # run-local.sh output — resolved source clone, pilot report, and the
 # rendered video it produces (output/video.mp4, covered by the output/
 # rule above). Generated, not source.
 .local-run/
+
+# One-time downloaded narration voice model (see src/render/tts.py,
+# scripts/ensure_piper_voice.py) — fetched, not source, ~64MB.
+.cache/

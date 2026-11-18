@@ -162,6 +162,14 @@ run_backend() {
     echo "documentation/02-configuration.md for every field."
   fi
 
+  if [ "$RENDER_ENABLED" = "1" ]; then
+    # One-time ~64MB download of the Piper Indian-English narration
+    # voice (see src/render/tts.py). Non-fatal if it can't be reached
+    # (e.g. this project's own dev sandbox blocks huggingface.co) —
+    # synthesis just falls back to espeak-ng either way.
+    python scripts/ensure_piper_voice.py
+  fi
+
   log "[1/4] Backend: running the pipeline (detect -> chunk -> extract -> narrate -> render)"
   python scripts/run_backend_pilot.py $RENDER_FLAG
 
@@ -225,8 +233,8 @@ run_docs_server() {
 run_video_render() {
   log "[4/4] Video: rendering output/video.mp4"
 
-  if [ ! -f render-app/public/sample-chunk/bundle.json ]; then
-    echo "No rendered chunk is staged at render-app/public/sample-chunk/ —" >&2
+  if [ ! -f render-app/public/chunks/manifest.json ]; then
+    echo "No rendered chunks are staged at render-app/public/chunks/ —" >&2
     echo "run the backend step first without --no-render so there is" >&2
     echo "something to render." >&2
     exit 1
@@ -290,7 +298,7 @@ run_video_render() {
   # far more reliable on a laptop. Override with REMOTION_CONCURRENCY.
   RENDER_CONCURRENCY="${REMOTION_CONCURRENCY:-1}"
 
-  RENDER_ARGS=(CodeExplainerChunk "$OUTPUT_VIDEO" "--concurrency=$RENDER_CONCURRENCY")
+  RENDER_ARGS=(FullVideo "$OUTPUT_VIDEO" "--concurrency=$RENDER_CONCURRENCY")
   if [ -n "$BROWSER_EXECUTABLE" ]; then
     RENDER_ARGS+=(--browser-executable="$BROWSER_EXECUTABLE")
   fi

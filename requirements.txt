@@ -1,2 +1,8 @@
 PyYAML>=6.0
 pytest>=8.0
+
+# Narration TTS (see src/render/tts.py): piper-tts is the preferred
+# engine when its voice model has been downloaded (run-local.sh does
+# this once, see scripts/ensure_piper_voice.py); espeak-ng (a system
+# binary, not a Python package) is the always-available fallback.
+piper-tts>=1.8.0

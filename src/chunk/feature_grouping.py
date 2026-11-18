@@ -57,12 +57,32 @@ def _relpath(root: Path, path: Path) -> str:
     return str(path.relative_to(root)).replace("\\", "/")
 
 
+def _is_under_ignored_dir(path: Path, base: Path) -> bool:
+    """True if any directory component BETWEEN base and path (exclusive
+    of base itself) is a name we want to skip (.git, node_modules, a
+    dotfile/dotdir, ...).
+
+    Deliberately checks path.relative_to(base).parts rather than
+    path.parts: the repo is often cloned into a path that itself has a
+    dot-prefixed ancestor (e.g. run-local.sh's .local-run/source/...),
+    and checking the full absolute/passed-in path's parts against this
+    would wrongly treat every single file in the repo as "hidden" and
+    silently drop it from chunking. Only components inside the tree
+    we're actually scanning should count.
+    """
+    try:
+        rel_parts = path.relative_to(base).parts
+    except ValueError:
+        rel_parts = path.parts
+    return any(part in IGNORED_DIR_NAMES or part.startswith(".") for part in rel_parts)
+
+
 def _iter_files(directory: Path, extensions: set[str], recursive: bool = True):
     pattern = "**/*" if recursive else "*"
     for path in directory.glob(pattern):
         if not path.is_file():
             continue
-        if any(part in IGNORED_DIR_NAMES or part.startswith(".") for part in path.parts):
+        if _is_under_ignored_dir(path, directory):
             continue
         if path.suffix in extensions:
             yield path
@@ -182,7 +202,7 @@ def _group_by_resource_pairing(root: Path, backend_root: Path, extension: str, s
     for path in backend_root.rglob("*"):
         if not path.is_dir():
             continue
-        if any(part in IGNORED_DIR_NAMES or part.startswith(".") for part in path.parts):
+        if _is_under_ignored_dir(path, backend_root):
             continue
         if path.name.lower() in RESOURCE_DIR_NAMES:
             resource_dirs.append(path)
@@ -212,7 +232,7 @@ def _group_by_resource_pairing(root: Path, backend_root: Path, extension: str, s
     for path in sorted(backend_root.rglob("*")):
         if not path.is_dir() or path in resource_dir_set:
             continue
-        if any(part in IGNORED_DIR_NAMES or part.startswith(".") for part in path.parts):
+        if _is_under_ignored_dir(path, backend_root):
             continue
         direct_files = sorted(p for p in path.glob(f"*{extension}") if p.is_file())
         if not direct_files:
@@ -272,7 +292,7 @@ def group_python_agent_features(root: Path, backend_root: Path) -> list[Feature]
         return features
 
     for directory in sorted({p.parent for p in backend_root.rglob(f"*{PYTHON_SOURCE_EXTENSION}")
-                              if not any(part in IGNORED_DIR_NAMES or part.startswith(".") for part in p.parts)}):
+                              if not _is_under_ignored_dir(p, backend_root)}):
         files = sorted(p for p in directory.glob(f"*{PYTHON_SOURCE_EXTENSION}") if p.is_file())
         grouped: dict[str, list[Path]] = {}
         unmatched: list[Path] = []
