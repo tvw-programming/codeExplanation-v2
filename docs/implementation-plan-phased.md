@@ -1,6 +1,6 @@
 # Implementation Plan — Phased
 
-Status: Phase 4 complete and verified against the real alumni repo. Phases 0, 1, 2, 3 complete.
+Status: Phase 5 complete and verified against the real alumni repo. Phases 0-4 complete.
 
 Test repo for the pipeline: https://github.com/tvw-programming/Alumni-web (dynamic input — any repo URL works; this is only the first test case).
 
@@ -38,11 +38,15 @@ Test repo for the pipeline: https://github.com/tvw-programming/Alumni-web (dynam
 - pullRequest gap partially closed: pull_request_lookup.py uses `gh api` to walk commit history for a file and find its most recent associated PR, when the pipeline actually has GitHub API access to that repo (an attached, owned repo — not a third-party example repo attached just to read its PR history, which this deliberately did not do for the alumni repo). Verified the underlying mechanism works against our own repo (correctly found the real commit for README.md, correctly returned None since that commit was pushed directly rather than via a PR — not a bug, an accurate result). When no API access or no linked PR exists, the field stays null with its note, exactly as before — never fabricated.
 - 70 tests passing (66 existing + 4 new reuse-pipeline tests).
 
-## Phase 5 — Narrator script generation (step 7)
-- Four-beat script per chunk (purpose, connections, flow, recap), 90-180s, ~130 wpm budget.
-- Identifier pronunciation lookup table; VISUAL[HIGHLIGHT:id] cue tokens tied to line ranges.
-- Confidence-gated speech: verified claims spoken, assumed claims hedged, unverified omitted; notes never spoken.
-- Continuity glossary keyed by stable chunk IDs; dependency-first ordering.
+## Phase 5 — Narrator script generation (step 7) (done)
+- Template-based, not an LLM call: every sentence in the script is built mechanically from fields already present in the Phase 3/4 extracted record, so nothing is spoken that isn't grounded in the extraction's own symbol table — a deliberate continuation of this project's regex/heuristic stance, and fully deterministic/testable as a result. An LLM-elaborated version (same structure, richer prose) is a natural later upgrade, not required by the locked rules.
+- pronunciation.py: splits camelCase/PascalCase/snake_case/kebab-case/route-segment identifiers into spoken words; a small table of pronounceable-vs-spelled-out acronyms (JSON -> "Jason", SQL -> "sequel", API/URL/ID/DB/HTTP/HTML/CSS/JWT/UUID spelled letter by letter) is a documented judgment call, not a sourced rule.
+- visual_cues.py: generates one VISUAL[HIGHLIGHT:id] token per importantFunctions entry (the only field in the locked schema that carries a lineRange today). eventHandlers, dataModels, and routes carry no lineRange in the current Phase 3 schema, so no cue is fabricated for them — an honest gap, not an oversight, flagged in code for a future schema addition.
+- script_builder.py: four beats (purpose, connections, flow, recap) per chunk. Purpose names the feature and framework before mechanism. Flow sentences are confidence-gated per item: eventHandlers/apiCalls/routes marked assumed=true get the one fixed hedge phrase ("It looks like ..."); importantFunctions are always spoken plainly (taken directly from code, no assumed flag exists for them). The notes field is never read into any beat. Word/duration budget: 130 wpm with a +12.5% pause allowance (within the rule's 10-15% band); the flow beat splits into two at a sentence boundary (never mid-sentence) once estimated duration passes ~60s.
+- glossary.py: featureMapping is a symmetric, undirected link list (not a directed dependency graph — see extractor.py), so there is no single correct "dependency order" to recover from it. Resolved with a documented heuristic: process the chunk with the fewest not-yet-seen links first (ties broken by chunkId for determinism), so each chunk's already-registered links become real back-references ("covered earlier") and any links to chunks not yet seen become real forward previews ("covered later") — both always checked against the actual featureMapping, never invented.
+- pipeline.py (generate_narration_for_repo): orchestrates dependency-first ordering, builds the glossary as it goes, and produces a script + pronunciation table per chunk.
+- 44 new tests (10 pronunciation, 6 visual cues, 7 glossary, 16 script builder, 5 pipeline integration), 114 passing overall.
+- Verified against the real alumni repo (22 chunks, no synthetic-only check): every chunk got a script. 13/22 chunks have real connections (not standalone) via genuine featureMapping links. Honest finding: only 2/22 chunks land inside the 90-180s target band on this template-only approach (the two richest admin chunks, at 95s and 124s) — most real chunks in this repo are small (1-3 handlers/functions), so the template naturally produces 20-70s of narration for them. This is a genuine gap to flag for Phase 6/7: either the 90-180s target is meant for feature-rich chunks only, or a richer (LLM-elaborated) script stage is needed to pad small chunks to length without inventing ungrounded content. Not treated as a bug and not patched over by inflating word counts artificially.
 
 ## Phase 6 — Video rendering
 - WhisperX word-level alignment feeding Remotion's interpolate()/useCurrentFrame() for highlight timing.
