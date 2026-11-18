@@ -21,6 +21,7 @@ from pathlib import Path
 
 from src.chunk.chunk_splitter import ChunkPlan
 from src.storage.mirror_store import EXTRACTOR_VERSION
+from .function_context import build_function_context
 from .common import (
     detect_language, read_lines, content_hash, now_iso,
     confidence_from_flags, confidence_level,
@@ -116,7 +117,6 @@ def build_frontend_chunk_record(
         {
             "name": fn.name,
             "signature": fn.signature,
-            "description": None,
             "lineRange": list(fn.line_range),
             "codeSnippet": fn.snippet.text,
             "truncated": fn.snippet.truncated,
@@ -125,6 +125,19 @@ def build_frontend_chunk_record(
         }
         for fn in functions if not fn.is_event_handler
     ]
+    # Second pass: the call graph needs every function's line range, so
+    # the context can only be built once the list above exists.
+    for entry in important_functions:
+        entry.update(build_function_context(
+            name=entry["name"],
+            signature=entry["signature"],
+            line_range=entry["lineRange"],
+            lines=lines,
+            all_functions=important_functions,
+            language="ts",
+            api_calls=api_calls,
+            side_effects=side_effects,
+        ))
 
     event_handlers = [
         {
@@ -245,7 +258,6 @@ def build_backend_go_chunk_record(
         {
             "name": fn.name,
             "signature": fn.signature,
-            "description": None,
             "lineRange": list(fn.line_range),
             "codeSnippet": fn.snippet.text,
             "truncated": fn.snippet.truncated,
@@ -254,6 +266,17 @@ def build_backend_go_chunk_record(
         }
         for fn in functions
     ]
+    for entry in important_functions:
+        entry.update(build_function_context(
+            name=entry["name"],
+            signature=entry["signature"],
+            line_range=entry["lineRange"],
+            lines=lines,
+            all_functions=important_functions,
+            language="go",
+            api_calls=None,
+            side_effects=side_effects,
+        ))
 
     data_models_out = [
         {

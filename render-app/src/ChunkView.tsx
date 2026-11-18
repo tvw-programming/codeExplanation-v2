@@ -41,12 +41,30 @@ export type HighlightCue = {
 
 export type NarrationSegment = {
   label: string;
+  kind?: string;
+  // Short line for the list. `spoken` is the fuller narration that is
+  // actually being read aloud; the active item shows it so the panel
+  // carries the detail while the rest stay scannable.
   text: string;
+  spoken?: string;
   fromFrame: number;
   toFrame: number;
   assumed: boolean;
   note: string | null;
 };
+
+/** Summaries are written as "name — what it does"; the name is pulled
+ *  out so it can be shown as a heading for the item. */
+function splitSummary(text: string): { title: string | null; detail: string } {
+  const separator = text.indexOf(" — ");
+  if (separator === -1) {
+    return { title: null, detail: text };
+  }
+  return {
+    title: text.slice(0, separator).trim(),
+    detail: text.slice(separator + 3).trim(),
+  };
+}
 
 export type Bundle = {
   chunkId: string;
@@ -234,10 +252,19 @@ export const ChunkView: React.FC<{ chunkDir: string }> = ({ chunkDir }) => {
   );
 
   // Keep the active narration item in view once the list runs past the
-  // bottom of the panel.
+  // bottom of the panel. The active item renders its fuller spoken
+  // text, so it is measured with that rather than its summary.
+  const bodyTextFor = (segment: NarrationSegment, active: boolean): string => {
+    const { detail } = splitSummary(segment.text);
+    return active ? segment.spoken || detail : detail;
+  };
+
   let narrationScroll = 0;
   if (segments.length > 0 && activeSegmentIndex >= 0) {
-    const heights = segments.map((s) => estimateSegmentHeight(s.text));
+    const heights = segments.map((s, i) =>
+      estimateSegmentHeight(bodyTextFor(s, i === activeSegmentIndex))
+      + (splitSummary(s.text).title ? NARRATION_LINE_HEIGHT : 0),
+    );
     const totalHeight = heights.reduce((a, b) => a + b, 0);
     const offsetOfActive = heights
       .slice(0, activeSegmentIndex)
@@ -430,6 +457,7 @@ export const ChunkView: React.FC<{ chunkDir: string }> = ({ chunkDir }) => {
             <Box sx={{ transform: `translateY(${-narrationScroll}px)` }}>
               {segments.map((segment, i) => {
                 const isActive = i === activeSegmentIndex;
+                const { title } = splitSummary(segment.text);
                 return (
                   <Box
                     key={segment.label}
@@ -461,18 +489,34 @@ export const ChunkView: React.FC<{ chunkDir: string }> = ({ chunkDir }) => {
                     >
                       {segment.label}
                     </Box>
-                    <Typography
-                      component="div"
-                      sx={{
-                        fontFamily: "Helvetica, Arial, sans-serif",
-                        fontSize: `${NARRATION_FONT_SIZE}px`,
-                        lineHeight: `${NARRATION_LINE_HEIGHT}px`,
-                        color: isActive ? "#ffffff" : DIM_TEXT,
-                        fontWeight: isActive ? 600 : 400,
-                      }}
-                    >
-                      {segment.text}
-                    </Typography>
+                    <Box sx={{ minWidth: 0 }}>
+                      {title ? (
+                        <Typography
+                          component="div"
+                          sx={{
+                            fontFamily: "Menlo, monospace",
+                            fontSize: `${NARRATION_FONT_SIZE}px`,
+                            lineHeight: `${NARRATION_LINE_HEIGHT}px`,
+                            fontWeight: 700,
+                            color: isActive ? ACCENT : DIM_TEXT,
+                          }}
+                        >
+                          {title}
+                        </Typography>
+                      ) : null}
+                      <Typography
+                        component="div"
+                        sx={{
+                          fontFamily: "Helvetica, Arial, sans-serif",
+                          fontSize: `${NARRATION_FONT_SIZE}px`,
+                          lineHeight: `${NARRATION_LINE_HEIGHT}px`,
+                          color: isActive ? "#ffffff" : DIM_TEXT,
+                          fontWeight: isActive ? 500 : 400,
+                        }}
+                      >
+                        {bodyTextFor(segment, isActive)}
+                      </Typography>
+                    </Box>
                   </Box>
                 );
               })}

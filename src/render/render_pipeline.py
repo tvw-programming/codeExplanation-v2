@@ -1,60 +1,128 @@
-"""Phase 6 — orchestrates one chunk's narration record + NarrationScript
-into a render bundle: audio, word-aligned captions, and a frame-based
+"""Phase 6 — orchestrates one chunk's narration beats into a render
+bundle: audio, per-beat narration segments, and a frame-based
 highlight config, ready for the Remotion project (render-app/) to
 render.
 
-Alignment source is always recorded honestly: "whisper-cpp" when the
-real tools/transcribe.mjs run succeeded, or "estimated" when it could
-not run (see estimated_alignment.py for why) — and every cue built
-from an estimated alignment is forced to assumed=True, never presented
-as verified timing.
+Each beat is synthesised on its own and padded with the pause it asks
+for, then the parts are joined into one narration track (see
+audio_assembly.py). That is what makes the pauses real — the video is
+one continuous soundtrack per chunk, so "give the viewer two seconds to
+read this function" can only mean two seconds of actual samples.
+
+It also makes the timing exact. Every beat's start and end are
+measured from the rendered audio, so the highlight for a function is
+up for precisely as long as that function is being talked about, and
+the narration list highlights precisely the line being spoken. The
+earlier approach could not do this: it synthesised the whole chunk in
+one pass and then had to guess where each sentence fell, either by
+spreading words evenly across the total duration or by matching word
+indices against a transcript. alignmentSource records which of these
+produced the timing, and is "measured-beats" on this path.
 """
 
 from __future__ import annotations
 
 import json
-import subprocess
 from pathlib import Path
 
 from src.narrate.script_builder import NarrationScript
-from .script_text import concat_beats, strip_visual_tokens
-from .tts import synthesize, TTSError
-from .timing import TranscriptWord, TimedCue, align_cues_to_words
-from .estimated_alignment import build_estimated_words
+from .audio_assembly import (
+    AudioAssemblyError,
+    concat_wavs,
+    pad_with_silence,
+    probe_duration_ms,
+)
 from .highlight_config import build_highlight_config
-from .narration_segments import build_narration_segments
+from .narration_segments import segment_label
+from .timing import TimedCue, ms_to_frame
+from .tts import TTSError, synthesize
 
 RENDER_APP_DIR = Path(__file__).resolve().parents[2] / "render-app"
-TRANSCRIBE_SCRIPT = RENDER_APP_DIR / "scripts" / "transcribe.mjs"
+
+ALIGNMENT_MEASURED = "measured-beats"
 
 
-def _probe_duration_ms(wav_path: Path) -> int:
-    result = subprocess.run(
-        ["ffprobe", "-v", "error", "-show_entries", "format=duration",
-         "-of", "default=noprint_wrappers=1:nokey=1", str(wav_path)],
-        capture_output=True, text=True, timeout=30, check=False,
-    )
-    try:
-        return round(float(result.stdout.strip()) * 1000)
-    except (ValueError, AttributeError):
-        return 0
+def _synthesize_beats(script: NarrationScript, output_dir: Path) -> tuple[list[dict], Path]:
+    """Renders every beat to audio, pads each with its pause, joins them,
+    and reports where each one landed in the finished track."""
+    parts_dir = output_dir / "beats"
+    parts_dir.mkdir(parents=True, exist_ok=True)
+
+    joined_parts: list[Path] = []
+    placements: list[dict] = []
+    cursor_ms = 0
+
+    for index, beat in enumerate(script.beats):
+        raw = parts_dir / f"{index:03d}.wav"
+        result = synthesize(beat.spoken, raw)
+        speech_ms = probe_duration_ms(raw)
+
+        padded = pad_with_silence(raw, parts_dir / f"{index:03d}-padded.wav",
+                                  beat.pause_after_ms)
+        total_ms = probe_duration_ms(padded) if padded != raw else speech_ms
+
+        placements.append({
+            "beat": beat,
+            "startMs": cursor_ms,
+            "speechEndMs": cursor_ms + speech_ms,
+            "endMs": cursor_ms + total_ms,
+            "engine": result.engine,
+        })
+        joined_parts.append(padded)
+        cursor_ms += total_ms
+
+    narration_path = concat_wavs(joined_parts, output_dir / "narration.wav")
+    return placements, narration_path
 
 
-def _try_real_transcription(wav_path: Path, out_json: Path) -> list[TranscriptWord] | None:
-    if not TRANSCRIBE_SCRIPT.is_file():
-        return None
-    result = subprocess.run(
-        ["node", str(TRANSCRIBE_SCRIPT), str(wav_path), str(out_json)],
-        capture_output=True, text=True, timeout=600, check=False, cwd=str(RENDER_APP_DIR),
-    )
-    if result.returncode != 0 or not out_json.is_file():
-        return None
-    try:
-        data = json.loads(out_json.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
-        return None
-    return [TranscriptWord(word=w["word"], start_ms=w["startMs"], end_ms=w["endMs"])
-            for w in data.get("words", [])]
+def _cues_from_placements(script: NarrationScript, placements: list[dict]) -> list[TimedCue]:
+    """A cue is anchored to the beat that talks about it, so its window
+    is measured rather than inferred."""
+    cues_by_id = {cue.id: cue for cue in script.visual_cues}
+    timed: list[TimedCue] = []
+    for placement in placements:
+        beat = placement["beat"]
+        if not beat.cue_id:
+            continue
+        cue = cues_by_id.get(beat.cue_id)
+        if cue is None:
+            continue
+        timed.append(TimedCue(
+            id=cue.id,
+            token=cue.token,
+            line_range=cue.line_range,
+            label=cue.label,
+            start_ms=placement["startMs"],
+            end_ms=placement["endMs"],
+            # The window is the measured span of the audio that
+            # describes these lines — nothing is being guessed at.
+            assumed=False,
+        ))
+    return timed
+
+
+def _segments_from_placements(placements: list[dict], fps: int) -> list[dict]:
+    segments: list[dict] = []
+    for index, placement in enumerate(placements):
+        beat = placement["beat"]
+        segments.append({
+            "label": segment_label(index),
+            "kind": beat.kind,
+            # What the panel shows; the spoken text is longer.
+            "text": beat.summary,
+            "spoken": beat.spoken,
+            "fromFrame": ms_to_frame(placement["startMs"], fps),
+            "toFrame": ms_to_frame(placement["endMs"], fps),
+            "assumed": False,
+            "note": None,
+        })
+    # Butt consecutive windows together so exactly one segment is active
+    # at any frame, with no flicker between them.
+    for current, nxt in zip(segments, segments[1:]):
+        current["toFrame"] = nxt["fromFrame"]
+    if segments:
+        segments[0]["fromFrame"] = 0
+    return segments
 
 
 def build_render_bundle(
@@ -64,40 +132,31 @@ def build_render_bundle(
     record: dict | None = None,
 ) -> dict:
     output_dir = Path(output_dir)
-    record = record or {}
     output_dir.mkdir(parents=True, exist_ok=True)
+    record = record or {}
 
-    full_text = concat_beats(script.purpose, script.connections, script.flow, script.recap)
-    clean_text, cue_word_index = strip_visual_tokens(full_text)
+    if not script.beats:
+        return {"chunkId": script.chunk_id, "error": "Narration script has no beats."}
 
-    wav_path = output_dir / "narration.wav"
     try:
-        tts_result = synthesize(clean_text, wav_path)
+        placements, wav_path = _synthesize_beats(script, output_dir)
     except TTSError as exc:
         return {"chunkId": script.chunk_id, "error": f"TTS failed: {exc}"}
+    except AudioAssemblyError as exc:
+        return {"chunkId": script.chunk_id, "error": f"Audio assembly failed: {exc}"}
 
-    duration_ms = _probe_duration_ms(wav_path)
+    duration_ms = probe_duration_ms(wav_path)
+    if duration_ms <= 0:
+        # Fall back to the sum of the measured parts rather than
+        # reporting a zero-length chunk.
+        duration_ms = placements[-1]["endMs"] if placements else 0
 
-    transcript_json = output_dir / "transcript.json"
-    words = _try_real_transcription(wav_path, transcript_json)
-    if words is not None:
-        alignment_source = "whisper-cpp"
-    else:
-        words = build_estimated_words(clean_text, duration_ms)
-        alignment_source = "estimated"
-
-    timed_cues: list[TimedCue] = align_cues_to_words(script.visual_cues, cue_word_index, words)
-    if alignment_source == "estimated":
-        # The underlying word timings themselves are not verified, so no
-        # cue built from them can be presented as verified either,
-        # regardless of whether its word index happened to be in range.
-        for cue in timed_cues:
-            cue.assumed = True
-            cue.note = (cue.note or "") + " Word timing is estimated (even spacing across " \
-                                            "measured audio duration), not from real transcription."
-
+    timed_cues = _cues_from_placements(script, placements)
     highlight_config = build_highlight_config(timed_cues, fps, duration_ms)
-    narration_segments = build_narration_segments(clean_text, words, fps, duration_ms)
+    narration_segments = _segments_from_placements(placements, fps)
+
+    engines = {p["engine"] for p in placements}
+    tts_engine = engines.pop() if len(engines) == 1 else "+".join(sorted(engines))
 
     bundle = {
         "chunkId": script.chunk_id,
@@ -106,10 +165,10 @@ def build_render_bundle(
         "filePath": record.get("filePath"),
         "featureName": record.get("featureName"),
         "durationMs": duration_ms,
-        "alignmentSource": alignment_source,
-        "ttsEngine": tts_result.engine,
+        "alignmentSource": ALIGNMENT_MEASURED,
+        "ttsEngine": tts_engine,
         "narrationAudio": str(wav_path),
-        "cleanText": clean_text,
+        "cleanText": " ".join(p["beat"].spoken for p in placements),
         "narrationSegments": narration_segments,
         "highlightConfig": highlight_config,
     }

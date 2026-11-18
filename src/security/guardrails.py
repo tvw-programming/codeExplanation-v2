@@ -25,6 +25,21 @@ _SECRET_PATTERNS = [
     re.compile(r"-----BEGIN (RSA |EC |)PRIVATE KEY-----"),
     re.compile(r"(?i)aws_secret_access_key\s*[=:]"),
     re.compile(r"ghp_[A-Za-z0-9]{36}"),  # GitHub personal access token shape
+
+    # The patterns above all require an assignment shape (key = "..."),
+    # which misses a credential written into prose — "use AKIA... for
+    # staging" in a comment. That matters more than it used to: doc
+    # comments are now read aloud in the narration, so a secret in one
+    # would be spoken as well as written. These shapes are anchored on
+    # distinctive issuer prefixes, so matching them bare carries little
+    # false-positive risk.
+    re.compile(r"\bAKIA[0-9A-Z]{16}\b"),                     # AWS access key id
+    re.compile(r"\bgh[osur]_[A-Za-z0-9]{36}\b"),             # other GitHub tokens
+    re.compile(r"\bgithub_pat_[A-Za-z0-9_]{22,}\b"),         # GitHub fine-grained PAT
+    re.compile(r"\bxox[baprs]-[A-Za-z0-9-]{10,}\b"),         # Slack token
+    re.compile(r"\bAIza[0-9A-Za-z_\-]{35}\b"),               # Google API key
+    re.compile(r"\bsk_live_[0-9a-zA-Z]{16,}\b"),             # Stripe live secret key
+    re.compile(r"\beyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\b"),  # JWT
 ]
 
 

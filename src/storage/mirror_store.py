@@ -29,7 +29,10 @@ from src.extract.common import content_hash
 #   1 - original: contentHash-only reuse.
 #   2 - eventHandlers carry a lineRange, so the narration can highlight
 #       the handler line it is talking about.
-EXTRACTOR_VERSION = 2
+#   3 - importantFunctions carry doc comments, call graph and body
+#       facts, so the narration can describe a function instead of
+#       only naming it.
+EXTRACTOR_VERSION = 3
 
 
 def output_path_for(output_root: Path, file_path: str) -> Path:

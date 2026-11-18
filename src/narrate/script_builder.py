@@ -22,6 +22,12 @@ from dataclasses import dataclass, field
 
 from .visual_cues import VisualCue, generate_visual_cues
 from .glossary import GlossaryEntry
+from .function_narration import (
+    MIN_PAUSE_MS,
+    build_function_narration,
+    build_function_summary,
+    pause_after_ms,
+)
 
 WORDS_PER_MINUTE = 130
 PAUSE_FACTOR = 1.125  # +12.5%, within the rule's 10-15% pause allowance
@@ -168,6 +174,21 @@ def build_recap_beat(record: dict) -> str:
 
 
 @dataclass
+class NarrationBeat:
+    """One unit of narration: what is spoken, the shorter line shown
+    beside the code while it plays, which highlight is up during it,
+    and how long to stay silent afterwards so the viewer can read.
+
+    Splitting spoken from summary is deliberate — the panel has to stay
+    scannable while the audio can afford to be thorough."""
+    kind: str                       # "purpose" | "connections" | "item" | "recap"
+    summary: str
+    spoken: str
+    cue_id: str | None = None
+    pause_after_ms: int = 0
+
+
+@dataclass
 class NarrationScript:
     chunk_id: str
     purpose: str
@@ -177,6 +198,103 @@ class NarrationScript:
     visual_cues: list[VisualCue] = field(default_factory=list)
     estimated_seconds: float = 0.0
     within_target_range: bool = False
+    beats: list[NarrationBeat] = field(default_factory=list)
+
+
+def build_item_beats(record: dict, cues: list[VisualCue]) -> list[NarrationBeat]:
+    """One beat per narrated item, in the same order the flow sentences
+    use, each tied to the highlight for the lines it describes."""
+    cues_by_field: dict[str, dict[str, VisualCue]] = {}
+    for cue in cues:
+        cues_by_field.setdefault(cue.source_field, {})[cue.label] = cue
+
+    def cue_id_for(source_field: str, label: str) -> str | None:
+        cue = cues_by_field.get(source_field, {}).get(label)
+        return cue.id if cue else None
+
+    beats: list[NarrationBeat] = []
+
+    for fn in record.get("importantFunctions") or []:
+        name = fn.get("name", "a function")
+        beats.append(NarrationBeat(
+            kind="item",
+            summary=build_function_summary(fn),
+            spoken=build_function_narration(fn),
+            cue_id=cue_id_for("importantFunctions", name),
+            pause_after_ms=pause_after_ms(fn.get("lineCount") or 0),
+        ))
+
+    for route in record.get("routes") or []:
+        method = route.get("method", "")
+        path = route.get("path", "")
+        sentence = f"A {method} request to {path} is handled here."
+        label = route.get("path") or route.get("name") or ""
+        beats.append(NarrationBeat(
+            kind="item",
+            summary=f"{method} {path}".strip(),
+            spoken=_hedge(sentence, bool(route.get("assumed"))),
+            cue_id=cue_id_for("routes", label),
+            pause_after_ms=MIN_PAUSE_MS,
+        ))
+
+    for handler in record.get("eventHandlers") or []:
+        name = handler.get("name", "handler")
+        event_type = handler.get("eventType", "user")
+        sentence = f"The {name} handler responds to a {event_type} event."
+        note = handler.get("notes")
+        spoken = _hedge(sentence, bool(handler.get("assumed")))
+        if note and handler.get("assumed"):
+            # An inline JSX handler has no named function behind it; say
+            # so rather than implying the extractor knows what it does.
+            spoken += " It is bound inline in the markup, so what it does has to be read off the line itself."
+        beats.append(NarrationBeat(
+            kind="item",
+            summary=f"{name} — responds to a {event_type} event",
+            spoken=spoken,
+            cue_id=cue_id_for("eventHandlers", name),
+            pause_after_ms=MIN_PAUSE_MS,
+        ))
+
+    for call in record.get("apiCalls") or []:
+        sentence = f"A {call.get('method', '')} call goes out to {call.get('url', '')}."
+        beats.append(NarrationBeat(
+            kind="item",
+            summary=f"{call.get('method', '')} {call.get('url', '')}".strip(),
+            spoken=_hedge(sentence, bool(call.get("assumed"))),
+            cue_id=None,
+            pause_after_ms=MIN_PAUSE_MS,
+        ))
+
+    return beats
+
+
+def build_beats(
+    record: dict,
+    cues: list[VisualCue],
+    purpose: str,
+    connections: str,
+    recap: str,
+) -> list[NarrationBeat]:
+    opening_pause = 400
+    beats = [
+        NarrationBeat(kind="purpose", summary=purpose, spoken=purpose,
+                      pause_after_ms=opening_pause),
+        NarrationBeat(kind="connections", summary=connections, spoken=connections,
+                      pause_after_ms=opening_pause),
+    ]
+    items = build_item_beats(record, cues)
+    if not items:
+        beats.append(NarrationBeat(
+            kind="item",
+            summary="No further steps to narrate.",
+            spoken="This part of the code has no further steps to narrate beyond what "
+                   "purpose already covered.",
+            pause_after_ms=opening_pause,
+        ))
+    else:
+        beats.extend(items)
+    beats.append(NarrationBeat(kind="recap", summary=recap, spoken=recap))
+    return beats
 
 
 def build_narration_script(
@@ -191,8 +309,13 @@ def build_narration_script(
     flow = build_flow_beats(flow_sentences)
     recap = build_recap_beat(record)
 
-    total_text = " ".join([purpose, connections, *flow, recap])
-    estimated = estimate_seconds(total_text)
+    beats = build_beats(record, cues, purpose, connections, recap)
+
+    # Estimated length now follows what is actually spoken (the beats),
+    # plus the pauses between them, rather than the older flow text.
+    spoken_text = " ".join(beat.spoken for beat in beats)
+    pause_seconds = sum(beat.pause_after_ms for beat in beats) / 1000
+    estimated = estimate_seconds(spoken_text) + pause_seconds
 
     return NarrationScript(
         chunk_id=record.get("chunkId", ""),
@@ -203,4 +326,5 @@ def build_narration_script(
         visual_cues=cues,
         estimated_seconds=estimated,
         within_target_range=TARGET_MIN_SECONDS <= estimated <= TARGET_MAX_SECONDS,
+        beats=beats,
     )
