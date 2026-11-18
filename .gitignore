@@ -15,3 +15,8 @@ node_modules/
 render-app/out/
 render-app/public/sample-chunk/
 render-app/.whisper-cpp/
+
+# run-local.sh output — resolved source clone, pilot report, and the
+# rendered video it produces. Generated, not source.
+.local-run/
+/output.mp4
