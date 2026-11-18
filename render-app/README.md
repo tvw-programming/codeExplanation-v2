@@ -37,6 +37,30 @@ npx remotion render
 npx remotion upgrade
 ```
 
+## Documentation viewer (MUI)
+
+This project also ships a documentation browser for the
+`/documentation` folder at the repo root — a tree sidebar (grouped by
+Start Here / Pipeline Phases / Reference / Roadmap) on the left,
+rendered markdown on the right. It's a small React + MUI app in
+`docs-viewer-src/`, built with Vite into `public/docs-viewer/`, and
+served as static files by Remotion's own dev server alongside the
+video-rendering UI — so no second server or toolchain is needed.
+
+```console
+npm run build:docs   # builds docs-viewer-src/ -> public/docs-viewer/
+npm run dev           # then open http://localhost:3000/docs-viewer/
+```
+
+Re-run `npm run build:docs` any time `../documentation/*.md` changes
+(the build copies nothing automatically — see `docs-viewer-src/vite.config.ts`
+and `public/docs/` for where the markdown source files are read from).
+
+Every component in render-app — this docs viewer and the
+`CodeExplainerChunk` Remotion composition in `src/` — shares one MUI
+theme (`shared/theme.ts`) and the same `@mui/material`/`@mui/x-tree-view`
+dependency versions declared in this project's own `package.json`.
+
 ## Docs
 
 Get started with Remotion by reading the [fundamentals page](https://www.remotion.dev/docs/the-fundamentals).

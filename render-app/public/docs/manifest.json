@@ -1,0 +1,36 @@
+[
+  {
+    "group": "Start Here",
+    "items": [
+      { "file": "README.md", "title": "Documentation Index" },
+      { "file": "01-overview-and-dynamic-design.md", "title": "Overview & Dynamic Design" },
+      { "file": "02-configuration.md", "title": "Configuration" }
+    ]
+  },
+  {
+    "group": "Pipeline Phases",
+    "items": [
+      { "file": "03-phase0-scaffolding-and-security.md", "title": "Phase 0 — Scaffolding & Security" },
+      { "file": "04-phase1-project-type-detection.md", "title": "Phase 1 — Project Type Detection" },
+      { "file": "05-phase2-feature-wise-chunking.md", "title": "Phase 2 — Feature-Wise Chunking" },
+      { "file": "06-phase3-extraction.md", "title": "Phase 3 — Extraction" },
+      { "file": "07-phase4-storage-and-reuse.md", "title": "Phase 4 — Storage & Reuse" },
+      { "file": "08-phase5-narration.md", "title": "Phase 5 — Narration" },
+      { "file": "09-phase6-rendering.md", "title": "Phase 6 — Rendering" },
+      { "file": "10-phase7-pilot-and-validation.md", "title": "Phase 7 — Pilot & Validation" }
+    ]
+  },
+  {
+    "group": "Reference",
+    "items": [
+      { "file": "11-json-schema-reference.md", "title": "JSON Schema Reference" },
+      { "file": "12-function-rationale-index.md", "title": "Function Rationale Index" }
+    ]
+  },
+  {
+    "group": "Roadmap",
+    "items": [
+      { "file": "13-known-gaps-and-roadmap.md", "title": "Known Gaps & Roadmap" }
+    ]
+  }
+]
