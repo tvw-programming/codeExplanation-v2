@@ -23,21 +23,28 @@ See `docs/json-structure-rules.md` for the full field-level rules this pipeline 
 ./run-local.sh
 ```
 
-With no arguments, this does everything with the default configuration
-and no manual setup: sets up a Python venv and installs
-`requirements.txt`, creates `pipeline.config.yaml` from the example file
-if you don't have one yet, runs the full pipeline (detect → chunk →
-extract → narrate → render) against whatever repo that config points
-at, and renders the result straight to **`./output.mp4`** via Remotion
-— no interactive server left running.
+With no arguments, this does four things with the default configuration
+and no manual setup:
+
+1. **Backend** — sets up a Python venv, installs `requirements.txt`,
+   creates `pipeline.config.yaml` from the example file if you don't
+   have one yet, and runs the full pipeline (detect → chunk → extract
+   → narrate → render) against whatever repo that config points at.
+2. **Frontend install** — runs `npm install` for `render-app`, if its
+   `node_modules` isn't already there.
+3. **Docs server** — builds the MUI documentation viewer and serves it
+   (left running) at **`http://localhost:4173/docs-viewer/`**
+   (port via `$DOCS_PORT`).
+4. **Video** — renders the result straight to a fixed path,
+   **`./output/video.mp4`**, via Remotion.
 
 Other modes:
 
 ```console
-./run-local.sh --no-render       # backend only, skip TTS/video (no output.mp4)
-./run-local.sh --backend-only    # run the pipeline and exit
-./run-local.sh --frontend-only   # render whatever is already staged
-./run-local.sh --studio          # open Remotion Studio + the docs viewer instead
+./run-local.sh --no-render           # steps 1-3 only, skip TTS/video (no output/video.mp4)
+./run-local.sh --backend-only        # step 1 only
+./run-local.sh --skip-docs-server    # steps 1, 2, 4 — no web server started
+./run-local.sh --stop-docs-server    # stop a docs server left running from a previous run
 ./run-local.sh --help
 ```
 

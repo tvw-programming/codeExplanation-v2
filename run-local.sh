@@ -1,40 +1,35 @@
 #!/usr/bin/env bash
 # run-local.sh — run the whole codeExplanation-v2 project locally with
-# the default configuration, no arguments, no manual setup, and end
-# with a real output.mp4 at the project root.
+# one command and the default configuration. Does four things, in order:
 #
-# What it does, in order:
-#   1. Backend  — creates/reuses a Python venv, installs requirements.txt,
-#      copies pipeline.config.example.yaml -> pipeline.config.yaml if you
-#      don't have one yet (so it runs with sane defaults out of the box),
-#      then runs the full pipeline (detect -> chunk -> extract -> narrate
-#      -> render) against whatever repo pipeline.config.yaml points at,
-#      via the Phase 7 pilot runner (scripts/run_backend_pilot.py).
-#      One successfully-rendered chunk's audio/highlight-config/source
-#      file is staged into render-app/public/sample-chunk/ for the next
-#      step. Full report: .local-run/output/pilot_report.json.
-#   2. Frontend — installs render-app's npm dependencies if needed,
-#      builds the MUI documentation viewer (render-app/public/docs-viewer),
-#      then renders that staged chunk straight to ./output.mp4 at the
-#      project root via `npx remotion render` — no manual step, no
-#      interactive server left running.
+#   1. Run the Python backend pipeline (detect -> chunk -> extract ->
+#      narrate -> render) against whatever repo pipeline.config.yaml
+#      points at (creating it from pipeline.config.example.yaml first
+#      if you don't have one yet).
+#   2. Install render-app's node modules (npm install), if not already
+#      installed.
+#   3. Start a local web server and leave it running, so you can open
+#      the documentation (the MUI tree viewer over /documentation) in
+#      a browser at http://localhost:4173/docs-viewer/
+#   4. Render the pipeline's output to a real video file at a fixed
+#      path: ./output/video.mp4
 #
 # Usage:
-#   ./run-local.sh                 # default: produces ./output.mp4
-#   ./run-local.sh --no-render     # skip TTS/video in the backend step
-#                                   # (no output.mp4 can be produced this way)
-#   ./run-local.sh --backend-only  # run the backend pilot and exit
-#   ./run-local.sh --frontend-only # skip the backend step, just render
-#                                   # whatever is already staged
-#   ./run-local.sh --studio        # after the backend step, start the
-#                                   # interactive Remotion Studio dev
-#                                   # server instead of a one-shot render
+#   ./run-local.sh                  # all four steps
+#   ./run-local.sh --no-render      # steps 1-3 only; skips TTS/video,
+#                                     # so step 4 is skipped too
+#   ./run-local.sh --backend-only   # step 1 only
+#   ./run-local.sh --skip-docs-server   # steps 1, 2, 4 — no web server
+#   ./run-local.sh --stop-docs-server   # stop a server from a previous run
+#   ./run-local.sh --help
+#
+# Fixed locations:
+#   Video:          ./output/video.mp4
+#   Docs server:    http://localhost:4173/docs-viewer/  (port via $DOCS_PORT)
+#   Backend data:   ./.local-run/  (resolved source clone + pilot report)
 #
 # Prerequisites this script does NOT install for you: python3, node/npm,
-# espeak-ng (TTS) and ffmpeg/ffprobe (used by Remotion's own render and
-# by the backend's audio-duration measurement). Everything else (the
-# venv, pip packages, npm packages, the docs-viewer build) is handled
-# automatically.
+# and (for real rendered audio/video) espeak-ng and ffmpeg/ffprobe.
 
 set -euo pipefail
 
@@ -42,20 +37,47 @@ PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$PROJECT_ROOT"
 
 RUN_BACKEND=1
-RUN_FRONTEND=1
+RUN_NPM_INSTALL=1
+RUN_DOCS_SERVER=1
+RUN_VIDEO_RENDER=1
 RENDER_FLAG=""
 RENDER_ENABLED=1
-MODE="render"   # "render" (default, produces output.mp4) or "studio"
-OUTPUT_PATH="$PROJECT_ROOT/output.mp4"
+
+DOCS_PORT="${DOCS_PORT:-4173}"
+LOCAL_RUN_DIR="$PROJECT_ROOT/.local-run"
+DOCS_PID_FILE="$LOCAL_RUN_DIR/docs-server.pid"
+DOCS_LOG_FILE="$LOCAL_RUN_DIR/docs-server.log"
+OUTPUT_DIR="$PROJECT_ROOT/output"
+OUTPUT_VIDEO="$OUTPUT_DIR/video.mp4"
 
 for arg in "$@"; do
   case "$arg" in
-    --no-render) RENDER_FLAG="--no-render"; RENDER_ENABLED=0 ;;
-    --backend-only) RUN_FRONTEND=0 ;;
-    --frontend-only) RUN_BACKEND=0 ;;
-    --studio) MODE="studio" ;;
+    --no-render)
+      RENDER_FLAG="--no-render"
+      RENDER_ENABLED=0
+      RUN_VIDEO_RENDER=0
+      ;;
+    --backend-only)
+      RUN_NPM_INSTALL=0
+      RUN_DOCS_SERVER=0
+      RUN_VIDEO_RENDER=0
+      ;;
+    --skip-docs-server) RUN_DOCS_SERVER=0 ;;
+    --stop-docs-server)
+      stop_docs_server() {
+        if [ -f "$DOCS_PID_FILE" ] && kill -0 "$(cat "$DOCS_PID_FILE")" 2>/dev/null; then
+          kill "$(cat "$DOCS_PID_FILE")"
+          rm -f "$DOCS_PID_FILE"
+          echo "Stopped the documentation server."
+        else
+          echo "No documentation server is running (per $DOCS_PID_FILE)."
+        fi
+      }
+      stop_docs_server
+      exit 0
+      ;;
     -h|--help)
-      sed -n '2,29p' "$0"
+      sed -n '2,27p' "$0"
       exit 0
       ;;
     *)
@@ -68,10 +90,10 @@ done
 log() { printf '\n\033[1;36m==> %s\033[0m\n' "$1"; }
 
 # ---------------------------------------------------------------------
-# Backend: Python pipeline, default configuration
+# 1) Python backend pipeline, default configuration
 # ---------------------------------------------------------------------
 run_backend() {
-  log "Backend: setting up Python environment"
+  log "[1/4] Backend: setting up Python environment"
 
   if ! command -v python3 >/dev/null 2>&1; then
     echo "python3 is required but was not found on PATH." >&2
@@ -87,25 +109,24 @@ run_backend() {
   pip install --quiet -r requirements.txt
 
   if [ ! -f pipeline.config.yaml ]; then
-    log "Backend: no pipeline.config.yaml found — using the default configuration"
+    echo "No pipeline.config.yaml found — using the default configuration."
     cp pipeline.config.example.yaml pipeline.config.yaml
     echo "Created pipeline.config.yaml from pipeline.config.example.yaml."
     echo "Edit it any time to point the pipeline at a different repo — see"
     echo "documentation/02-configuration.md for every field."
   fi
 
-  log "Backend: running the pipeline (detect -> chunk -> extract -> narrate -> render)"
+  log "[1/4] Backend: running the pipeline (detect -> chunk -> extract -> narrate -> render)"
   python scripts/run_backend_pilot.py $RENDER_FLAG
 
   deactivate
 }
 
 # ---------------------------------------------------------------------
-# Frontend: render-app (Remotion — a one-shot video render by default,
-# or the interactive Studio dev server with --studio)
+# 2) Install render-app's node modules
 # ---------------------------------------------------------------------
-run_frontend() {
-  log "Frontend: setting up render-app"
+run_npm_install() {
+  log "[2/4] Frontend: installing render-app's node modules"
 
   if ! command -v npm >/dev/null 2>&1; then
     echo "npm (Node.js) is required but was not found on PATH." >&2
@@ -113,41 +134,67 @@ run_frontend() {
   fi
 
   cd "$PROJECT_ROOT/render-app"
-
   if [ ! -d node_modules ]; then
     npm install
+  else
+    echo "node_modules already installed — skipping (delete render-app/node_modules to force a reinstall)."
   fi
+  cd "$PROJECT_ROOT"
+}
 
-  log "Frontend: building the documentation viewer"
+# ---------------------------------------------------------------------
+# 3) Start a local server so the documentation is viewable in a browser
+# ---------------------------------------------------------------------
+run_docs_server() {
+  log "[3/4] Docs: building and serving the documentation viewer"
+
+  cd "$PROJECT_ROOT/render-app"
   npm run build:docs
+  cd "$PROJECT_ROOT"
 
-  if [ "$MODE" = "studio" ]; then
-    log "Frontend: starting Remotion Studio (serves the video compositions and the docs viewer)"
-    echo "Once it starts, open:"
-    echo "  - Remotion Studio:    http://localhost:3000"
-    echo "  - Documentation (MUI tree viewer): http://localhost:3000/docs-viewer/"
-    echo "Press Ctrl+C to stop."
-    npm run dev
-    return
+  mkdir -p "$LOCAL_RUN_DIR"
+
+  # Stop a server left over from a previous run before starting a new one.
+  if [ -f "$DOCS_PID_FILE" ] && kill -0 "$(cat "$DOCS_PID_FILE")" 2>/dev/null; then
+    kill "$(cat "$DOCS_PID_FILE")"
+    sleep 0.3
   fi
 
-  if [ "$RENDER_ENABLED" = "0" ]; then
-    log "Frontend: skipped video render (ran with --no-render, nothing was staged to render)"
-    return
-  fi
+  ( cd render-app/public && exec python3 -m http.server "$DOCS_PORT" ) \
+    > "$DOCS_LOG_FILE" 2>&1 &
+  echo $! > "$DOCS_PID_FILE"
+  sleep 0.5
 
-  if [ ! -f public/sample-chunk/bundle.json ]; then
-    echo "No rendered chunk is staged at public/sample-chunk/ — run the backend" >&2
-    echo "step first (without --no-render) so there is something to render." >&2
+  if kill -0 "$(cat "$DOCS_PID_FILE")" 2>/dev/null; then
+    echo "Documentation server running at: http://localhost:$DOCS_PORT/docs-viewer/"
+    echo "(left running in the background — stop it with: ./run-local.sh --stop-docs-server)"
+  else
+    echo "Documentation server failed to start — see $DOCS_LOG_FILE" >&2
+  fi
+}
+
+# ---------------------------------------------------------------------
+# 4) Render the pipeline's output to a real video file at a fixed path
+# ---------------------------------------------------------------------
+run_video_render() {
+  log "[4/4] Video: rendering output/video.mp4"
+
+  if [ ! -f render-app/public/sample-chunk/bundle.json ]; then
+    echo "No rendered chunk is staged at render-app/public/sample-chunk/ —" >&2
+    echo "run the backend step first without --no-render so there is" >&2
+    echo "something to render." >&2
     exit 1
   fi
 
-  log "Frontend: rendering output.mp4"
+  mkdir -p "$OUTPUT_DIR"
+
+  cd "$PROJECT_ROOT/render-app"
+
   # Remotion's own headless-Chromium download is blocked by this
-  # environment's network allowlist (see documentation/09-phase6-rendering.md
-  # and documentation/13-known-gaps-and-roadmap.md) — point it at the
-  # Playwright Chromium already installed here instead, the same
-  # workaround used when this composition was first proven end to end.
+  # environment's network allowlist (see
+  # documentation/09-phase6-rendering.md and
+  # documentation/13-known-gaps-and-roadmap.md) — point it at the
+  # Playwright Chromium already installed here instead.
   BROWSER_EXECUTABLE=""
   for candidate in /opt/pw-browsers/chromium-*/chrome-linux64/chrome; do
     if [ -x "$candidate" ]; then
@@ -156,18 +203,22 @@ run_frontend() {
     fi
   done
 
-  RENDER_ARGS=(CodeExplainerChunk "$OUTPUT_PATH")
+  RENDER_ARGS=(CodeExplainerChunk "$OUTPUT_VIDEO")
   if [ -n "$BROWSER_EXECUTABLE" ]; then
     RENDER_ARGS+=(--browser-executable="$BROWSER_EXECUTABLE")
   fi
 
   npx remotion render "${RENDER_ARGS[@]}"
+  cd "$PROJECT_ROOT"
 
-  log "Frontend: done"
-  echo "Video written to: $OUTPUT_PATH"
+  echo "Video written to: $OUTPUT_VIDEO"
 }
 
 [ "$RUN_BACKEND" = "1" ] && run_backend
-[ "$RUN_FRONTEND" = "1" ] && run_frontend
+[ "$RUN_NPM_INSTALL" = "1" ] && run_npm_install
+[ "$RUN_DOCS_SERVER" = "1" ] && run_docs_server
+[ "$RUN_VIDEO_RENDER" = "1" ] && run_video_render
 
 log "Done."
+[ "$RUN_DOCS_SERVER" = "1" ] && echo "Documentation: http://localhost:$DOCS_PORT/docs-viewer/"
+[ "$RUN_VIDEO_RENDER" = "1" ] && echo "Video:         $OUTPUT_VIDEO"
