@@ -120,6 +120,7 @@ def build_frontend_chunk_record(
             "codeSnippet": fn.snippet.text,
             "truncated": fn.snippet.truncated,
             "continuationNote": fn.snippet.continuation_note,
+            "secretsRedacted": fn.snippet.secrets_redacted,
         }
         for fn in functions if not fn.is_event_handler
     ]
@@ -161,6 +162,7 @@ def build_frontend_chunk_record(
             "codeSnippet": m.snippet.text,
             "truncated": m.snippet.truncated,
             "continuationNote": m.snippet.continuation_note,
+            "secretsRedacted": m.snippet.secrets_redacted,
         }
         for m in models
     ]
@@ -174,6 +176,10 @@ def build_frontend_chunk_record(
         notes.append(f"No {component_name}Props interface found; inputs left empty rather than guessed.")
     if any(fn["truncated"] for fn in important_functions):
         notes.append("One or more function snippets were trimmed to 120 lines; see continuationNote per entry.")
+    if any(fn["secretsRedacted"] for fn in important_functions) or any(m["secretsRedacted"] for m in data_models_out):
+        notes.append("A possible secret was detected and redacted from one or more code snippets in this "
+                      "chunk before it was written; verify the source file for exposed credentials.")
+        confidence = min(confidence, 0.5)
 
     return {
         "chunkId": chunk.chunk_id,
@@ -232,6 +238,7 @@ def build_backend_go_chunk_record(
             "codeSnippet": fn.snippet.text,
             "truncated": fn.snippet.truncated,
             "continuationNote": fn.snippet.continuation_note,
+            "secretsRedacted": fn.snippet.secrets_redacted,
         }
         for fn in functions
     ]
@@ -244,6 +251,7 @@ def build_backend_go_chunk_record(
             "codeSnippet": s.snippet.text,
             "truncated": s.snippet.truncated,
             "continuationNote": s.snippet.continuation_note,
+            "secretsRedacted": s.snippet.secrets_redacted,
         }
         for s in structs
     ]
@@ -273,6 +281,10 @@ def build_backend_go_chunk_record(
         notes.append("One or more function snippets were trimmed to 120 lines; see continuationNote per entry.")
     if routes_out:
         notes.append("Route protection is inferred from local .Use() calls only; verify before relying on it.")
+    if any(fn["secretsRedacted"] for fn in important_functions) or any(s["secretsRedacted"] for s in data_models_out):
+        notes.append("A possible secret was detected and redacted from one or more code snippets in this "
+                      "chunk before it was written; verify the source file for exposed credentials.")
+        confidence = min(confidence, 0.5)
 
     return {
         "chunkId": chunk.chunk_id,

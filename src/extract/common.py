@@ -17,6 +17,8 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 
+from src.security.guardrails import redact_secrets
+
 MAX_SNIPPET_LINES = 120
 
 LANGUAGE_BY_EXTENSION = {
@@ -65,6 +67,7 @@ class CodeSnippet:
     text: str
     truncated: bool
     continuation_note: str | None = None
+    secrets_redacted: bool = False
 
 
 def trim_snippet(lines: list[str], start_line: int, end_line: int,
@@ -73,10 +76,18 @@ def trim_snippet(lines: list[str], start_line: int, end_line: int,
     `max_lines`. Per the locked rule, a function/model longer than this
     is NOT cut off silently — it continues in a follow-on snapshot, so
     the caller gets a continuation note rather than losing the tail.
+
+    Every snippet is also run through guardrails.redact_secrets() here
+    — the single choke point every function/struct/interface snippet
+    passes through on its way into a chunk record — rather than relying
+    on callers to remember to scan. A code review found this was
+    previously never wired in anywhere, so a hardcoded secret in a
+    source file was copied verbatim into the output JSON.
     """
     span = lines[start_line - 1:end_line]
     if len(span) <= max_lines:
-        return CodeSnippet(text="\n".join(span), truncated=False)
+        text, redacted = redact_secrets("\n".join(span))
+        return CodeSnippet(text=text, truncated=False, secrets_redacted=redacted)
 
     first_part = span[:max_lines]
     remaining = len(span) - max_lines
@@ -85,7 +96,8 @@ def trim_snippet(lines: list[str], start_line: int, end_line: int,
         f"follow in this definition (source lines {start_line + max_lines}-{end_line}). "
         "Continue in a follow-on snapshot rather than treating this as the whole definition."
     )
-    return CodeSnippet(text="\n".join(first_part), truncated=True, continuation_note=note)
+    text, redacted = redact_secrets("\n".join(first_part))
+    return CodeSnippet(text=text, truncated=True, continuation_note=note, secrets_redacted=redacted)
 
 
 def confidence_from_flags(total_claims: int, assumed_claims: int, base: float = 0.95) -> float:

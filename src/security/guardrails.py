@@ -61,6 +61,33 @@ def secret_scan(content: str, context: str = "") -> None:
             )
 
 
+REDACTION_PLACEHOLDER = "[REDACTED: possible secret removed by guardrails.redact_secrets]"
+
+
+def redact_secrets(content: str) -> tuple[str, bool]:
+    """Non-raising counterpart to secret_scan(), for call sites (code
+    snippets going into a chunk record) where aborting the whole chunk
+    over one matched substring would be worse than redacting it and
+    flagging the chunk for review.
+
+    Returns (possibly-redacted content, whether anything was redacted).
+    Added after a code review found that secret_scan() existed and was
+    unit-tested but was never actually called anywhere in the real
+    extraction pipeline — a hardcoded secret in a source file would be
+    copied verbatim into the output JSON. This function is now called
+    from src/extract/common.py's trim_snippet() for every code snippet
+    before it reaches a chunk record.
+    """
+    redacted_any = False
+    result = content
+    for pattern in _SECRET_PATTERNS:
+        new_result, count = pattern.subn(REDACTION_PLACEHOLDER, result)
+        if count:
+            redacted_any = True
+            result = new_result
+    return result, redacted_any
+
+
 def assert_safe_to_read(path: str | Path, patterns: list[str] | None = None) -> None:
     """Raise if `path` must never be read by the extractor."""
     if is_blocked_path(path, patterns):

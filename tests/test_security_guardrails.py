@@ -4,6 +4,8 @@ from src.security.guardrails import (
     is_blocked_path,
     filter_blocked_paths,
     secret_scan,
+    redact_secrets,
+    REDACTION_PLACEHOLDER,
     SecretFoundError,
     assert_safe_to_read,
 )
@@ -52,3 +54,26 @@ def test_assert_safe_to_read_blocks():
 
 def test_assert_safe_to_read_allows():
     assert_safe_to_read("src/app.py") is None
+
+
+def test_redact_secrets_replaces_match_and_reports_true():
+    text, redacted = redact_secrets('const apiKey = "sk-abcdefghijklmnopqrstuvwxyz123456";')
+    assert redacted is True
+    assert "sk-abcdefghijklmnopqrstuvwxyz123456" not in text
+    assert REDACTION_PLACEHOLDER in text
+
+
+def test_redact_secrets_leaves_clean_content_untouched_and_reports_false():
+    text, redacted = redact_secrets("function hello() { return 'world'; }")
+    assert redacted is False
+    assert text == "function hello() { return 'world'; }"
+
+
+def test_redact_secrets_handles_multiple_matches():
+    text, redacted = redact_secrets(
+        'api_key = "sk-abcdefghijklmnopqrstuvwxyz123456"\n'
+        "-----BEGIN RSA PRIVATE KEY-----\nMIIBOgIBAAJ..."
+    )
+    assert redacted is True
+    assert "sk-abcdefghijklmnopqrstuvwxyz123456" not in text
+    assert "BEGIN RSA PRIVATE KEY" not in text

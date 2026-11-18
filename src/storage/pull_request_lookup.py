@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import json
 import subprocess
+from urllib.parse import quote
 
 
 def _gh_api(path: str) -> list | dict | None:
@@ -39,7 +40,12 @@ def find_last_pull_request_url(owner: str, repo: str, file_path: str) -> str | N
     associated with the latest commit that touched `file_path`, or None
     if that can't be determined (no API access, no commits, no linked
     PR, or any error along the way)."""
-    commits = _gh_api(f"repos/{owner}/{repo}/commits?path={file_path}&per_page=1")
+    # file_path is URL-encoded before going into the query string — fixed
+    # after a code review found it was interpolated raw, so a path
+    # containing "&", "#", "%", or a space would silently produce a
+    # malformed or wrong API request.
+    encoded_path = quote(file_path, safe="/")
+    commits = _gh_api(f"repos/{owner}/{repo}/commits?path={encoded_path}&per_page=1")
     if not isinstance(commits, list) or not commits:
         return None
     sha = commits[0].get("sha")

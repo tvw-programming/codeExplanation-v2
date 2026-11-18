@@ -24,13 +24,21 @@ class ResolvedSource:
     local_root: Path     # where the code actually lives on disk
 
 
+def _host_is_github(netloc: str) -> bool:
+    """Exact-or-subdomain match, never a bare substring check — fixed
+    after a code review found "github.com" in parsed.netloc accepted
+    github.com.attacker.net as a GitHub URL."""
+    host = netloc.split("@")[-1].split(":")[0].lower()
+    return host == "github.com" or host.endswith(".github.com")
+
+
 def _looks_like_git_url(value: str) -> bool:
     if value.startswith("git@"):
         return True
     parsed = urlparse(value)
-    return parsed.scheme in ("http", "https") and parsed.netloc != "" and value.endswith((".git",)) or (
-        parsed.scheme in ("http", "https") and "github.com" in parsed.netloc
-    )
+    if parsed.scheme not in ("http", "https") or not parsed.netloc:
+        return False
+    return value.endswith(".git") or _host_is_github(parsed.netloc)
 
 
 def resolve_source(value: str, workdir: Path) -> ResolvedSource:
@@ -46,10 +54,33 @@ def resolve_source(value: str, workdir: Path) -> ResolvedSource:
 
     if _looks_like_git_url(value):
         workdir.mkdir(parents=True, exist_ok=True)
-        dest = workdir / _slug_from_url(value)
+        workdir_resolved = workdir.resolve()
+        slug = _slug_from_url(value)
+        dest = workdir / slug
+
+        # Fixed after a code review found a path-traversal bug: a crafted
+        # value like "https://github.com/someorg/.." produced slug ".."
+        # and resolved local_root to workdir's PARENT (an arbitrary,
+        # already-existing directory), silently skipping the clone and
+        # handing the rest of the pipeline the wrong directory to scan.
+        # Reject any slug that isn't a single, safe path segment, and
+        # double-check the resolved destination actually stays inside
+        # workdir before trusting it.
+        if not slug or slug in (".", "..") or "/" in slug or "\\" in slug:
+            raise SourceResolutionError(
+                f"Could not resolve source '{value}': the derived clone directory "
+                f"name '{slug}' is not a safe path segment."
+            )
+        dest_resolved = dest.resolve()
+        if dest_resolved == workdir_resolved or workdir_resolved not in dest_resolved.parents:
+            raise SourceResolutionError(
+                f"Could not resolve source '{value}': the clone destination "
+                f"'{dest_resolved}' would fall outside the clone workdir."
+            )
+
         if not dest.exists():
             subprocess.run(
-                ["git", "clone", "--depth", "1", value, str(dest)],
+                ["git", "clone", "--depth", "1", "--", value, str(dest)],
                 check=True,
                 capture_output=True,
             )
