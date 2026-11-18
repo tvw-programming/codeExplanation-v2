@@ -90,6 +90,48 @@ done
 log() { printf '\n\033[1;36m==> %s\033[0m\n' "$1"; }
 
 # ---------------------------------------------------------------------
+# Preflight: catch missing native tools with a clear, OS-specific
+# fix instead of letting them fail silently deep inside the pipeline
+# (e.g. without espeak-ng, TTS synthesis fails for every chunk, and
+# all run_backend_pilot.py reports is "No successfully-rendered
+# chunk to stage" — see src/render/tts.py).
+# ---------------------------------------------------------------------
+check_render_prerequisites() {
+  local missing=0
+
+  if ! command -v espeak-ng >/dev/null 2>&1; then
+    missing=1
+    echo "espeak-ng was not found on PATH — it's required for narration audio" >&2
+    echo "(see src/render/tts.py). Install it, then re-run:" >&2
+    case "$(uname -s)" in
+      Darwin) echo "    brew install espeak-ng" >&2 ;;
+      Linux)  echo "    sudo apt-get install espeak-ng   # Debian/Ubuntu" >&2
+              echo "    sudo dnf install espeak-ng       # Fedora" >&2 ;;
+      *)      echo "    See https://github.com/espeak-ng/espeak-ng for your platform." >&2 ;;
+    esac
+  fi
+
+  if ! command -v ffprobe >/dev/null 2>&1 || ! command -v ffmpeg >/dev/null 2>&1; then
+    missing=1
+    echo "ffmpeg/ffprobe was not found on PATH — required to measure narration" >&2
+    echo "audio duration and to finish the video render. Install it, then re-run:" >&2
+    case "$(uname -s)" in
+      Darwin) echo "    brew install ffmpeg" >&2 ;;
+      Linux)  echo "    sudo apt-get install ffmpeg      # Debian/Ubuntu" >&2
+              echo "    sudo dnf install ffmpeg          # Fedora" >&2 ;;
+      *)      echo "    See https://ffmpeg.org/download.html for your platform." >&2 ;;
+    esac
+  fi
+
+  if [ "$missing" = "1" ]; then
+    echo "" >&2
+    echo "Run with --no-render to skip TTS/video and just exercise the rest" >&2
+    echo "of the pipeline, or install the tool(s) above and re-run." >&2
+    exit 1
+  fi
+}
+
+# ---------------------------------------------------------------------
 # 1) Python backend pipeline, default configuration
 # ---------------------------------------------------------------------
 run_backend() {
@@ -98,6 +140,10 @@ run_backend() {
   if ! command -v python3 >/dev/null 2>&1; then
     echo "python3 is required but was not found on PATH." >&2
     exit 1
+  fi
+
+  if [ "$RENDER_ENABLED" = "1" ]; then
+    check_render_prerequisites
   fi
 
   if [ ! -d .venv ]; then
@@ -214,11 +260,13 @@ run_video_render() {
   echo "Video written to: $OUTPUT_VIDEO"
 }
 
-[ "$RUN_BACKEND" = "1" ] && run_backend
-[ "$RUN_NPM_INSTALL" = "1" ] && run_npm_install
-[ "$RUN_DOCS_SERVER" = "1" ] && run_docs_server
-[ "$RUN_VIDEO_RENDER" = "1" ] && run_video_render
+if [ "$RUN_BACKEND" = "1" ]; then run_backend; fi
+if [ "$RUN_NPM_INSTALL" = "1" ]; then run_npm_install; fi
+if [ "$RUN_DOCS_SERVER" = "1" ]; then run_docs_server; fi
+if [ "$RUN_VIDEO_RENDER" = "1" ]; then run_video_render; fi
 
 log "Done."
-[ "$RUN_DOCS_SERVER" = "1" ] && echo "Documentation: http://localhost:$DOCS_PORT/docs-viewer/"
-[ "$RUN_VIDEO_RENDER" = "1" ] && echo "Video:         $OUTPUT_VIDEO"
+if [ "$RUN_DOCS_SERVER" = "1" ]; then echo "Documentation: http://localhost:$DOCS_PORT/docs-viewer/"; fi
+if [ "$RUN_VIDEO_RENDER" = "1" ]; then echo "Video:         $OUTPUT_VIDEO"; fi
+
+exit 0

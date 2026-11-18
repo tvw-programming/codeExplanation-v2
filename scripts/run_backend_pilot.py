@@ -127,8 +127,20 @@ def main() -> int:
                   f"-> {SAMPLE_CHUNK_DIR}")
         else:
             print("[backend] No successfully-rendered chunk to stage for video "
-                  "rendering (see pilot_report.json's render section for why).",
-                  file=sys.stderr)
+                  "rendering.", file=sys.stderr)
+            render_results = report.get("render")
+            first_error = None
+            if isinstance(render_results, list):
+                first_error = next((r.get("error") for r in render_results if "error" in r), None)
+            if first_error:
+                print(f"[backend] Render error: {first_error}", file=sys.stderr)
+                if "espeak-ng" in first_error:
+                    print("[backend] Install espeak-ng (e.g. `brew install espeak-ng` on "
+                          "macOS, `apt-get install espeak-ng` on Debian/Ubuntu) and re-run, "
+                          "or use --no-render to skip TTS/video.", file=sys.stderr)
+            else:
+                print("[backend] See pilot_report.json's render section for details.",
+                      file=sys.stderr)
             return 2
     else:
         print("[backend] Rendering was skipped (--no-render); run-local.sh will "
