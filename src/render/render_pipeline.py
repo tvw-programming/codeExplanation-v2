@@ -33,6 +33,7 @@ from .audio_assembly import (
     probe_duration_ms,
 )
 from .highlight_config import build_highlight_config
+from src.narrate.function_narration import speakable
 from .narration_segments import segment_label
 from .timing import TimedCue, ms_to_frame
 from .tts import TTSError, synthesize
@@ -73,6 +74,39 @@ def _synthesize_beats(script: NarrationScript, output_dir: Path) -> tuple[list[d
 
     narration_path = concat_wavs(joined_parts, output_dir / "narration.wav")
     return placements, narration_path
+
+
+def _build_card_narration(overview: dict | None, output_dir: Path) -> dict | None:
+    """Speaks the file card: its name, then what the file is for.
+
+    The card's on-screen time is this audio's length (with a floor
+    applied in the composition), so the viewer is never reading a
+    summary that has already been talked over, and never left staring
+    at a card after the narration has finished.
+    """
+    if not overview:
+        return None
+
+    file_name = overview.get("fileName") or ""
+    purpose = overview.get("purpose") or ""
+    spoken = speakable(f"{file_name}. {purpose}".strip())
+    if not spoken:
+        return None
+
+    wav_path = output_dir / "card.wav"
+    try:
+        result = synthesize(spoken, wav_path)
+    except TTSError:
+        # The card is still worth showing without narration; the
+        # composition falls back to its minimum duration.
+        return None
+
+    return {
+        "audio": "card.wav",
+        "durationMs": probe_duration_ms(result.path),
+        "spoken": spoken,
+        "engine": result.engine,
+    }
 
 
 def _cues_from_placements(script: NarrationScript, placements: list[dict]) -> list[TimedCue]:
@@ -156,6 +190,8 @@ def build_render_bundle(
     highlight_config = build_highlight_config(timed_cues, fps, duration_ms)
     narration_segments = _segments_from_placements(placements, fps)
 
+    card_narration = _build_card_narration(overview, output_dir)
+
     engines = {p["engine"] for p in placements}
     tts_engine = engines.pop() if len(engines) == 1 else "+".join(sorted(engines))
 
@@ -170,8 +206,10 @@ def build_render_bundle(
         "ttsEngine": tts_engine,
         "narrationAudio": str(wav_path),
         "cleanText": " ".join(p["beat"].spoken for p in placements),
-        # Contents of the card shown before this file's walkthrough.
+        # Contents of the card shown before this file's walkthrough,
+        # and the narration read over it.
         "fileOverview": overview,
+        "cardNarration": card_narration,
         "narrationSegments": narration_segments,
         "highlightConfig": highlight_config,
     }

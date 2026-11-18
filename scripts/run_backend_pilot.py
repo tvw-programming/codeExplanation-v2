@@ -77,6 +77,13 @@ def _stage_one_chunk(chunk_id: str, dest_dir: Path, resolved_root: Path, output_
     # regardless of the real file's extension (Go, Python, ... source
     # displays exactly as well as TSX does — it's shown as plain text).
     shutil.copyfile(source_src, dest_dir / "source.tsx")
+
+    # The file card's own narration. Optional: synthesis may have been
+    # skipped, and the card still renders (at its minimum duration)
+    # without it, so a missing card.wav must not fail the staging.
+    card_src = output_root / "render" / chunk_id / "card.wav"
+    if card_src.is_file():
+        shutil.copyfile(card_src, dest_dir / "card.wav")
     return True
 
 

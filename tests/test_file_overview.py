@@ -1,10 +1,20 @@
 from pathlib import Path
 
 from src.narrate.file_overview import (
+    LAYER_AGENTIC,
+    LAYER_BACKEND,
+    LAYER_CONFIG,
+    LAYER_FRONTEND,
+    LAYER_TESTING,
+    _pretty_package,
     build_file_overview,
     build_file_overviews,
     classify_file_type,
+    classify_layer,
     resolve_relationships,
+    split_frameworks_and_libraries,
+    summarize_purpose,
+    CARD_PURPOSE_CHARS,
 )
 
 
@@ -142,3 +152,99 @@ def test_test_files_that_import_a_file_are_counted_as_coverage():
     overview = build_file_overview(records[0], resolve_relationships(records), records)
     assert overview["tests"] == ["src/lib/a.test.ts"]
     assert "tests" not in overview["unavailable"]
+
+
+def test_framework_is_separated_from_libraries():
+    frameworks, libraries = split_frameworks_and_libraries([
+        "github.com/gofiber/fiber/v2",
+        "firebase.google.com/go/v4/auth",
+        "google.golang.org/api/option",
+    ])
+    assert frameworks == ["Fiber"]
+    assert libraries == ["firebase/auth", "google/option"]
+
+
+def test_a_library_whose_name_contains_a_framework_name_stays_a_library():
+    """Substring matching made "@tanstack/react-query" read as React."""
+    frameworks, libraries = split_frameworks_and_libraries(
+        ["react", "@tanstack/react-query", "next-auth"],
+    )
+    assert frameworks == ["React"]
+    assert "@tanstack/react-query" in libraries
+    assert "next-auth" in libraries
+
+
+def test_go_module_paths_get_a_meaningful_name_not_their_last_segment():
+    """"firebase.google.com/go/v4" is Firebase, not a package named "go"."""
+    assert _pretty_package("firebase.google.com/go/v4") == "firebase"
+    assert _pretty_package("github.com/lib/pq") == "pq"
+    assert _pretty_package("gorm.io/gorm") == "gorm"
+    assert _pretty_package("@mui/material") == "@mui/material"
+    assert _pretty_package("axios") == "axios"
+
+
+def test_layer_classification_covers_the_four_kinds_of_work():
+    assert classify_layer("api/internal/handler/a.go", record("x")) == LAYER_BACKEND
+    assert classify_layer("src/features/alumni/Page.tsx", record("x")) == LAYER_FRONTEND
+    assert classify_layer("api/internal/a_test.go", record("x")) == LAYER_TESTING
+    assert classify_layer("src/a.test.ts", record("x")) == LAYER_TESTING
+    assert classify_layer("vite.config.ts", record("x")) == LAYER_CONFIG
+
+
+def test_agentic_work_is_recognised_from_its_imports():
+    agent = record("src/agents/planner.ts", dependencies=[
+        {"path": "@langchain/core"}, {"path": "openai"},
+    ])
+    assert classify_layer("src/agents/planner.ts", agent) == LAYER_AGENTIC
+
+
+def test_contains_counts_what_the_file_actually_holds():
+    rec = record(
+        "api/internal/handler/a.go",
+        importantFunctions=[{"name": "A", "exported": True}, {"name": "b"}],
+        routes=[{"method": "GET", "path": "/alumni"}],
+        dataModels=[{"name": "Alumni"}],
+    )
+    overview = build_file_overview(rec, resolve_relationships([rec]), [rec])
+    joined = " ".join(overview["contains"])
+    assert "2 function(s)" in joined
+    assert "1 exported" in joined
+    assert "1 route(s)" in joined
+    assert "1 model(s)" in joined
+    assert overview["routes"] == ["GET /alumni"]
+
+
+def test_card_purpose_is_cut_at_a_sentence_not_mid_word():
+    """An ellipsis mid-word reads as missing information; whole
+    sentences read as a complete thought."""
+    long_purpose = (
+        "Package firebaseauth validates Firebase ID tokens on the API edge. "
+        "The rule this package exists to enforce: the browser never tells us who it is. "
+        "It presents a token signed by Google, we verify the signature against Google's "
+        "rotating public keys, and the uid we act on comes out of that verification. "
+        "A uid in a request body is ignored entirely by every handler in this service."
+    )
+    summary = summarize_purpose(long_purpose)
+    assert len(summary) <= CARD_PURPOSE_CHARS
+    assert not summary.endswith("...")
+    assert summary.endswith((".", "!", "?"))
+    assert summary.startswith("Package firebaseauth validates")
+
+
+def test_a_short_purpose_is_left_exactly_as_it_is():
+    assert summarize_purpose("Entry point for the app.") == "Entry point for the app."
+
+
+def test_a_single_enormous_sentence_still_gets_cut_cleanly():
+    monster = "This one sentence just keeps going and going " * 20
+    summary = summarize_purpose(monster)
+    assert len(summary) <= CARD_PURPOSE_CHARS + 1
+    assert not summary.endswith(" .")
+
+
+def test_overview_keeps_the_full_purpose_alongside_the_card_version():
+    long_purpose = "First sentence here. " + ("Padding sentence. " * 40)
+    rec = record("src/a.ts", fileDescription=long_purpose)
+    overview = build_file_overview(rec, resolve_relationships([rec]), [rec])
+    assert len(overview["purpose"]) <= CARD_PURPOSE_CHARS
+    assert overview["purposeFull"] == long_purpose

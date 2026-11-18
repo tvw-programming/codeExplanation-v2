@@ -24,6 +24,7 @@ imports in this repository" rather than claiming completeness.
 
 from __future__ import annotations
 
+import re
 import subprocess
 from pathlib import Path
 
@@ -85,6 +86,186 @@ def classify_file_type(file_path: str, record: dict) -> str:
     if file_path.endswith(".go"):
         return "Go source file"
     return f"{record.get('language') or 'Source'} file"
+
+
+# Packages that are the framework a file is built on, as opposed to a
+# library it merely uses. Matched as substrings of the dependency string
+# so versioned Go module paths ("github.com/gofiber/fiber/v2") and
+# scoped npm names both land.
+_FRAMEWORK_MARKERS: list[tuple[str, str]] = [
+    ("gofiber/fiber", "Fiber"),
+    ("gin-gonic/gin", "Gin"),
+    ("labstack/echo", "Echo"),
+    ("net/http", "net/http"),
+    ("react", "React"),
+    ("@angular", "Angular"),
+    ("vue", "Vue"),
+    ("svelte", "Svelte"),
+    ("next", "Next.js"),
+    ("express", "Express"),
+    ("fastapi", "FastAPI"),
+    ("django", "Django"),
+    ("flask", "Flask"),
+    ("spring", "Spring"),
+]
+
+# Imports that mean this file is doing agent/LLM work rather than
+# ordinary frontend or backend work.
+_AGENTIC_MARKERS = (
+    "langchain", "langgraph", "openai", "anthropic", "llama_index", "llamaindex",
+    "modelcontextprotocol", "/mcp", "mcp-", "autogen", "crewai", "semantic-kernel",
+    "transformers", "ollama",
+)
+
+LAYER_FRONTEND = "Frontend"
+LAYER_BACKEND = "Backend"
+LAYER_TESTING = "Testing"
+LAYER_AGENTIC = "Agentic"
+LAYER_CONFIG = "Configuration"
+
+
+# Path segments that identify no package on their own: taking the last
+# segment of "firebase.google.com/go/v4" would label it "go".
+_GENERIC_SEGMENTS = {"go", "pkg", "src", "lib", "internal", "api", "v1", "client"}
+_CODE_HOSTS = {"github", "gitlab", "bitbucket", "codeberg", "sr"}
+
+
+def _is_version_segment(part: str) -> bool:
+    return len(part) > 1 and part[0] == "v" and part[1:].isdigit()
+
+
+def _pretty_package(name: str) -> str:
+    """A readable name for a dependency. Go module paths are domain
+    qualified and version suffixed, so the last segment is usually
+    meaningless — "firebase.google.com/go/v4/auth" is the Firebase auth
+    package, not a package called "auth"."""
+    cleaned = name.strip().rstrip("/")
+    parts = [p for p in cleaned.split("/") if p and not _is_version_segment(p)]
+    if not parts:
+        return name
+
+    if cleaned.startswith("@"):
+        return "/".join(parts[:2])
+
+    if "." in parts[0]:
+        host = parts[0].split(".")[0]
+        if host in _CODE_HOSTS and len(parts) >= 3:
+            return parts[2]
+        tail = [p for p in parts[1:] if p.lower() not in _GENERIC_SEGMENTS]
+        if not tail or tail[-1].lower() == host.lower():
+            return host
+        return f"{host}/{tail[-1]}"
+
+    return parts[0]
+
+
+def split_frameworks_and_libraries(packages: list[str]) -> tuple[list[str], list[str]]:
+    """Which of a file's packages is the framework it is built on, and
+    which are libraries it uses."""
+    frameworks: list[str] = []
+    libraries: list[str] = []
+    for package in packages:
+        lowered = package.lower()
+        # Match on whole path segments, not bare substrings: otherwise
+        # "@tanstack/react-query" reads as the React framework rather
+        # than as a library, and "next-auth" as Next.js.
+        segments = {part for part in lowered.split("/") if part}
+        matched = None
+        for marker, label in _FRAMEWORK_MARKERS:
+            hit = marker in lowered if "/" in marker else marker in segments
+            if hit:
+                matched = label
+                break
+        if matched:
+            if matched not in frameworks:
+                frameworks.append(matched)
+        else:
+            pretty = _pretty_package(package)
+            if pretty not in libraries:
+                libraries.append(pretty)
+    return frameworks, libraries
+
+
+def classify_layer(file_path: str, record: dict) -> str:
+    """Which part of the system this file belongs to. Derived from the
+    path, the language and what it imports — the repository does not
+    state this anywhere, so it is a reading of the evidence rather than
+    a fact the code declares."""
+    path = file_path.lower()
+    name = Path(file_path).name.lower()
+
+    if name.endswith(("_test.go", ".test.ts", ".test.tsx", ".spec.ts", ".spec.tsx")):
+        return LAYER_TESTING
+    if "/test" in path or path.startswith("test"):
+        return LAYER_TESTING
+
+    packages = [
+        *(record.get("frameworkOrLibrary") or []),
+        *[d.get("path", "") for d in record.get("dependencies") or []],
+    ]
+    blob = " ".join(packages).lower()
+    if any(marker in blob for marker in _AGENTIC_MARKERS):
+        return LAYER_AGENTIC
+
+    if (
+        name.endswith((".json", ".yaml", ".yml", ".toml", ".ini"))
+        or "/config" in path
+        # Build/tool config lives at the repo root as <tool>.config.ts
+        # (vite.config.ts, jest.config.js, tailwind.config.ts).
+        or ".config." in name
+        or name in {"dockerfile", "makefile", "go.mod", "package.json"}
+    ):
+        return LAYER_CONFIG
+
+    if file_path.endswith(".go") or record.get("routes"):
+        return LAYER_BACKEND
+    if file_path.endswith((".tsx", ".jsx", ".css", ".scss", ".html")):
+        return LAYER_FRONTEND
+    if file_path.endswith(".ts"):
+        # A .ts file under an api/ or server/ directory is backend code.
+        if any(fragment in path for fragment in ("/server/", "/backend/", "/api/server")):
+            return LAYER_BACKEND
+        return LAYER_FRONTEND
+    if file_path.endswith(".py"):
+        return LAYER_BACKEND
+    return LAYER_BACKEND if record.get("language") == "Go" else LAYER_FRONTEND
+
+
+# How much of a file's header comment the card shows and reads aloud.
+# A package doc can run several paragraphs; at that length the card
+# becomes a wall of text and its narration runs close to half a minute
+# before the walkthrough has even started.
+CARD_PURPOSE_CHARS = 280
+
+_SENTENCE_SPLIT = re.compile(r"(?<=[.!?])\s+")
+
+
+def summarize_purpose(text: str, max_chars: int = CARD_PURPOSE_CHARS) -> str:
+    """The opening of a purpose, cut at a sentence boundary.
+
+    Ending mid-word on an ellipsis reads as missing information. Whole
+    sentences read as a complete thought, which is what this is: the
+    rest of the file's documentation is covered by the walkthrough that
+    follows the card.
+    """
+    text = text.strip()
+    if len(text) <= max_chars:
+        return text
+
+    kept: list[str] = []
+    length = 0
+    for sentence in _SENTENCE_SPLIT.split(text):
+        if kept and length + len(sentence) + 1 > max_chars:
+            break
+        kept.append(sentence)
+        length += len(sentence) + 1
+
+    joined = " ".join(kept).strip()
+    if joined and len(joined) <= max_chars:
+        return joined
+    # One sentence longer than the whole budget (or no sentence
+    # boundaries at all): cut at a word instead.
+    return text[:max_chars].rsplit(" ", 1)[0].rstrip(",;:") + "."
 
 
 def _stem(module_path: str) -> str:
@@ -238,21 +419,63 @@ def build_file_overview(
     if (record.get("confidenceLevel") or "") in {"low", "medium"}:
         risks.append(f"extraction confidence is {record.get('confidenceLevel')}")
 
+    functions = record.get("importantFunctions") or []
     exported_names = [
-        fn.get("name") for fn in record.get("importantFunctions") or []
-        if fn.get("exported") and fn.get("name")
+        fn.get("name") for fn in functions if fn.get("exported") and fn.get("name")
     ]
+
+    packages = [
+        *(record.get("frameworkOrLibrary") or []),
+        *[d.get("path", "") for d in record.get("dependencies") or []
+          if not (d.get("path", "").startswith((".", "~", "@/")))],
+    ]
+    frameworks, libraries = split_frameworks_and_libraries(packages)
+
+    routes = [
+        f"{r.get('method', '')} {r.get('path', '')}".strip()
+        for r in record.get("routes") or []
+    ]
+    outbound = [
+        f"{c.get('method', '')} {c.get('url', '')}".strip()
+        for c in record.get("apiCalls") or []
+    ]
+    side_effects = sorted({
+        effect.get("kind") for effect in record.get("sideEffects") or []
+        if isinstance(effect, dict) and effect.get("kind")
+    })
+
+    # Counts of what the file actually holds — a quick sense of how much
+    # file this is, before the walkthrough starts.
+    contains: list[str] = []
+    if functions:
+        contains.append(f"{len(functions)} function(s)")
+    if exported_names:
+        contains.append(f"{len(exported_names)} exported")
+    if record.get("eventHandlers"):
+        contains.append(f"{len(record['eventHandlers'])} handler(s)")
+    if routes:
+        contains.append(f"{len(routes)} route(s)")
+    if record.get("dataModels"):
+        contains.append(f"{len(record['dataModels'])} model(s)")
 
     return {
         "fileName": Path(file_path).name,
         "filePath": file_path,
-        "purpose": purpose,
+        "purpose": summarize_purpose(purpose) if purpose else None,
+        "purposeFull": purpose,
         "fileType": classify_file_type(file_path, record),
+        "layer": classify_layer(file_path, record),
+        "feature": record.get("featureName"),
         "callers": links["callers"],
         "callees": links["callees"],
         "language": record.get("language"),
-        "frameworks": record.get("frameworkOrLibrary") or [],
+        "frameworks": frameworks,
+        "libraries": libraries,
         "exports": exported_names,
+        "contains": contains,
+        "routes": routes,
+        "outboundCalls": outbound,
+        "sideEffects": side_effects,
         "lineCount": (record.get("lineRange") or [1, 1])[1],
         "lastModified": last_modified,
         "tests": tests,

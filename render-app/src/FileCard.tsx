@@ -1,25 +1,37 @@
-import { AbsoluteFill, interpolate, useCurrentFrame } from "remotion";
+import { AbsoluteFill, Audio, interpolate, staticFile, useCurrentFrame } from "remotion";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 
 // The card that introduces each file before its walkthrough starts:
-// what the file is, where it sits, what calls it and what it calls.
+// what the file is, where it sits, what it's built on, what calls it
+// and what it calls.
 //
 // Fields the repository genuinely cannot answer are not shown as empty
 // rows — the overview carries a reason for each one (see
 // src/narrate/file_overview.py) and the card prints that instead, so a
 // gap reads as a known gap rather than as missing data.
+//
+// The card is on screen for exactly as long as its narration takes to
+// read (floored at MIN_FILE_CARD_SECONDS), so the viewer is never read
+// a summary that has already left the screen.
 
 export type FileOverview = {
   fileName: string;
   filePath: string;
   purpose: string | null;
   fileType: string;
+  layer: string;
+  feature: string | null;
   callers: string[];
   callees: string[];
   language: string | null;
   frameworks: string[];
+  libraries: string[];
   exports: string[];
+  contains: string[];
+  routes: string[];
+  outboundCalls: string[];
+  sideEffects: string[];
   lineCount: number;
   lastModified: string | null;
   tests: string[];
@@ -27,16 +39,53 @@ export type FileOverview = {
   unavailable: Record<string, string>;
 };
 
+export type CardNarration = {
+  audio: string;
+  durationMs: number;
+  spoken: string;
+  engine: string;
+};
+
 const ACCENT = "#60a5fa";
 const DIM_TEXT = "#8b9099";
 const PANEL_BG = "#1b1e25";
+const BORDER = "1px solid rgba(255,255,255,0.07)";
 
-export const FILE_CARD_SECONDS = 3;
+export const MIN_FILE_CARD_SECONDS = 6;
+// A little air after the narration ends before the walkthrough starts.
+export const FILE_CARD_TAIL_SECONDS = 0.6;
+
+const LAYER_COLORS: Record<string, string> = {
+  Frontend: "#60a5fa",
+  Backend: "#4ade80",
+  Testing: "#fbbf24",
+  Agentic: "#c084fc",
+  Configuration: "#94a3b8",
+};
 
 const shortPath = (path: string): string => {
   const parts = path.split("/");
-  return parts.length > 3 ? ".../" + parts.slice(-3).join("/") : path;
+  return parts.length > 2 ? ".../" + parts.slice(-2).join("/") : path;
 };
+
+const Badge: React.FC<{ text: string; color: string }> = ({ text, color }) => (
+  <Box
+    sx={{
+      flexShrink: 0,
+      bgcolor: color,
+      color: "#0b1020",
+      fontFamily: "Helvetica, Arial, sans-serif",
+      fontSize: 15,
+      fontWeight: 700,
+      borderRadius: "6px",
+      px: "12px",
+      py: "5px",
+      whiteSpace: "nowrap",
+    }}
+  >
+    {text}
+  </Box>
+);
 
 const Card: React.FC<{
   label: string;
@@ -45,23 +94,26 @@ const Card: React.FC<{
 }> = ({ label, children, grow = 1 }) => (
   <Box
     sx={{
-      flex: grow,
+      flex: `${grow} 1 0`,
       minWidth: 0,
       bgcolor: PANEL_BG,
-      border: "1px solid rgba(255,255,255,0.07)",
+      border: BORDER,
       borderRadius: "10px",
-      p: "16px 18px",
+      p: "13px 16px",
+      // Height follows the content: a fixed stretch is what left the
+      // Exports box mostly empty.
+      alignSelf: "flex-start",
     }}
   >
     <Typography
       sx={{
         fontFamily: "Helvetica, Arial, sans-serif",
-        fontSize: 12,
+        fontSize: 11,
         letterSpacing: "0.12em",
         textTransform: "uppercase",
         color: ACCENT,
         fontWeight: 700,
-        mb: "8px",
+        mb: "7px",
       }}
     >
       {label}
@@ -70,16 +122,17 @@ const Card: React.FC<{
   </Box>
 );
 
-const Body: React.FC<{ children: React.ReactNode; dim?: boolean }> = ({
-  children,
-  dim = false,
-}) => (
+const Body: React.FC<{
+  children: React.ReactNode;
+  dim?: boolean;
+  size?: number;
+}> = ({ children, dim = false, size = 15 }) => (
   <Typography
     component="div"
     sx={{
       fontFamily: "Helvetica, Arial, sans-serif",
-      fontSize: 16,
-      lineHeight: "23px",
+      fontSize: `${size}px`,
+      lineHeight: `${Math.round(size * 1.45)}px`,
       color: dim ? DIM_TEXT : "#e8eaed",
     }}
   >
@@ -87,28 +140,77 @@ const Body: React.FC<{ children: React.ReactNode; dim?: boolean }> = ({
   </Typography>
 );
 
-const Mono: React.FC<{ items: string[] }> = ({ items }) => (
-  <Box sx={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
-    {items.map((item) => (
+const Chips: React.FC<{ items: string[]; max?: number }> = ({ items, max = 6 }) => (
+  <Box sx={{ display: "flex", flexWrap: "wrap", gap: "5px" }}>
+    {items.slice(0, max).map((item) => (
       <Box
         key={item}
         sx={{
           fontFamily: "Menlo, monospace",
-          fontSize: 14,
+          fontSize: 13,
           color: "#dbeafe",
           bgcolor: "rgba(96,165,250,0.14)",
           borderRadius: "5px",
-          px: "8px",
-          py: "3px",
+          px: "7px",
+          py: "2px",
         }}
       >
         {item}
       </Box>
     ))}
+    {items.length > max ? (
+      <Box sx={{ fontFamily: "Helvetica, Arial, sans-serif", fontSize: 13, color: DIM_TEXT, alignSelf: "center" }}>
+        +{items.length - max} more
+      </Box>
+    ) : null}
   </Box>
 );
 
-export const FileCard: React.FC<{ overview: FileOverview }> = ({ overview }) => {
+/** Long purpose text steps down in size rather than being cut off —
+ *  the card has the room, it was the fixed font that did not. */
+function purposeFontSize(text: string): number {
+  if (text.length > 520) return 15;
+  if (text.length > 340) return 17;
+  if (text.length > 200) return 19;
+  return 21;
+}
+
+const KeyValue: React.FC<{ label: string; value: React.ReactNode }> = ({ label, value }) => (
+  <Box sx={{ display: "flex", gap: "8px", alignItems: "baseline", mb: "3px" }}>
+    <Typography
+      sx={{
+        fontFamily: "Helvetica, Arial, sans-serif",
+        fontSize: 13,
+        color: DIM_TEXT,
+        width: 74,
+        flexShrink: 0,
+      }}
+    >
+      {label}
+    </Typography>
+    <Typography
+      component="div"
+      sx={{
+        fontFamily: "Menlo, monospace",
+        fontSize: 14,
+        color: "#e8eaed",
+        minWidth: 0,
+        overflow: "hidden",
+        textOverflow: "ellipsis",
+      }}
+    >
+      {value}
+    </Typography>
+  </Box>
+);
+
+export const FileCard: React.FC<{
+  overview: FileOverview;
+  narration?: CardNarration | null;
+  chunkDir?: string;
+  position?: { index: number; total: number };
+  sectionSeconds?: number;
+}> = ({ overview, narration, chunkDir, position, sectionSeconds }) => {
   const frame = useCurrentFrame();
   const fade = interpolate(frame, [0, 8], [0, 1], {
     extrapolateLeft: "clamp",
@@ -119,28 +221,33 @@ export const FileCard: React.FC<{ overview: FileOverview }> = ({ overview }) => 
     extrapolateRight: "clamp",
   });
 
-  const otherBits: string[] = [];
-  if (overview.language) otherBits.push(overview.language);
-  if (overview.frameworks.length > 0) otherBits.push(overview.frameworks.join(", "));
-  otherBits.push(`${overview.lineCount} lines`);
-  if (overview.lastModified) {
-    otherBits.push(`last modified ${overview.lastModified.slice(0, 10)}`);
+  const purpose = overview.purpose;
+  const layerColor = LAYER_COLORS[overview.layer] ?? ACCENT;
+
+  const subtitleBits: string[] = [];
+  if (position) subtitleBits.push(`File ${position.index} of ${position.total}`);
+  if (overview.feature) subtitleBits.push(`feature: ${overview.feature}`);
+  if (sectionSeconds && sectionSeconds > 0) {
+    const minutes = Math.floor(sectionSeconds / 60);
+    const seconds = Math.round(sectionSeconds % 60);
+    subtitleBits.push(`section runs ${minutes}m ${String(seconds).padStart(2, "0")}s`);
   }
 
+  const interfaceItems = overview.routes.length > 0 ? overview.routes : overview.outboundCalls;
+  const interfaceLabel = overview.routes.length > 0 ? "Routes served" : "Outbound calls";
+
   return (
-    <AbsoluteFill
-      style={{
-        backgroundColor: "#15171c",
-        padding: "46px 54px",
-        opacity: fade,
-      }}
-    >
+    <AbsoluteFill style={{ backgroundColor: "#15171c", padding: "38px 46px", opacity: fade }}>
+      {narration && chunkDir ? (
+        <Audio src={staticFile(`${chunkDir}/${narration.audio}`)} />
+      ) : null}
+
       <Box sx={{ transform: `translateY(${rise}px)`, height: "100%", display: "flex", flexDirection: "column" }}>
-        <Box sx={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 3 }}>
+        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 2 }}>
           <Typography
             sx={{
               fontFamily: "Menlo, monospace",
-              fontSize: 46,
+              fontSize: 42,
               fontWeight: 700,
               color: "#ffffff",
               whiteSpace: "nowrap",
@@ -150,89 +257,102 @@ export const FileCard: React.FC<{ overview: FileOverview }> = ({ overview }) => 
           >
             {overview.fileName}
           </Typography>
-          <Box
-            sx={{
-              flexShrink: 0,
-              bgcolor: ACCENT,
-              color: "#0b1020",
-              fontFamily: "Helvetica, Arial, sans-serif",
-              fontSize: 15,
-              fontWeight: 700,
-              borderRadius: "6px",
-              px: "12px",
-              py: "5px",
-            }}
-          >
-            {overview.fileType}
+          <Box sx={{ display: "flex", gap: "8px", flexShrink: 0 }}>
+            <Badge text={overview.layer} color={layerColor} />
+            <Badge text={overview.fileType} color="rgba(255,255,255,0.14)" />
           </Box>
         </Box>
 
         <Typography
-          sx={{
-            fontFamily: "Menlo, monospace",
-            fontSize: 18,
-            color: DIM_TEXT,
-            mt: "6px",
-            mb: "22px",
-          }}
+          sx={{ fontFamily: "Menlo, monospace", fontSize: 17, color: DIM_TEXT, mt: "4px" }}
         >
           {overview.filePath}
         </Typography>
+        {subtitleBits.length > 0 ? (
+          <Typography
+            sx={{
+              fontFamily: "Helvetica, Arial, sans-serif",
+              fontSize: 14,
+              color: "#6b7280",
+              mt: "3px",
+            }}
+          >
+            {subtitleBits.join("  ·  ")}
+          </Typography>
+        ) : null}
 
-        <Box sx={{ display: "flex", flexDirection: "column", gap: "14px", flex: 1, minHeight: 0 }}>
+        <Box sx={{ display: "flex", flexDirection: "column", gap: "11px", mt: "16px", flex: 1, minHeight: 0 }}>
           <Card label="Purpose">
-            {overview.purpose ? (
-              <Body>
-                {overview.purpose.length > 320
-                  ? overview.purpose.slice(0, 320).replace(/\s+\S*$/, "") + "..."
-                  : overview.purpose}
-              </Body>
+            {purpose ? (
+              <Body size={purposeFontSize(purpose)}>{purpose}</Body>
             ) : (
               <Body dim>Not stated: {overview.unavailable.purpose}.</Body>
             )}
           </Card>
 
-          <Box sx={{ display: "flex", gap: "14px" }}>
-            <Card label="Called by">
-              {overview.callers.length > 0 ? (
-                <Mono items={overview.callers.slice(0, 4).map(shortPath)} />
-              ) : (
-                <Body dim>No importers of this file in this repository.</Body>
-              )}
+          <Box sx={{ display: "flex", gap: "11px", alignItems: "flex-start" }}>
+            <Card label="Stack" grow={1}>
+              <KeyValue label="Language" value={overview.language ?? "unknown"} />
+              <KeyValue
+                label="Framework"
+                value={overview.frameworks.length > 0 ? overview.frameworks.join(", ") : "none"}
+              />
+              <KeyValue
+                label="Libraries"
+                value={overview.libraries.length > 0 ? overview.libraries.join(", ") : "none"}
+              />
+              <KeyValue label="Size" value={`${overview.lineCount} lines`} />
             </Card>
-            <Card label="Calls">
-              {overview.callees.length > 0 ? (
-                <Mono items={overview.callees.slice(0, 4).map(shortPath)} />
+
+            <Card label="Relationships" grow={1}>
+              <Box sx={{ mb: "7px" }}>
+                <Body dim size={13}>Called by</Body>
+                {overview.callers.length > 0 ? (
+                  <Chips items={overview.callers.map(shortPath)} max={3} />
+                ) : (
+                  <Body dim size={14}>No importers in this repository.</Body>
+                )}
+              </Box>
+              <Box>
+                <Body dim size={13}>Calls</Body>
+                {overview.callees.length > 0 ? (
+                  <Chips items={overview.callees.map(shortPath)} max={3} />
+                ) : (
+                  <Body dim size={14}>No internal imports.</Body>
+                )}
+              </Box>
+            </Card>
+
+            <Card label="Contains" grow={1}>
+              {overview.contains.length > 0 ? (
+                <Body size={14}>{overview.contains.join(" · ")}</Body>
               ) : (
-                <Body dim>No internal imports.</Body>
+                <Body dim size={14}>Nothing named at the top level.</Body>
               )}
+              {overview.exports.length > 0 ? (
+                <Box sx={{ mt: "7px" }}>
+                  <Body dim size={13}>Exports</Body>
+                  <Chips items={overview.exports} max={5} />
+                </Box>
+              ) : null}
+              {overview.sideEffects.length > 0 ? (
+                <Box sx={{ mt: "7px" }}>
+                  <Body dim size={13}>Side effects</Body>
+                  <Body size={14}>{overview.sideEffects.join(", ")}</Body>
+                </Box>
+              ) : null}
             </Card>
           </Box>
 
-          <Box sx={{ display: "flex", gap: "14px" }}>
-            <Card label="Exports" grow={1}>
-              {overview.exports.length > 0 ? (
-                <Mono items={overview.exports.slice(0, 6)} />
-              ) : (
-                <Body dim>Nothing exported under a name.</Body>
-              )}
+          {interfaceItems.length > 0 ? (
+            <Card label={interfaceLabel}>
+              <Chips items={interfaceItems} max={8} />
             </Card>
-            <Card label="Other" grow={1}>
-              <Body>{otherBits.join(" · ")}</Body>
-              {overview.unavailable.lastModified ? (
-                <Body dim>Last modified unknown: {overview.unavailable.lastModified}.</Body>
-              ) : null}
-              {overview.tests.length > 0 ? (
-                <Body>Covered by {overview.tests.length} test file(s).</Body>
-              ) : overview.unavailable.tests ? (
-                <Body dim>Tests: {overview.unavailable.tests}.</Body>
-              ) : null}
-            </Card>
-          </Box>
+          ) : null}
 
           {overview.risks.length > 0 ? (
             <Card label="Worth knowing">
-              <Body dim>{overview.risks.join("; ")}.</Body>
+              <Body dim size={14}>{overview.risks.join("; ")}.</Body>
             </Card>
           ) : null}
         </Box>
