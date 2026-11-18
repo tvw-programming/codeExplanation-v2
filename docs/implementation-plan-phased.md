@@ -1,6 +1,6 @@
 # Implementation Plan — Phased
 
-Status: Phase 3 complete and verified against the real alumni repo. Phases 0, 1, 2 complete.
+Status: Phase 4 complete and verified against the real alumni repo. Phases 0, 1, 2, 3 complete.
 
 Test repo for the pipeline: https://github.com/tvw-programming/Alumni-web (dynamic input — any repo URL works; this is only the first test case).
 
@@ -11,39 +11,32 @@ Test repo for the pipeline: https://github.com/tvw-programming/Alumni-web (dynam
 - 14 tests passing.
 
 ## Phase 1 — Project type detection (step 1) (done)
-- Marker-file detection: package.json -> React/Angular, go.mod -> Go, requirements.txt/pyproject.toml/setup.py -> Python, pom.xml/build.gradle -> Spring Boot (checked for an actual spring-boot dependency, else plain java), Dockerfile/docker-compose.yml -> Docker flag.
-- Populates projectType: frontend stack, backend stack(s) as a list, architecture (monolith/microservice), Dockerized yes/no. No "unknown" fallback.
-- Architecture heuristic (inference, not a sourced rule): more than one distinct backend marker root means microservice; one backend root is monolith.
-- Edge case: stray .py files with no requirements.txt/pyproject.toml are surfaced as `unclaimed_hint_files`, never silently claimed as a Python stack.
+- Marker-file detection across React/Angular, Go, Python, Spring Boot, Docker.
+- projectType has no "unknown" fallback; stray files with no marker file are surfaced, never silently claimed.
 - Verified on the real alumni repo: frontend=react, backend=[go], architecture=monolith, dockerized=true.
-- 26 tests passing (14 from Phase 0 + 12 new).
+- 26 tests passing.
 
 ## Phase 2 — Feature-wise dynamic chunking (step 2 and 3) (done)
-- Grouping rules per stack: React/Angular by organizing folder; Go/Spring Boot by handler/repository/service/controller resource-name pairing; Python by agent naming convention.
-- Size-based splitting: feature total <=200 lines stays one chunk; above that, one chunk per file; any file over 200 lines flagged `needs_further_split` for Phase 3.
-- chunkId: feature-name slug + short hash of (file path + feature name).
-- Verified against the real alumni repo: 14 features, 22 chunks, with 3 files correctly flagged needs_further_split (AdminGrid.tsx 284L, AlumniFormDialog.tsx 221L, alumni_repository.go 248L).
-- 40 tests passing (26 existing + 14 new).
+- Stack-specific grouping (organizing folder for React/Angular; resource-name pairing for Go/Spring Boot; agent convention for Python) plus size-based splitting (<=200 one chunk, above that one chunk per file, oversized files flagged needs_further_split).
+- Verified against the real alumni repo: 14 features, 22 chunks, 3 files correctly flagged for further splitting.
+- 40 tests passing.
 
 ## Phase 3 — Extraction into the JSON structure (step 4) (done)
-- Built as regex/heuristic-based static analysis (ts_extractor.py, go_extractor.py), not a real AST parser (ts-morph, go/ast). This is a deliberate scope decision, not an oversight — the locked accuracy rule already requires every uncertain claim to be marked assumed, so a heuristic extractor can still produce every required field honestly; a real parser is the natural future upgrade and would mostly raise confidence rather than change the schema.
-- TypeScript/React extraction: imports, interfaces (-> dataModels), functions (export and non-export, plus hook-wrapped arrows like `const x = useCallback((...) => {...})`), event handlers (named handle*/on* functions AND inline JSX `onClick={...}` props — the latter always marked assumed since there's no named function to point at), api/axios calls (method + URL, template-literal URLs marked assumed), side effects (console/localStorage/sessionStorage/document writes), props interface matched by `${ComponentName}Props` naming convention.
-- Go extraction: imports (classified stdlib/external/internal by module path), structs (-> dataModels), functions (with receiver), side effects (pgx-style `.Query/.QueryRow/.Exec/.Begin` calls — matched against the real repo's actual pattern, not a guessed ORM-style `.Save()/.Create()`), Fiber routes (group prefix resolution, static/dynamic by `:param`, routing library name).
-- Real bug found and fixed while testing against the alumni repo: the first route-protection heuristic scanned the whole file for the substring "auth" and got a false positive — main.go's own comments and variable names (`AUTH_MODE`, `authMode`) explain that auth is explicitly DISABLED for this dev gateway, but the naive substring match read that as evidence auth was present. Fixed to only check `.Use(...)` calls made on the same route-group variable, matched by an auth/jwt substring in that specific call — still a heuristic (always marked `assumed: true`), but no longer fooled by prose mentioning the word. A regression test for this exact case is in test_go_extractor.py.
-- Frontend-to-backend featureMapping: resolves the frontend's axios `baseURL` (e.g. `/api/v1` from client.ts), normalizes `${id}`/`:id` to a common `{}` placeholder, and matches by (method, normalized path). Verified end to end on the real repo: src/api/alumni.ts <-> api/cmd/server/main.go linked correctly, including the one PUT call with a template-literal URL (correctly marked assumed). Same-feature sibling chunks are also linked into featureMapping mechanically (no assumption needed, since Phase 2 already grouped them).
-- Confidence formula: starts at 0.95, subtracts proportionally to the share of claims marked assumed in that chunk (confidence_from_flags in common.py) — a documented starting point, not a validated scoring model, consistent with the project's own 0.85 threshold being untested.
-- Known, documented gaps (not silently papered over):
-  - `pullRequest` (required by the rules doc) is left `null` with a `pullRequestNote` explaining why: a shallow git clone carries no GitHub PR metadata, and this phase does not call the GitHub API. Closing this needs a `gh api` / GitHub PR-search lookup keyed by file path, added as a follow-up rather than faked here.
-  - Python and Spring Boot extraction (as opposed to grouping, which Phase 2 already does) are not implemented — the alumni repo has no genuine marker for either stack, so there was nothing real to validate against.
-  - The brace-matching used to find a function/struct/interface's end line is naive (doesn't understand braces inside strings or comments) — a known limitation of regex extraction, not hidden.
-- Verified end to end against the real alumni repo (22 chunks): e.g. `src/features/admin/AlumniAdminGrid.tsx` correctly extracted 17 event handlers (all inline JSX, all marked assumed) plus 2 named functions, landing at confidence 0.5/low; `api/internal/repository/alumni_repository.go` extracted 4 structs, 11 functions, 7 real pgx side effects, landing at confidence 0.95/high.
-- 66 tests passing (40 existing + 21 extractor unit tests against real-shaped fixtures, including the auth-false-positive regression + 5 synthetic end-to-end integration tests covering the full frontend<->backend linking, independent of the external repo clone).
+- Regex/heuristic-based static analysis for TypeScript/React and Go (ts_extractor.py, go_extractor.py) — a deliberate scope decision, documented in code, not a real AST parser. Every uncertain claim is marked assumed per the locked accuracy rule.
+- Real bug found and fixed via testing against the alumni repo: a route-protection heuristic false-positived on the word "auth" appearing in comments explaining auth was DISABLED. Fixed to check only `.Use()` calls on the matching route-group variable; regression test added.
+- Frontend-to-backend featureMapping: resolves axios baseURL, normalizes `${id}`/`:id` params, matches by (method, path). Verified end to end on the real repo.
+- Documented gaps: pullRequest was null (closed partially in Phase 4, see below); Python/Spring Boot extraction not implemented (no real repo to validate against); naive brace-matching doesn't understand strings/comments.
+- Verified end to end: AlumniAdminGrid.tsx -> 17 handlers + 2 functions, confidence 0.5/low; alumni_repository.go -> 4 structs, 11 functions, 7 real pgx calls, confidence 0.95/high.
+- 66 tests passing.
 
-## Phase 4 — Storage and reuse (step 5 and 6)
-- Save each chunk's JSON into a dummy folder mirroring the client repo's structure.
-- contentHash and lastUpdated are already computed by Phase 3's json_builder; Phase 4 adds the actual write-to-mirrored-folder and the hash-comparison reuse logic.
-- pullRequest is still open — see Phase 3's gap note; likely needs a GitHub API lookup added here or deferred further.
-- Reuse logic: compare content hash each run; re-analyze only changed chunks.
+## Phase 4 — Storage and reuse (step 5 and 6) (done)
+- mirror_store.py: each chunk's JSON is written to `<output_root>/<filePath>.json` — mirroring the client repo's own directory structure exactly, with `.json` appended so it never collides with the real source file.
+- needs_reanalysis() compares the file's current content hash against the stored record's contentHash. No stored record, no stored hash, or a hash mismatch all trigger re-analysis; an exact match reuses the stored record with zero re-extraction.
+- reuse_pipeline.py (extract_repo_with_reuse): wraps Phase 3's builders with this check per chunk, then still recomputes featureMapping over the full set every run (cheap and mechanical — only the per-file extraction itself is skipped on reuse).
+- Proven, not just asserted: a test suite builds a small repo, runs extraction twice with no changes and confirms 100% reuse with the SAME lastUpdated/contentHash (not just a matching boolean), then changes one file and confirms exactly one chunk is re-extracted while the untouched one's record is byte-identical to before.
+- Verified against the real alumni repo (22 chunks): run 1 -> {reused: 0, reanalyzed: 22}; run 2 with no changes -> {reused: 22, reanalyzed: 0}. Output folder structure mirrors the repo exactly (e.g. output/src/features/admin/AlumniAdminGrid.tsx.json).
+- pullRequest gap partially closed: pull_request_lookup.py uses `gh api` to walk commit history for a file and find its most recent associated PR, when the pipeline actually has GitHub API access to that repo (an attached, owned repo — not a third-party example repo attached just to read its PR history, which this deliberately did not do for the alumni repo). Verified the underlying mechanism works against our own repo (correctly found the real commit for README.md, correctly returned None since that commit was pushed directly rather than via a PR — not a bug, an accurate result). When no API access or no linked PR exists, the field stays null with its note, exactly as before — never fabricated.
+- 70 tests passing (66 existing + 4 new reuse-pipeline tests).
 
 ## Phase 5 — Narrator script generation (step 7)
 - Four-beat script per chunk (purpose, connections, flow, recap), 90-180s, ~130 wpm budget.
