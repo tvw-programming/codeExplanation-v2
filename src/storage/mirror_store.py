@@ -32,7 +32,9 @@ from src.extract.common import content_hash
 #   3 - importantFunctions carry doc comments, call graph and body
 #       facts, so the narration can describe a function instead of
 #       only naming it.
-EXTRACTOR_VERSION = 3
+#   4 - records carry the file's own header comment, for the card that
+#       introduces each file in the video.
+EXTRACTOR_VERSION = 4
 
 
 def output_path_for(output_root: Path, file_path: str) -> Path:

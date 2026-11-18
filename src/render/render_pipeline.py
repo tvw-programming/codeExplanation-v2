@@ -130,6 +130,7 @@ def build_render_bundle(
     output_dir: Path,
     fps: int = 30,
     record: dict | None = None,
+    overview: dict | None = None,
 ) -> dict:
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -169,6 +170,8 @@ def build_render_bundle(
         "ttsEngine": tts_engine,
         "narrationAudio": str(wav_path),
         "cleanText": " ".join(p["beat"].spoken for p in placements),
+        # Contents of the card shown before this file's walkthrough.
+        "fileOverview": overview,
         "narrationSegments": narration_segments,
         "highlightConfig": highlight_config,
     }

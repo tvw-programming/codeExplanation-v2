@@ -109,6 +109,48 @@ def leading_doc_comment(lines: list[str], start_line: int) -> str | None:
     return prose
 
 
+def file_header_comment(lines: list[str]) -> str | None:
+    """The comment block at the very top of a file, which is where a
+    file's own statement of purpose lives when it has one.
+
+    Only a comment that opens the file counts. A comment further down
+    belongs to whatever it sits above, and a licence header is skipped
+    by the same boilerplate rule the per-function comments use.
+    """
+    index = 0
+    while index < len(lines) and not lines[index].strip():
+        index += 1
+    if index >= len(lines):
+        return None
+
+    first = lines[index].strip()
+    block: list[str] = []
+
+    if first.startswith("/*"):
+        cursor = index
+        while cursor < len(lines) and "*/" not in lines[cursor]:
+            cursor += 1
+        if cursor >= len(lines):
+            return None
+        block = lines[index:cursor + 1]
+    elif first.startswith("//"):
+        cursor = index
+        while cursor < len(lines) and lines[cursor].strip().startswith("//"):
+            cursor += 1
+        block = lines[index:cursor]
+    else:
+        return None
+
+    prose = _strip_comment_markers(block)
+    if not prose or _BOILERPLATE_RE.match(prose):
+        return None
+    if len(prose.split()) < 3:
+        return None
+
+    prose, _ = redact_secrets(prose)
+    return prose
+
+
 def _body(lines: list[str], line_range) -> str:
     start, end = line_range
     return "\n".join(lines[max(0, start - 1):end])

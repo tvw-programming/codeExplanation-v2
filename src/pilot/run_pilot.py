@@ -16,6 +16,7 @@ from pathlib import Path
 from src.detect.project_type import detect_project_type
 from src.extract.reuse_pipeline import extract_repo_with_reuse
 from src.narrate.pipeline import generate_narration_for_repo
+from src.narrate.file_overview import build_file_overviews
 from src.render.render_pipeline import build_render_bundle
 from src.validate.schema_check import validate_records
 
@@ -37,6 +38,10 @@ def run_pilot(repo_root: str | Path, output_root: str | Path, render: bool = Tru
     narration_seconds = sorted(round(r["script"].estimated_seconds, 1) for r in narration.values())
     in_target_band = sum(1 for r in narration.values() if r["script"].within_target_range)
 
+    # Caller/callee links are a property of the record set as a whole,
+    # so they are resolved once here rather than per chunk.
+    file_overviews = build_file_overviews(records, repo_root)
+
     render_results = []
     if render:
         for chunk_id, entry in narration.items():
@@ -44,6 +49,7 @@ def run_pilot(repo_root: str | Path, output_root: str | Path, render: bool = Tru
                 entry["script"],
                 output_root / "render" / chunk_id,
                 record=entry.get("record"),
+                overview=file_overviews.get(chunk_id),
             )
             if "error" in bundle:
                 render_results.append({"chunkId": chunk_id, "error": bundle["error"]})

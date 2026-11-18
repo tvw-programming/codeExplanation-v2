@@ -21,7 +21,7 @@ from pathlib import Path
 
 from src.chunk.chunk_splitter import ChunkPlan
 from src.storage.mirror_store import EXTRACTOR_VERSION
-from .function_context import build_function_context
+from .function_context import build_function_context, file_header_comment
 from .common import (
     detect_language, read_lines, content_hash, now_iso,
     confidence_from_flags, confidence_level,
@@ -210,6 +210,10 @@ def build_frontend_chunk_record(
         "projectType": project_type_dict,
         "language": detect_language(chunk.file_path),
         "lineRange": [1, len(lines)],
+        # The file's own header comment, where it has one: the author's
+        # statement of what this file is for, used as the purpose on the
+        # file card that introduces each section of the video.
+        "fileDescription": file_header_comment(lines),
         "frameworkOrLibrary": framework_or_library,
         "inputs": inputs,
         "outputs": [],
@@ -328,6 +332,10 @@ def build_backend_go_chunk_record(
         "projectType": project_type_dict,
         "language": detect_language(chunk.file_path),
         "lineRange": [1, len(lines)],
+        # The file's own header comment, where it has one: the author's
+        # statement of what this file is for, used as the purpose on the
+        # file card that introduces each section of the video.
+        "fileDescription": file_header_comment(lines),
         "frameworkOrLibrary": framework_or_library,
         "inputs": [],
         "outputs": [],
