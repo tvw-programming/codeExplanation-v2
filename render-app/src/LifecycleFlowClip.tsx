@@ -86,12 +86,15 @@ export const LifecycleFlowClip: React.FC<{
       >
         {steps.map((step, i) => {
           const active = i === activeStep;
+          // Fiber middleware steps use Fiber green (secondary); others use primary.
+          const accent =
+            step.action === "middleware" ? theme.secondary || theme.primary : theme.primary;
           return (
             <Box key={`${step.order}-${step.label}`} sx={{ display: "flex", alignItems: "center", gap: "12px" }}>
               <Box
                 sx={{
-                  border: `2px ${step.assumed ? "dashed" : "solid"} ${theme.primary}`,
-                  bgcolor: active ? theme.primary : `${theme.primary}22`,
+                  border: `2px ${step.assumed ? "dashed" : "solid"} ${accent}`,
+                  bgcolor: active ? accent : `${accent}22`,
                   color: active ? "#0b1020" : CEV_FG_PRIMARY,
                   opacity: step.assumed && !active ? 0.7 : 1,
                   borderRadius: "999px",

@@ -86,3 +86,105 @@ def flag_react_lifecycle_security(flows: list[dict]) -> list[dict]:
                     "assumed": True,
                 })
     return flags
+
+
+def flag_go_fiber_tree_security(graph: dict | None, record: dict | None = None) -> list[dict]:
+    """Flag missing auth middleware and wide-open CORS on route trees."""
+    flags: list[dict] = []
+    if not graph:
+        return flags
+    record = record or {}
+    routes_by_id = {
+        n["id"]: n for n in (graph.get("nodes") or []) if n.get("kind") == "route"
+    }
+
+    for node in graph.get("nodes") or []:
+        if node.get("kind") != "route":
+            continue
+        meta = node.get("meta") or {}
+        if meta.get("role") == "group":
+            continue
+        # Leaf route nodes carry method/path.
+        if not meta.get("method"):
+            continue
+        if meta.get("protected"):
+            continue
+        flags.append({
+            "id": f"unauthed-route:{node['id']}",
+            "severity": "medium",
+            "ruleId": "missing_auth_middleware",
+            "message": f"Route {node.get('label')} has no auth/jwt middleware in this file's ordered chain.",
+            "nodeIds": [node["id"]],
+            "edgeIds": [],
+            "assumed": True,
+        })
+
+    for mw in record.get("middleware") or []:
+        if not mw.get("isCors"):
+            continue
+        mid = None
+        for node in graph.get("nodes") or []:
+            if node.get("kind") == "middleware" and node.get("label") == mw.get("name"):
+                mid = node["id"]
+                break
+        flags.append({
+            "id": f"cors:{mw.get('name')}:{mw.get('order')}",
+            "severity": "low",
+            "ruleId": "cors_middleware_present",
+            "message": "CORS middleware detected; verify origins are not wide open.",
+            "nodeIds": [mid] if mid else ([graph["rootId"]] if graph.get("rootId") in routes_by_id or graph.get("rootId") else []),
+            "edgeIds": [],
+            "assumed": True,
+        })
+
+    return flags
+
+
+def flag_go_fiber_lifecycle_security(flows: list[dict]) -> list[dict]:
+    flags: list[dict] = []
+    for flow in flows:
+        steps = flow.get("steps") or []
+        has_auth_mw = any(
+            s.get("action") == "middleware" and (s.get("meta") or {}).get("isAuth")
+            for s in steps
+        )
+        # Auth after handler would be wrong; our builder always puts mw first,
+        # but flag if a middleware step appears after the handler step.
+        handler_order = next((s["order"] for s in steps if s.get("action") == "handler"), None)
+        for step in steps:
+            if (
+                step.get("action") == "middleware"
+                and handler_order is not None
+                and step.get("order", 0) > handler_order
+            ):
+                flags.append({
+                    "id": f"mw-order:{flow['id']}:{step['order']}",
+                    "severity": "high",
+                    "ruleId": "middleware_after_handler",
+                    "message": "Middleware step appears after the handler in this flow ordering.",
+                    "nodeIds": [],
+                    "edgeIds": [],
+                    "assumed": True,
+                })
+        if not has_auth_mw and not (flow.get("meta") or {}).get("protected"):
+            flags.append({
+                "id": f"unauthed-flow:{flow['id']}",
+                "severity": "medium",
+                "ruleId": "missing_auth_middleware",
+                "message": f"Lifecycle for {flow.get('title')} has no auth middleware step in this file.",
+                "nodeIds": [],
+                "edgeIds": [],
+                "assumed": True,
+            })
+        for step in steps:
+            if step.get("action") == "db" and "concat" in (step.get("label") or "").lower():
+                flags.append({
+                    "id": f"sql:{flow['id']}:{step['order']}",
+                    "severity": "high",
+                    "ruleId": "sql_string_concat",
+                    "message": "Database step label suggests string-concat SQL; verify parameterization.",
+                    "nodeIds": [],
+                    "edgeIds": [],
+                    "assumed": True,
+                })
+    return flags

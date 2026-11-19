@@ -67,8 +67,17 @@ export function treeFramesFor(narration: ClipNarration | null | undefined): numb
 
 type LayoutNode = VisualNode & { x: number; y: number; depth: number };
 
+/** Structural parent→child edges used for layout (FE mounts or BE routes). */
+function structuralEdges(graph: VisualGraph): VisualEdge[] {
+  const kinds =
+    graph.kind === "route_tree"
+      ? new Set(["routes_to"])
+      : new Set(["mounts", "provides"]);
+  return (graph.edges || []).filter((e) => kinds.has(e.kind));
+}
+
 function layoutTree(graph: VisualGraph, width: number, height: number): LayoutNode[] {
-  const mounts = (graph.edges || []).filter((e) => e.kind === "mounts");
+  const mounts = structuralEdges(graph);
   const children = new Map<string, string[]>();
   for (const e of mounts) {
     const list = children.get(e.from) || [];
@@ -130,13 +139,15 @@ export const ComponentTreeClip: React.FC<{
   narration?: ClipNarration | null;
 }> = ({ chunkDir, visualGraph, visualTheme, securityFlags = [], narration }) => {
   const frame = useCurrentFrame();
-  const theme = visualTheme || themeForStack("react");
+  const theme = visualTheme || themeForStack(visualGraph.kind === "route_tree" ? "go" : "react");
   const width = 1280;
   const height = 720;
   const laid = layoutTree(visualGraph, width, height);
   const byId = new Map(laid.map((n) => [n.id, n]));
-  const mounts = (visualGraph.edges || []).filter((e) => e.kind === "mounts");
+  const structure = structuralEdges(visualGraph);
+  const mwEdges = (visualGraph.edges || []).filter((e) => e.kind === "middleware_before");
   const flagged = new Set(securityFlags.flatMap((f) => f.nodeIds || []));
+  const isRouteTree = visualGraph.kind === "route_tree";
 
   const activeBeat =
     narration?.beats?.find(
@@ -150,15 +161,15 @@ export const ComponentTreeClip: React.FC<{
       <StackLogo theme={theme} />
       <Box sx={{ position: "absolute", top: 24, left: 28 }}>
         <Typography sx={{ color: CEV_FG_MUTED, fontSize: 13, letterSpacing: 1 }}>
-          COMPONENT TREE
+          {isRouteTree ? "ROUTE TREE" : "COMPONENT TREE"}
         </Typography>
         <Typography sx={{ color: CEV_FG_PRIMARY, fontSize: 22, fontWeight: 600 }}>
-          {byId.get(visualGraph.rootId)?.label || "Component"}
+          {byId.get(visualGraph.rootId)?.label || (isRouteTree ? "Routes" : "Component")}
         </Typography>
       </Box>
 
       <svg width={width} height={height} style={{ position: "absolute", inset: 0 }}>
-        {mounts.map((e) => {
+        {structure.map((e) => {
           const from = byId.get(e.from);
           const to = byId.get(e.to);
           if (!from || !to) return null;
@@ -176,9 +187,31 @@ export const ComponentTreeClip: React.FC<{
             />
           );
         })}
+        {mwEdges.map((e) => {
+          const from = byId.get(e.from);
+          const to = byId.get(e.to);
+          if (!from || !to) return null;
+          // Fiber green accent for middleware_before edges.
+          return (
+            <line
+              key={e.id}
+              x1={from.x}
+              y1={from.y + 18}
+              x2={to.x}
+              y2={to.y - 18}
+              stroke={theme.secondary || theme.primary}
+              strokeOpacity={e.assumed ? 0.55 : 0.9}
+              strokeWidth={2}
+              strokeDasharray={e.assumed ? "6 4" : "2 3"}
+            />
+          );
+        })}
       </svg>
 
-      {laid.map((n) => (
+      {laid.map((n) => {
+        const isMw = n.kind === "middleware";
+        const stroke = isMw ? theme.secondary || theme.primary : theme.primary;
+        return (
         <Box
           key={n.id}
           sx={{
@@ -187,8 +220,8 @@ export const ComponentTreeClip: React.FC<{
             top: n.y - 18,
             width: 140,
             textAlign: "center",
-            border: `2px solid ${theme.primary}`,
-            bgcolor: `${theme.primary}30`,
+            border: `2px solid ${stroke}`,
+            bgcolor: `${stroke}30`,
             borderRadius: "8px",
             px: 1,
             py: 0.5,
@@ -221,7 +254,8 @@ export const ComponentTreeClip: React.FC<{
             />
           ) : null}
         </Box>
-      ))}
+      );
+      })}
 
       {activeBeat?.spoken ? (
         <Box

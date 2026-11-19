@@ -35,7 +35,7 @@ the full explanation.
 | 3 | `normalize_path()` / `match_calls_to_routes()` | One shared `{}`-placeholder normalization for both `${id}` and `:id` | Exact string matching — would never connect a frontend call to its backend route |
 | 3 | inline JSX handler extraction | Always `assumed: true`, no synthesized name | Inventing a plausible name/purpose for an anonymous inline function |
 | 4 | `output_path_for()` | Mirrors the real repo's directory structure | A flat `chunks/<chunkId>.json` layout — opaque to a human browsing the output |
-| 4 | `needs_reanalysis()` | SHA-256 content hash **and** `EXTRACTOR_VERSION` (currently 6) | File modification timestamp; also: hash-only reuse would keep stale JSON after extractor upgrades |
+| 4 | `needs_reanalysis()` | SHA-256 content hash **and** `EXTRACTOR_VERSION` (currently 7) | File modification timestamp; also: hash-only reuse would keep stale JSON after extractor upgrades |
 | 4 | "no stored hash" handling | Treated as "needs re-analysis" | Trusting an old record with no hash to compare — unjustified optimism |
 | 4 | `extract_repo_with_reuse()` | Always recomputes `featureMapping` fully, even with reused chunks | Caching cross-chunk links per-chunk — risks stale links when a linked chunk changes |
 | 4 | `find_last_pull_request_url()` | Best-effort, never raises, returns `None` on any failure | Propagating failures — `pullRequest` being unknown is an expected, accepted state |

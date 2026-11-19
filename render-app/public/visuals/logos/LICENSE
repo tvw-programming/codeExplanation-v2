@@ -2,3 +2,9 @@ React logo mark: derived from the official React brand atom (https://react.dev).
 Trademark of Meta / React. Used here only to identify the technology stack;
 no affiliation or endorsement implied. Do not modify the mark beyond
 monochrome/on-dark contrast variants permitted by brand guidance.
+
+Go Fiber mark (go-fiber.svg): original simplified mark using Go brand cyan
+(#00ADD8) and Fiber green (#00C853) for stack identification on dark video
+frames only. Go and the gopher are trademarks of the Go project; Fiber is a
+trademark of its maintainers. No affiliation or endorsement implied.
+SPDX-License-Identifier: CC0-1.0 (this simplified identifying glyph).

@@ -321,6 +321,8 @@ def build_backend_go_chunk_record(
     functions = go.extract_functions(text)
     side_effects = go.extract_side_effects(text)
     routes = go.extract_routes(text, uses_fiber)
+    middleware = go.extract_middleware(text)
+    group_parents, fiber_roots = go.extract_route_groups(text)
 
     framework_or_library = _resolve_go_framework_or_library(imports)
     dependencies = [{"path": imp.path, "usedFor": "internal import"} for imp in imports if imp.is_internal]
@@ -374,8 +376,49 @@ def build_backend_go_chunk_record(
             "assumed": r.assumed,
             "handler": r.handler,
             "notes": r.note,
+            "routerVar": r.router_var,
+            "line": r.line,
+            # Ordered middleware chain for this router (ancestors then self).
+            "middleware": [
+                {
+                    "name": mw.name,
+                    "order": mw.order,
+                    "line": mw.line,
+                    "isAuth": mw.is_auth,
+                    "isCors": mw.is_cors,
+                    "assumed": mw.assumed,
+                    "source": mw.source,
+                    "routerVar": mw.router_var,
+                }
+                for mw in go.middleware_chain_for_router(
+                    r.router_var, group_parents, middleware, fiber_roots,
+                )
+            ],
         }
         for r in routes
+    ]
+
+    middleware_out = [
+        {
+            "name": mw.name,
+            "order": mw.order,
+            "line": mw.line,
+            "isAuth": mw.is_auth,
+            "isCors": mw.is_cors,
+            "assumed": mw.assumed,
+            "source": mw.source,
+            "routerVar": mw.router_var,
+        }
+        for mw in middleware
+    ]
+
+    route_groups_out = [
+        {
+            "var": var,
+            "parent": parent,
+            "prefix": prefix,
+        }
+        for var, (parent, prefix) in sorted(group_parents.items())
     ]
 
     total_claims = len(important_functions) + len(routes_out) + len(data_models_out)
@@ -386,7 +429,10 @@ def build_backend_go_chunk_record(
     if any(fn["truncated"] for fn in important_functions):
         notes.append("One or more function snippets were trimmed to 120 lines; see continuationNote per entry.")
     if routes_out:
-        notes.append("Route protection is inferred from local .Use() calls only; verify before relying on it.")
+        notes.append(
+            "Route protection is inferred from local .Use() / Group(..., mw) calls on this "
+            "router or its ancestor groups only; verify before relying on it."
+        )
     if any(fn["secretsRedacted"] for fn in important_functions) or any(s["secretsRedacted"] for s in data_models_out):
         notes.append("A possible secret was detected and redacted from one or more code snippets in this "
                       "chunk before it was written; verify the source file for exposed credentials.")
@@ -415,6 +461,9 @@ def build_backend_go_chunk_record(
         "dependencies": dependencies,
         "dataModels": data_models_out,
         "routes": routes_out,
+        "middleware": middleware_out,
+        "routeGroups": route_groups_out,
+        "usesFiber": uses_fiber,
         "confidence": confidence,
         "confidenceLevel": confidence_level(confidence),
         "notes": " ".join(notes) if notes else None,

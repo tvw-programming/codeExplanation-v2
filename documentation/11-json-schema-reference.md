@@ -47,7 +47,7 @@ one ever disagree, the `docs/` file wins.
 | Field | Required | Rule | Implemented by |
 |---|---|---|---|
 | `contentHash` | yes | SHA-256 of the primary file's raw bytes | `common.py: content_hash()` |
-| `extractorVersion` | yes (implementation) | Integer; currently `6`. Hash match is **not** enough to reuse — version mismatch forces re-analysis | `mirror_store.EXTRACTOR_VERSION` / `json_builder.py` |
+| `extractorVersion` | yes (implementation) | Integer; currently `7`. Hash match is **not** enough to reuse — version mismatch forces re-analysis | `mirror_store.EXTRACTOR_VERSION` / `json_builder.py` |
 | `fileDescription` | no | File header comment; FileCard purpose | `file_header_comment()` |
 | `lastUpdated` | yes | ISO-8601 UTC timestamp of last analysis | `common.py: now_iso()` |
 | `pullRequest` | yes (key); value may be `null` | Full PR URL, when determinable | `pull_request_lookup.py: find_last_pull_request_url()` |

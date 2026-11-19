@@ -23,6 +23,30 @@ export const VISUAL_THEME_BY_STACK: Record<string, VisualTheme> = {
     logoAssetId: "react-logo-ondark",
     logoPath: "visuals/logos/react.svg",
   },
+  go: {
+    stack: "go",
+    primary: "#00ADD8",
+    secondary: "#00C853",
+    onDark: "#00E5FF",
+    logoAssetId: "go-fiber-logo-ondark",
+    logoPath: "visuals/logos/go-fiber.svg",
+  },
+  gofiber: {
+    stack: "go",
+    primary: "#00ADD8",
+    secondary: "#00C853",
+    onDark: "#00E5FF",
+    logoAssetId: "go-fiber-logo-ondark",
+    logoPath: "visuals/logos/go-fiber.svg",
+  },
+  go_fiber: {
+    stack: "go",
+    primary: "#00ADD8",
+    secondary: "#00C853",
+    onDark: "#00E5FF",
+    logoAssetId: "go-fiber-logo-ondark",
+    logoPath: "visuals/logos/go-fiber.svg",
+  },
 };
 
 export function themeForStack(stack: string | undefined | null): VisualTheme {

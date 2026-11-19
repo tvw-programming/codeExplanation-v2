@@ -26,10 +26,26 @@ VISUAL_THEME_BY_STACK: dict[str, dict] = {
     "go": {
         "stack": "go",
         "primary": "#00ADD8",
+        "secondary": "#00C853",  # Fiber green — middleware edges / accent
+        "onDark": "#00E5FF",
+        "logoAssetId": "go-fiber-logo-ondark",
+        "logoPath": "visuals/logos/go-fiber.svg",
+    },
+    "gofiber": {
+        "stack": "go",
+        "primary": "#00ADD8",
         "secondary": "#00C853",
         "onDark": "#00E5FF",
         "logoAssetId": "go-fiber-logo-ondark",
-        "logoPath": "visuals/logos/go.svg",
+        "logoPath": "visuals/logos/go-fiber.svg",
+    },
+    "go_fiber": {
+        "stack": "go",
+        "primary": "#00ADD8",
+        "secondary": "#00C853",
+        "onDark": "#00E5FF",
+        "logoAssetId": "go-fiber-logo-ondark",
+        "logoPath": "visuals/logos/go-fiber.svg",
     },
     "python": {
         "stack": "python",

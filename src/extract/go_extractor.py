@@ -86,6 +86,21 @@ class ExtractedRoute:
     protected: bool
     assumed: bool
     note: str | None
+    router_var: str = ""       # Fiber router/group variable the route registered on
+    line: int | None = None
+
+
+@dataclass
+class ExtractedMiddleware:
+    """One .Use(...) / Group(..., mw) registration, in source order."""
+    router_var: str
+    name: str
+    order: int
+    line: int
+    is_auth: bool
+    is_cors: bool
+    assumed: bool
+    source: str  # "use" | "group"
 
 
 def _line_of(text: str, offset: int) -> int:
@@ -183,6 +198,140 @@ def extract_side_effects(text: str) -> list[tuple[str, int]]:
 
 USE_CALL_RE = re.compile(r"(?P<var>\w+)\.Use\(\s*(?P<call>[^)]*)\)")
 
+# Group with optional trailing middleware args after the prefix string.
+# e.g. api := app.Group("/api", AuthMiddleware, cors.New())
+ROUTE_GROUP_WITH_MW_RE = re.compile(
+    r"(?P<var>\w+)\s*:=\s*(?P<parent>\w+)\.Group\(\s*"
+    r"(?P<quote>['\"])(?P<prefix>[^'\"]*)(?P=quote)"
+    r"(?P<rest>\s*,\s*[^)]+)?\)"
+)
+
+
+def _middleware_display_name(expr: str) -> str:
+    """Short label for a middleware call/arg (never invent a business title)."""
+    cleaned = expr.strip()
+    if not cleaned:
+        return "middleware"
+    # Prefer the callee identifier: package.Func(...), Func, or &Type{}
+    m = re.match(r"(?P<name>[\w.]+)(?:\s*\(|$)", cleaned)
+    if m:
+        return m.group("name")
+    return cleaned[:48]
+
+
+def _split_middleware_args(call_body: str) -> list[str]:
+    """Split comma-separated Use/Group middleware args, respecting nesting."""
+    parts: list[str] = []
+    depth = 0
+    start = 0
+    for i, c in enumerate(call_body):
+        if c in "({[":
+            depth += 1
+        elif c in ")}]":
+            depth = max(0, depth - 1)
+        elif c == "," and depth == 0:
+            part = call_body[start:i].strip()
+            if part:
+                parts.append(part)
+            start = i + 1
+    tail = call_body[start:].strip()
+    if tail:
+        parts.append(tail)
+    return parts
+
+
+def extract_middleware(text: str) -> list[ExtractedMiddleware]:
+    """Ordered middleware registrations from .Use and Group(..., mw).
+
+    Order is file appearance order (Fiber runs Use hooks in registration
+    order on that router). Auth/CORS flags are substring heuristics on the
+    argument expression only — same honesty as route.protected.
+    """
+    events: list[tuple[int, ExtractedMiddleware]] = []
+    order = 0
+
+    for m in USE_CALL_RE.finditer(text):
+        for arg in _split_middleware_args(m.group("call")):
+            name = _middleware_display_name(arg)
+            is_auth = bool(re.search(r"(?i)auth|jwt", arg))
+            is_cors = bool(re.search(r"(?i)cors", arg))
+            events.append((m.start(), ExtractedMiddleware(
+                router_var=m.group("var"),
+                name=name,
+                order=order,
+                line=_line_of(text, m.start()),
+                is_auth=is_auth,
+                is_cors=is_cors,
+                assumed=True,
+                source="use",
+            )))
+            order += 1
+
+    for m in ROUTE_GROUP_WITH_MW_RE.finditer(text):
+        rest = (m.group("rest") or "").lstrip().lstrip(",").strip()
+        if not rest:
+            continue
+        for arg in _split_middleware_args(rest):
+            name = _middleware_display_name(arg)
+            is_auth = bool(re.search(r"(?i)auth|jwt", arg))
+            is_cors = bool(re.search(r"(?i)cors", arg))
+            events.append((m.start(), ExtractedMiddleware(
+                router_var=m.group("var"),
+                name=name,
+                order=order,
+                line=_line_of(text, m.start()),
+                is_auth=is_auth,
+                is_cors=is_cors,
+                assumed=True,
+                source="group",
+            )))
+            order += 1
+
+    events.sort(key=lambda item: (item[0], item[1].order))
+    # Re-number in stable source order after sort.
+    out: list[ExtractedMiddleware] = []
+    for i, (_pos, mw) in enumerate(events):
+        out.append(ExtractedMiddleware(
+            router_var=mw.router_var,
+            name=mw.name,
+            order=i,
+            line=mw.line,
+            is_auth=mw.is_auth,
+            is_cors=mw.is_cors,
+            assumed=mw.assumed,
+            source=mw.source,
+        ))
+    return out
+
+
+def middleware_chain_for_router(
+    router_var: str,
+    group_parents: dict[str, tuple[str, str]],
+    middleware: list[ExtractedMiddleware],
+    roots: set[str],
+) -> list[ExtractedMiddleware]:
+    """Ancestor-then-self middleware chain for a router var (registration order)."""
+    chain_vars: list[str] = []
+    seen: set[str] = set()
+    current = router_var
+    while current and current not in seen:
+        seen.add(current)
+        chain_vars.append(current)
+        if current in group_parents:
+            current = group_parents[current][0]
+        elif current in roots:
+            break
+        else:
+            break
+    chain_vars.reverse()  # root → leaf
+    by_var: dict[str, list[ExtractedMiddleware]] = {}
+    for mw in middleware:
+        by_var.setdefault(mw.router_var, []).append(mw)
+    ordered: list[ExtractedMiddleware] = []
+    for var in chain_vars:
+        ordered.extend(sorted(by_var.get(var, []), key=lambda m: m.order))
+    return ordered
+
 
 def _resolve_group_prefix(
     var: str,
@@ -244,10 +393,25 @@ def extract_routes(text: str, uses_fiber: bool) -> list[ExtractedRoute]:
         if not resolved:
             unresolved_groups.add(var)
 
+    all_middleware = extract_middleware(text)
+    # Auth on this var OR any ancestor group/app in the chain.
     protected_vars: set[str] = set()
-    for m in USE_CALL_RE.finditer(text):
-        if re.search(r"(?i)auth|jwt", m.group("call")):
-            protected_vars.add(m.group("var"))
+    for mw in all_middleware:
+        if mw.is_auth:
+            protected_vars.add(mw.router_var)
+
+    def _var_or_ancestor_protected(var: str) -> bool:
+        current = var
+        seen: set[str] = set()
+        while current and current not in seen:
+            if current in protected_vars:
+                return True
+            seen.add(current)
+            if current in group_parents:
+                current = group_parents[current][0]
+            else:
+                break
+        return False
 
     routes: list[ExtractedRoute] = []
     for m in ROUTE_REGISTER_RE.finditer(text):
@@ -260,14 +424,15 @@ def extract_routes(text: str, uses_fiber: bool) -> list[ExtractedRoute]:
 
         path = prefix.rstrip("/") + m.group("path")
         is_dynamic = ":" in m.group("path")
-        protected = var in protected_vars
+        protected = _var_or_ancestor_protected(var)
         notes = []
         if prefix_assumed:
             notes.append("Route group prefix for this variable could not be resolved; path may be incomplete.")
         notes.append(
-            "Protected status is inferred only from .Use() calls on this same variable in this "
-            "file, matched by an 'auth'/'jwt' substring in the call — not real call-graph analysis, "
-            "and it can miss auth applied elsewhere or misread an unrelated call. Verify before relying on it."
+            "Protected status is inferred only from .Use() / Group(..., mw) calls on this router "
+            "or its ancestor groups in this file, matched by an 'auth'/'jwt' substring in the call "
+            "— not real call-graph analysis, and it can miss auth applied elsewhere or misread an "
+            "unrelated call. Verify before relying on it."
         )
         routes.append(ExtractedRoute(
             method=m.group("method").upper(),
@@ -278,5 +443,17 @@ def extract_routes(text: str, uses_fiber: bool) -> list[ExtractedRoute]:
             protected=protected,
             assumed=True,
             note=" ".join(notes),
+            router_var=var,
+            line=_line_of(text, m.start()),
         ))
     return routes
+
+
+def extract_route_groups(text: str) -> tuple[dict[str, tuple[str, str]], set[str]]:
+    """Return (group_parents var→(parent, prefix), fiber app root vars)."""
+    group_parents: dict[str, tuple[str, str]] = {}
+    for m in ROUTE_GROUP_RE.finditer(text):
+        group_parents[m.group("var")] = (m.group("parent"), m.group("prefix"))
+    roots = {m.group("var") for m in FIBER_APP_RE.finditer(text)}
+    roots.add("app")
+    return group_parents, roots

@@ -30,9 +30,11 @@ export const VisualBreakdownStill: React.FC<{
   narration: ClipNarration;
   filePath?: string | null;
 }> = ({ chunkDir, visualGraph, visualTheme, narration, filePath }) => {
-  const theme = visualTheme || themeForStack("react");
+  const isRouteTree = visualGraph.kind === "route_tree";
+  const theme = visualTheme || themeForStack(isRouteTree ? "go" : "react");
   const root = (visualGraph.nodes || []).find((n) => n.id === visualGraph.rootId);
-  const childCount = (visualGraph.edges || []).filter((e) => e.kind === "mounts").length;
+  const edgeKind = isRouteTree ? "routes_to" : "mounts";
+  const childCount = (visualGraph.edges || []).filter((e) => e.kind === edgeKind).length;
   const name = filePath?.split("/").pop() || root?.label || "this file";
 
   return (
@@ -57,7 +59,8 @@ export const VisualBreakdownStill: React.FC<{
           {name}
         </Typography>
         <Typography sx={{ color: theme.primary, fontSize: 16, mb: 3 }}>
-          {root?.label || "component"} · {childCount} mount edge{childCount === 1 ? "" : "s"}
+          {root?.label || (isRouteTree ? "routes" : "component")} · {childCount}{" "}
+          {isRouteTree ? "route" : "mount"} edge{childCount === 1 ? "" : "s"}
         </Typography>
         <Box
           sx={{
