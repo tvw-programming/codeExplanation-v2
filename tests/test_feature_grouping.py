@@ -97,3 +97,43 @@ def test_spring_boot_pairs_controller_and_service(tmp_path):
     alumni = [f for f in features if f.name == "Alumni"]
     assert len(alumni) == 1
     assert len(alumni[0].files) == 2
+
+
+def test_flat_files_inside_the_organizing_folder_are_not_dropped(tmp_path):
+    """src/pages/Home.tsx is at least as common as src/pages/home/index.tsx.
+    These used to vanish: only subdirectories of the organizing folder
+    became features, and the folder itself was then skipped by the
+    loose-file pass, so a flat-pages repo produced no features at all
+    and the run "succeeded" having explained nothing."""
+    _write(tmp_path / "src" / "pages" / "Home.tsx")
+    _write(tmp_path / "src" / "pages" / "About.tsx")
+
+    features = group_react_or_angular_features(tmp_path, tmp_path / "src", "react")
+
+    assert features, "a flat pages folder must still produce a feature"
+    files = [f for feature in features for f in feature.files]
+    assert "src/pages/Home.tsx" in files
+    assert "src/pages/About.tsx" in files
+
+
+def test_organizing_folder_with_both_subdirs_and_flat_files_keeps_both(tmp_path):
+    _write(tmp_path / "src" / "features" / "alumni" / "List.tsx")
+    _write(tmp_path / "src" / "features" / "Dashboard.tsx")
+
+    features = group_react_or_angular_features(tmp_path, tmp_path / "src", "react")
+
+    names = {feature.name for feature in features}
+    assert "alumni" in names, "subdirectory features must still work"
+    files = [f for feature in features for f in feature.files]
+    assert "src/features/Dashboard.tsx" in files
+    assert "src/features/alumni/List.tsx" in files
+
+
+def test_a_flat_file_is_claimed_exactly_once(tmp_path):
+    """It must not be counted both as its own feature and inside the
+    subdirectory sweep, or the video would explain it twice."""
+    _write(tmp_path / "src" / "routes" / "users.tsx")
+
+    features = group_react_or_angular_features(tmp_path, tmp_path / "src", "react")
+    files = [f for feature in features for f in feature.files]
+    assert files.count("src/routes/users.tsx") == 1

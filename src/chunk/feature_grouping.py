@@ -139,6 +139,31 @@ def group_react_or_angular_features(root: Path, src_root: Path, stack: str = "re
                 primary_file=_relpath(root, primary) if primary else None,
             ))
 
+        # Files sitting directly in the organizing directory, not in a
+        # subdirectory of it — a flat src/pages/Home.tsx layout is at
+        # least as common as src/pages/home/index.tsx.
+        #
+        # These used to be dropped entirely: only subdirectories were
+        # turned into features above, and the organizing directory is in
+        # handled_dirs, so the loose-file pass below skipped it too. A
+        # repository whose pages are all flat files produced no features
+        # at all, and the run completed "successfully" having explained
+        # nothing.
+        direct_files = sorted(
+            p for p in organizing_dir.iterdir()
+            if p.is_file()
+            and p.suffix in FRONTEND_SOURCE_EXTENSIONS
+            and not p.name.startswith(".")
+        )
+        if direct_files:
+            primary = _pick_primary(direct_files)
+            features.append(Feature(
+                name=organizing_dir.name,
+                stack=stack,
+                files=[_relpath(root, f) for f in direct_files],
+                primary_file=_relpath(root, primary) if primary else None,
+            ))
+
     loose_files: list[Path] = []
     for entry in sorted(src_root.iterdir()):
         if entry in handled_dirs:
