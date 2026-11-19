@@ -17,8 +17,9 @@ export function shortFilePath(path: string | null | undefined): string {
 }
 
 /**
- * MUI AppBar-style chrome for tree / lifecycle / breakdown frames.
- * Brand-tinted bar + file path; logo stays top-right inside the bar.
+ * MUI AppBar-style chrome for every FullVideo segment (FileCard, tree,
+ * lifecycle, ChunkView, breakdown). Brand-tinted bar + file path;
+ * logo stays top-right inside the bar.
  */
 export const DiagramHeader: React.FC<{
   theme: VisualTheme;

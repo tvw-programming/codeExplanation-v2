@@ -155,6 +155,48 @@ export function themeForStack(stack: string | undefined | null): VisualTheme {
   };
 }
 
+/** Infer stack theme from FileCard overview frameworks / language. */
+export function themeFromFrameworks(
+  frameworks: string[] | undefined | null,
+  language?: string | null,
+): VisualTheme {
+  const joined = (frameworks || []).join(" ").toLowerCase();
+  const checks: Array<[string, string]> = [
+    ["react", "react"],
+    ["angular", "angular"],
+    ["vue", "vue"],
+    ["solid", "solid"],
+    ["qwik", "qwik"],
+    ["express", "express"],
+    ["fiber", "go_fiber"],
+    ["spring", "spring_boot"],
+  ];
+  for (const [needle, stack] of checks) {
+    if (joined.includes(needle)) return themeForStack(stack);
+  }
+  const lang = (language || "").toLowerCase();
+  if (lang === "go" || lang.startsWith("go ")) return themeForStack("go");
+  if (lang === "python") return themeForStack("python");
+  if (lang === "rust") return themeForStack("rust");
+  if (lang.includes("java")) return themeForStack("spring_boot");
+  if (lang === "javascript" || lang === "typescript" || lang === "tsx" || lang === "jsx") {
+    return themeForStack("javascript");
+  }
+  return themeForStack("unknown");
+}
+
+/** Prefer explicit theme; else frameworks/language; else unknown gray. */
+export function resolveVisualTheme(
+  theme: VisualTheme | null | undefined,
+  frameworks?: string[] | null,
+  language?: string | null,
+): VisualTheme {
+  if (theme && theme.stack && theme.stack !== "unknown") {
+    return theme;
+  }
+  return themeFromFrameworks(frameworks, language);
+}
+
 /** Stroke / edge accent on the dark video plane (plan §3.1). */
 export function videoAccent(theme: VisualTheme): string {
   return theme.onDark || theme.primary;

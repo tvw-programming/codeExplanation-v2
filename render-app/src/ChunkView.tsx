@@ -9,6 +9,9 @@ import {
 } from "remotion";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
+import { DiagramHeader } from "./DiagramHeader";
+import { HEADER_HEIGHT as DIAGRAM_HEADER_HEIGHT } from "./treeLayout";
+import { type VisualTheme, themeForStack } from "./visualTheme";
 
 // Shared per-chunk view, used by both the single-chunk demo composition
 // (CodeExplainerChunk, reading from public/sample-chunk/) and the
@@ -76,13 +79,16 @@ export type Bundle = {
   cleanText: string;
   narrationSegments?: NarrationSegment[];
   highlightConfig: HighlightCue[];
+  visualTheme?: VisualTheme | null;
+  stack?: string | null;
 };
 
 const FPS = 30;
 
 const WIDTH = 1280;
 const HEIGHT = 720;
-const HEADER_HEIGHT = 56;
+/** Match DiagramHeader / FullVideo chrome height. */
+const HEADER_HEIGHT = DIAGRAM_HEADER_HEIGHT;
 const NARRATION_WIDTH = 400;
 
 const CODE_FONT_SIZE = 15;
@@ -165,7 +171,11 @@ function estimateSegmentHeight(text: string): number {
   return lines * NARRATION_LINE_HEIGHT + NARRATION_ITEM_GAP;
 }
 
-export const ChunkView: React.FC<{ chunkDir: string }> = ({ chunkDir }) => {
+export const ChunkView: React.FC<{
+  chunkDir: string;
+  visualTheme?: VisualTheme | null;
+  filePath?: string | null;
+}> = ({ chunkDir, visualTheme, filePath }) => {
   const frame = useCurrentFrame();
   const [bundle, setBundle] = useState<Bundle | null>(null);
   const [sourceLines, setSourceLines] = useState<string[] | null>(null);
@@ -275,67 +285,21 @@ export const ChunkView: React.FC<{ chunkDir: string }> = ({ chunkDir }) => {
     narrationScroll = Math.min(Math.max(desired, 0), maxScroll);
   }
 
-  const headerTitle = bundle.filePath || bundle.chunkId;
+  const pathForHeader = filePath || bundle.filePath || bundle.chunkId;
+  const theme = visualTheme ?? bundle.visualTheme ?? themeForStack(bundle.stack);
 
   return (
     <AbsoluteFill style={{ backgroundColor: "#15171c" }}>
       <Audio src={staticFile(`${chunkDir}/narration.wav`)} />
 
-      {/* Header: the file this section is explaining. */}
-      <Box
-        sx={{
-          height: `${HEADER_HEIGHT}px`,
-          px: `${CODE_PAD_X}px`,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          bgcolor: "#101217",
-          borderBottom: "1px solid rgba(255,255,255,0.08)",
-        }}
-      >
-        <Box sx={{ display: "flex", alignItems: "baseline", gap: 1.5, minWidth: 0 }}>
-          <Box
-            sx={{
-              width: 8,
-              height: 8,
-              borderRadius: "50%",
-              bgcolor: ACCENT,
-              flexShrink: 0,
-              alignSelf: "center",
-            }}
-          />
-          <Typography
-            sx={{
-              fontFamily: "Menlo, monospace",
-              fontSize: 19,
-              fontWeight: 600,
-              color: "#f3f4f6",
-              whiteSpace: "nowrap",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-            }}
-          >
-            {headerTitle}
-          </Typography>
-        </Box>
-        {bundle.featureName ? (
-          <Typography
-            sx={{
-              fontFamily: "Helvetica, Arial, sans-serif",
-              fontSize: 14,
-              color: DIM_TEXT,
-              textTransform: "uppercase",
-              letterSpacing: "0.08em",
-              flexShrink: 0,
-              ml: 2,
-            }}
-          >
-            {bundle.featureName}
-          </Typography>
-        ) : null}
-      </Box>
+      <DiagramHeader
+        theme={theme}
+        filePath={pathForHeader}
+        eyebrow={bundle.featureName || "Code walkthrough"}
+        titleFallback={bundle.chunkId}
+      />
 
-      <Box sx={{ display: "flex", height: `${HEIGHT - HEADER_HEIGHT}px` }}>
+      <Box sx={{ display: "flex", height: `${HEIGHT - HEADER_HEIGHT}px`, mt: `${HEADER_HEIGHT}px` }}>
         {/* Code panel — scrolls to whichever line is being narrated. */}
         <Box
           sx={{
