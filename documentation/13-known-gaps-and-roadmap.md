@@ -5,18 +5,38 @@ code/plan rather than silently dropped. This file consolidates them in
 one place, plus the two security incidents fixed after the engineering
 code review.
 
-> **Superseded in part by `14-stack-support-validation.md`.** A
-> six-stack validation found that this file understated the problem in
-> two ways. It framed the gap as "two stacks lack extractors", when in
-> fact **Angular** produces schema-valid, fully-empty records (worse
-> than a loud failure, because the video looks finished), **Express**
-> cannot even be detected as a backend stack, and **Go is not as well
-> supported as the text below implies** — generics, interface methods
-> and closure-returning middleware are all invisible to it. Read that
-> document for the current picture; the gaps below remain accurate as
-> far as they go.
+## Current stack picture
 
-## Carried-forward implementation gaps
+**[`14-stack-support-validation.md`](./14-stack-support-validation.md)
+is the current stack picture**, with one code fix that landed after 14
+was written: nested Fiber group prefixes **are** composed in-file
+(`/api` + `/v1` + `/users` → `/api/v1/users`, not `/v1/users`).
+Angular empty-valid, no Express backend, no Python/Spring extractors,
+regex ceiling, and report-only schema validation are still true.
+Angular confidence is **0.3**, not 0.95.
+
+| Stack | Detect | Chunk | Extract | Honest failure mode |
+|---|---|---|---|---|
+| React TS/JSX | yes | yes | regex, real content | wrong ranges / `memo` / hook attribution |
+| Go Fiber | yes | yes | regex, real content | generics, interfaces, closure middleware missed |
+| Angular | yes | yes | empty-valid | video looks finished, says nothing true |
+| Python | yes | yes | placeholder | loud schema fail, still narrated/rendered |
+| Spring Boot | yes | yes | placeholder | same |
+| Express / Node | **no** | via `react_or_angular` default | placeholder | not even a backend stack value |
+
+## Carried-forward product gaps
+
+Keep these as roadmap: Python/Spring extractors (Python `ast` first,
+per 14), `outputs` always empty, statement-level split
+(`needs_further_split` unused), LLM-elaborated narration (`llm:` config
+unused), production voice quality.
+
+whisper.cpp-blocked-so-all-cues-assumed and the Chromium-sandbox
+download are **environment notes**, not the live production story.
+Live alignment is `measured-beats`; live TTS is Piper then espeak-ng.
+See [`09-phase6-rendering.md`](./09-phase6-rendering.md).
+
+## Carried-forward implementation gaps (detail)
 
 ### 1. Python and Spring Boot extraction are not implemented
 
@@ -51,30 +71,30 @@ but `json_builder.py` currently always emits `"outputs": []`.
 infer return types/emitted events, following the same
 assumed-when-uncertain pattern used everywhere else.
 
-### 3. The real whisper.cpp alignment path is network-blocked in this sandbox
+### 3. whisper.cpp model download / estimated alignment — environment note
 
-The binary compiles and runs; only the `huggingface.co` model-file
-download is blocked by this sandbox's network allowlist (confirmed via
-a direct `curl`: 403 at the proxy). Every real pilot run in this
-session used the `estimated` fallback instead, honestly labeled.
+The leftover `transcribe.mjs` path still cannot fetch its Hugging Face
+model in this sandbox. That is **not** the live aligner.
+`build_render_bundle` writes `"alignmentSource": "measured-beats"`.
+Keep `transcribe.mjs` as unused/optional.
 
-**What closes it:** run in an environment where that host is reachable,
-or pre-provide the model file. No code change needed — the real path
-runs automatically once the download succeeds.
+**What closes it (if anyone revives transcript alignment):** reachable
+Hugging Face, or a pre-provided model file.
 
-### 4. Remotion's own headless-Chromium download is also network-blocked
+### 4. Remotion Chromium download — environment note
 
-**What closes it:** already worked around for local verification via
-`--browser-executable` pointing at this environment's pre-installed
-Playwright Chromium. In an unrestricted environment, Remotion's normal
-Chromium fetch would simply work.
+Already worked around in `run-local.sh` via Playwright Chromium (Linux
+sandbox) or an installed Chrome/Chromium/Edge/Brave (macOS), plus
+`REMOTION_BROWSER_EXECUTABLE`. Not a current product gap.
 
 ### 5. The narrator's 90–180s target band is reliably met only for feature-rich chunks
 
-Only 2/22 real chunks land in the target band with the current
-template-only script generator; the other 20 (small, low-complexity
-chunks) land shorter. Not a bug — a template built strictly from
-grounded fields simply has less to say about a small chunk.
+Historical Alumni-web snapshot (old short templates): only 2/22 chunks
+landed in the target band. Function-aware item beats plus real pauses
+changed the distribution; **re-measure** rather than citing 2/22 as
+current. Not a bug — a template built strictly from grounded fields
+simply has less to say about a small chunk. The target stays; it is
+unmet for many small files.
 
 **What closes it:** either treat the 90–180s target as meant for
 feature-rich chunks specifically, or add a richer, LLM-elaborated
@@ -83,15 +103,15 @@ script stage (same structure, richer prose) that pads small chunks
 template approach was chosen first and what this upgrade would need to
 preserve.
 
-### 6. espeak-ng + estimated alignment are explicitly not production-ready
+### 6. Production voice quality is still not shipped
 
-Stated directly in the Phase 7 plan: good enough to prove the full
-mechanism, not recommended to ship as-is (robotic voice; 100% of cues
-`assumed=true` in this environment since no real transcription ran).
+Piper (Indian-English) is the default when the model is cached;
+espeak-ng is the required fallback. That is a partial delivery of the
+original Coqui/Indian-English requirement, not a commercial studio
+voice. Measured-beat alignment replaced estimated-every-cue.
 
-**What closes it:** swap `tts.py: synthesize()` for a commercial TTS
-vendor (one isolated function) and get the whisper.cpp path's network
-dependency resolved (see gap 3).
+**What closes it:** a higher-quality TTS swap of `tts.py: synthesize()`
+(still one function). whisper.cpp is not required for that.
 
 ### 7. No statement-level split for oversized single files
 
@@ -107,9 +127,11 @@ them as one oversized chunk.
 ## Security incidents found by code review and fixed
 
 These were found via `/engineering:code-review` against this repo's
-full commit history and fixed in a single follow-up commit (168 tests
-passing after the fix, with a before/after real-repo pilot re-run
-showing identical output — confirming no regression).
+full commit history and fixed in a follow-up commit (168 tests passing
+**at that time**; live count is in
+[`10-phase7-pilot-and-validation.md`](./10-phase7-pilot-and-validation.md)).
+A before/after real-repo pilot re-run showed identical output —
+confirming no regression.
 
 ### A. Secret redaction built but never wired into the real pipeline (Critical)
 
@@ -162,8 +184,8 @@ substitution is explained in full in its phase doc, summarized here:
 | Original proposal | What was actually built | Why (see phase doc) |
 |---|---|---|
 | Per-chunk LLM call (Bard/Gemini free tier) for `narrativeScript` and structured metadata | Mechanical, template-based extraction (Phase 3) + narration (Phase 5) | Determinism, testability, no per-chunk cost/latency/quota risk, zero risk of inventing ungrounded claims — see Phase 5 doc |
-| Coqui TTS (Indian English) with `edge_tts` fallback | `espeak-ng`, local and offline | Actually runs in this environment with no network dependency; isolated to one swappable function for a future vendor — see Phase 6 doc |
-| WhisperX word timestamps | whisper.cpp via Remotion's own installer package | Avoids a heavy Python audio stack (`pyannote`, `torch`) this environment doesn't carry, while producing the same word-level timing shape — see Phase 6 doc |
+| Coqui TTS (Indian English) with `edge_tts` fallback | **Piper** Indian-English (preferred) + **espeak-ng** fallback, both local | Offline, no API key; Piper is the partial original-requirement delivery; commercial vendor still a one-function swap — see Phase 6 doc |
+| WhisperX word timestamps | **Measured-beat** alignment (per-beat WAV + silence). whisper.cpp leftover | Cue windows come from measured beat durations, not a transcript — see Phase 6 doc |
 | `ts-morph`/Babel static analysis | Regex/heuristic extraction, confidence-scored | No repo-specific build/tooling assumptions required for "any repo as input"; upgrade path explicitly left open — see Phase 3 doc |
 | Fixed component/folder-based chunking | Feature-wise, stack-specific grouping, no hardcoded folder names | Matches the actual locked requirement ("the unit is the FEATURE") and generalizes across arbitrary repo layouts — see Phase 2 doc |
 

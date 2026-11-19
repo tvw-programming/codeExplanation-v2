@@ -9,8 +9,11 @@ chunks): run 1 → `{reused: 0, reanalyzed: 22}`; run 2 with no changes →
 
 1. **Mirrored storage** (`mirror_store.py`): each chunk's JSON lives at
    `<output_root>/<filePath>.json`.
-2. **Content-hash reuse** (`needs_reanalysis()`): skip re-extraction for
-   any file whose content hasn't changed since the last run.
+2. **Content-hash + extractor-version reuse** (`needs_reanalysis()`):
+   skip re-extraction only when the file bytes **and**
+   `extractorVersion` match. `EXTRACTOR_VERSION = 4` in
+   `mirror_store.py` forces re-analysis when extractors change even if
+   source bytes did not. Hash match is no longer enough.
 3. **Best-effort PR lookup** (`pull_request_lookup.py`): fills the
    `pullRequest` field via `gh api` when real GitHub access exists.
 
@@ -20,9 +23,10 @@ chunks): run 1 → `{reused: 0, reanalyzed: 22}`; run 2 with no changes →
   own structure.
 - `contentHash`, `lastUpdated`, `pullRequest` are required storage
   fields on every stored record.
-- A matching content hash reuses the stored record with zero
-  re-analysis; a mismatch (or no stored record) re-analyzes only that
-  one chunk.
+- A matching content hash **and** matching `extractorVersion` reuses
+  the stored record with zero re-analysis; a hash mismatch, missing
+  record, missing hash, or older extractor version re-analyzes only
+  that one chunk.
 
 ## Key functions and why they were chosen
 
@@ -47,8 +51,15 @@ source root were ever the same directory.
 
 **What it does:** returns `(should_reanalyze, current_content_hash)`.
 True when there's no stored record, the stored record has no
-`contentHash` to compare, or the hashes differ. False only on an exact
-hash match.
+`contentHash` to compare, the hashes differ, **or**
+`stored.extractorVersion` (default 1 if missing) is not
+`EXTRACTOR_VERSION`. False only on an exact hash match **and** current
+extractor version.
+
+Version bumps so far (see comments in `mirror_store.py`): function
+context on `importantFunctions`, handler `lineRange`, then
+`fileDescription` for the file card — each of those would otherwise
+have reused stale JSON forever on an unchanged file.
 
 **Why a content hash (SHA-256 of raw file bytes) instead of a file
 modification timestamp:** a timestamp changes on a `git checkout`, a
@@ -129,14 +140,15 @@ model.
 
 ## Verified against the real repo
 
-Run 1 on the real 22-chunk alumni repo: `{reused: 0, reanalyzed: 22}`
-(nothing stored yet). Run 2, no source changes: `{reused: 22,
-reanalyzed: 0}` — proven, not just asserted, by a dedicated test suite
-that runs extraction twice and checks the **same** `lastUpdated`/
-`contentHash` values come back (not just a matching boolean), then
-changes one file and confirms exactly one chunk re-extracts while every
-untouched chunk's record is byte-identical to before. The PR-lookup
-mechanism was separately verified against this project's own repo,
-correctly finding the real commit for `README.md` and correctly
-returning `None` for it (that commit was pushed directly, not via a
-PR — an accurate result, not a bug).
+Historical Alumni-web snapshot: run 1 `{reused: 0, reanalyzed: 22}`;
+run 2, no source changes `{reused: 22, reanalyzed: 0}`. The dedicated
+test suite still proves reuse in isolation (same `lastUpdated` /
+`contentHash` on a no-op second run; exactly one chunk re-extracts
+after a single-file edit). After an `EXTRACTOR_VERSION` bump, a
+no-source-change second run **will** reanalyze until records are
+rewritten at the new version.
+
+The PR-lookup mechanism was separately verified against this project's
+own repo, correctly finding the real commit for `README.md` and
+correctly returning `None` for it (that commit was pushed directly, not
+via a PR — an accurate result, not a bug).

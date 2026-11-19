@@ -22,7 +22,7 @@ the full explanation.
 | 1 | `_detect_frontend_flavor()` | Checks actual `package.json` dependencies | Assuming every `package.json` means React |
 | 1 | `_detect_java_flavor()` | Checks for `spring-boot` dependency in build file contents | Assuming any Maven/Gradle project is Spring Boot |
 | 1 | architecture heuristic | Count of distinct backend marker-file roots | Counting Dockerfiles or top-level folders — less direct a signal |
-| 2 | `group_react_or_angular_features()` | Checks a list of conventional organizing-folder names | Hardcoding one specific layout (e.g. always `features/`) |
+| 2 | `group_react_or_angular_features()` | Checks a list of conventional organizing-folder names; **flat files in the organizing folder are now claimed** | Hardcoding one specific layout; earlier only *subdirectories* became features (silent empty runs) |
 | 2 | `_group_by_resource_pairing()` | One shared function for Go + Spring Boot/Java | Two near-duplicate implementations — doubles the surface for bugs |
 | 2 | `RESOURCE_SUFFIX_PATTERN` | Fixed suffix-stripping list (`_handler`, `Controller`, ...) | Fuzzy/Levenshtein filename matching — slower, riskier false pairings |
 | 2 | `group_python_agent_features()` | Separate agent-convention grouping | Reusing the Go/Spring Boot resource-pairing function — wrong convention for Python |
@@ -35,25 +35,27 @@ the full explanation.
 | 3 | `normalize_path()` / `match_calls_to_routes()` | One shared `{}`-placeholder normalization for both `${id}` and `:id` | Exact string matching — would never connect a frontend call to its backend route |
 | 3 | inline JSX handler extraction | Always `assumed: true`, no synthesized name | Inventing a plausible name/purpose for an anonymous inline function |
 | 4 | `output_path_for()` | Mirrors the real repo's directory structure | A flat `chunks/<chunkId>.json` layout — opaque to a human browsing the output |
-| 4 | `needs_reanalysis()` | SHA-256 content hash comparison | File modification timestamp — changes on checkout/clone with no real content change |
+| 4 | `needs_reanalysis()` | SHA-256 content hash **and** `EXTRACTOR_VERSION` (currently 4) | File modification timestamp; also: hash-only reuse would keep stale JSON after extractor upgrades |
 | 4 | "no stored hash" handling | Treated as "needs re-analysis" | Trusting an old record with no hash to compare — unjustified optimism |
 | 4 | `extract_repo_with_reuse()` | Always recomputes `featureMapping` fully, even with reused chunks | Caching cross-chunk links per-chunk — risks stale links when a linked chunk changes |
 | 4 | `find_last_pull_request_url()` | Best-effort, never raises, returns `None` on any failure | Propagating failures — `pullRequest` being unknown is an expected, accepted state |
 | 4 | `file_path` in `gh api` query | URL-encoded via `urllib.parse.quote()` | Raw interpolation — broke on `&`/`#`/`%`/spaces in a path |
 | 4 | PR lookup scope | Verified against this project's own repo only | Force-attaching the third-party example repo just to read its PR history |
 | 5 | narration generation overall | Template-based, deterministic, grounded in the extracted record | An LLM call per chunk — non-deterministic, costly at scale, and risks un-grounded claims |
-| 5 | `PRONOUNCEABLE_ACRONYMS` | Hand-curated lookup table, explicitly a judgment call | A general grapheme-to-phoneme prediction algorithm — convention, not phonetics, decides "JSON → Jason" |
-| 5 | `generate_visual_cues()` | Only cues fields that actually carry a `lineRange` today | Fabricating a plausible line range for `eventHandlers`/`dataModels`/`routes` |
+| 5 | `build_item_beats()` / `function_narration.py` | Per-function spoken text from doc comments, callers, body facts + real `pause_after_ms` | A single "The X function runs next" flow sentence per symbol |
+| 5 | `file_overview.py` | FileCard payload (purpose from `fileDescription`, `unavailable` reasons) | Cutting from the last line of one file to the first of the next with no chapter title |
+| 5 | `PRONOUNCEABLE_ACRONYMS` | Table **built**; **not applied** to TTS — identifiers spoken as written (doc 15) | Splitting camelCase at runtime (would mismatch the name on screen); SSML unused |
+| 5 | `generate_visual_cues()` | Cues `importantFunctions`, `eventHandlers` (now with `lineRange`), `routes` | Fabricating a line range for `dataModels`; older docs that said handlers have no range |
 | 5 | `dependency_first_order()` | Deterministic "fewest unseen links first" heuristic | A real topological sort — undefined, because `featureMapping` is undirected, not a DAG |
 | 5 | `build_flow_beats()` split | Splits only at a sentence boundary near the time budget | Truncating by raw word/char count — risks cutting a spoken sentence in half |
 | 5 | hedge phrasing | One single fixed phrase ("It looks like") for every assumed claim | Varying wording per field type — dilutes the listener's learned signal |
-| 6 | `tts.py: synthesize()` | Local, offline `espeak-ng` | A cloud TTS vendor (per the original requirement) — adds a network dependency this sandbox can't always reach |
-| 6 | `build_estimated_words()` spacing | Even spacing across measured duration | Word-length-proportional spacing — "marginally more realistic" but disguises how rough the estimate really is |
-| 6 | estimated-alignment cues | Force `assumed=True` regardless of index match | Trusting an in-range index as evidence of correctness — the index isn't real evidence when the words were guessed |
-| 6 | real alignment engine | whisper.cpp via Remotion's own installer | WhisperX (named in the locked rules) — needs a heavy Python audio stack this environment doesn't carry |
-| 6 | `highlight_config.py` | Kept to a pure, one-line seconds→frames conversion | Folding Shiki/rendering logic into the Python side — breaks the clean Python/JS data boundary |
-| 6 | Remotion `CodeExplainerChunk` | Shows `alignmentSource` directly in the rendered UI | Keeping it purely as internal metadata — hides the honesty signal from the final viewer |
-| 6 | `calculateMetadata` | Computes composition duration from the real measured `durationMs` | A fixed/hardcoded composition duration — wrong for every chunk of a different length |
+| 6 | `tts.py: synthesize()` | **Piper** Indian-English voice preferred; **espeak-ng** fallback; `ttsEngine` recorded | Cloud TTS as the *only* engine; also: older docs that say espeak-ng is the sole engine |
+| 6 | `build_render_bundle()` timing | Per-beat synthesis + silence + concat; `alignmentSource: measured-beats` | Transcribing the whole track with WhisperX / whisper.cpp, or even-word `estimated` as the live path |
+| 6 | `build_estimated_words()` / `transcribe.mjs` | **Legacy / unused** by the live bundle (still unit-tested) | Presenting them as the production aligner |
+| 6 | `highlight_config.py` | Kept to a pure seconds→frames conversion | Folding rendering logic into Python |
+| 6 | `ChunkView.tsx` highlights | CSS selection bar over plain text | Shiki decorations (dependency present, **not imported**) |
+| 6 | Remotion `FullVideo` + `FileCard` | Concatenates every staged chunk; card introduces each file | Shipping only `CodeExplainerChunk` (that composition remains the sample-chunk demo) |
+| 6 | `calculateMetadata` | Duration from measured `durationMs` (plus card frames) | A fixed/hardcoded composition duration |
 | 7 | `validate_record()` | Checks `pullRequest`'s **key**, not its value, for presence | Requiring non-null — would force fabricating a PR URL for a legitimately unknown one |
 | 7 | placeholder records for unimplemented stacks | Allowed to legitimately fail schema validation | Special-casing them to pass — hides a real, known gap |
 | 7 | `run_pilot()` double extraction run | Re-runs extraction once more inside the pilot to prove reuse on real data | Trusting Phase 4's unit tests alone — proves the mechanism in isolation, not on this specific real repo |

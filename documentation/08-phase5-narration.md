@@ -1,28 +1,59 @@
 # Phase 5 — Narrator Script Generation
 
-Status: done. 44 new tests (10 pronunciation, 6 visual cues, 7
-glossary, 16 script builder, 5 pipeline integration), 114 passing
-overall at phase completion. Verified against the real alumni repo (22
-chunks): every chunk got a script; 13/22 have real connections via
-genuine `featureMapping` links; only 2/22 land in the 90–180s target
-band (an honest, documented finding, not a bug — see below).
+Status: done, then extended. The live narrator is richer than the
+original four concatenated beats whose flow sentences were "The X
+function runs next." Historical Alumni-web counts (22 scripts, 13/22
+with `featureMapping` links, **2/22 in the 90–180s band**) are a
+snapshot of those **old short templates**. Re-measure; do not cite 2/22
+as current.
+
+Voice and tone: [`15-narration-style-guide.md`](./15-narration-style-guide.md).
+When 08 and 15 disagree on identifiers, **15 wins and matches runtime**:
+identifiers are spoken **as written**.
 
 ## What this phase delivers
 
 `src/narrate/pipeline.py: generate_narration_for_repo(records)` turns
-every Phase 3/4 chunk record into a `NarrationScript` — four beats
-(purpose, connections, flow, recap) plus visual cue tokens and a
-per-chunk pronunciation table — processed in dependency-first order so
-cross-chunk continuity is grounded in real links.
+every Phase 3/4 chunk record into a `NarrationScript` processed in
+dependency-first order.
+
+Live structure (`script_builder.py: build_beats` + `build_item_beats`):
+
+1. **Purpose** beat — what this file/feature is for.
+2. **Connections** beat — real `featureMapping` back-refs / forward
+   previews, or "stands on its own."
+3. **Item beats** — one beat per important function, route, event
+   handler, and API call. Function text comes from
+   `function_narration.py` (doc comments, callers/callees, body facts,
+   `pause_after_ms`). This is what the viewer **hears**, not a single
+   "The X function runs next" sentence per symbol.
+4. **Recap** beat — what was covered, and what was not.
+
+Each item beat can carry a `cue_id` (highlight) and a real pause.
+Pauses are not estimated: Phase 6 pads the beat WAV with silence
+(`audio_assembly.py`).
+
+Separately, `file_overview.py` builds a **file card** payload
+(callers/callees, layer, risks, `unavailable` reasons). Phase 6 speaks
+it over `FileCard.tsx` before the walkthrough. That card is not
+mentioned in the original four-beat rule set; it is extra, grounded
+intro copy from `fileDescription` and the record.
+
+A per-chunk **pronunciation table is still built**
+(`pronunciation.py`) and **never applied to TTS**. Runtime matches
+doc 15 (spoken as written), not the camelCase-splitting rule below.
 
 ## Locked rules this phase implements
 
-- Four beats: purpose, connections, flow, recap.
+- Four beats: purpose, connections, flow (now a sequence of item
+  beats), recap.
 - Reason before mechanism; name flows by when they run, not by file
   path; never read code line by line.
 - Target 90–180 seconds per chunk; split the flow beat at ~60 seconds.
+  **Keep as a target; it is unmet for small files.**
 - Confidence-gated speech: verified claims plain, assumed claims
-  hedged with one fixed phrase, unverified claims never spoken.
+  hedged with one fixed phrase (`"It looks like"`), unverified claims
+  never spoken.
 - `notes` is never read aloud.
 - Back-references/forward-previews only where `featureMapping` shows a
   real link; process dependencies first.
@@ -31,148 +62,97 @@ cross-chunk continuity is grounded in real links.
 
 ### Template-based generation, not an LLM call
 
-`script_builder.py`'s module docstring is explicit: *"This is
-template-based, not a call to a language model: every sentence is
-built mechanically from fields already in the record, so nothing is
-invented that isn't in the extraction's own symbol table."*
+`script_builder.py`'s module docstring is explicit: every sentence is
+built mechanically from fields already in the record.
 
-**Why a deterministic template instead of an LLM-generated narration
-(which the original project requirement explicitly asked for — see
-Section C's "Prompt (for Bard) to generate per-chunk JSON"):**
+**Why a deterministic template instead of an LLM-generated narration:**
 
-- **Grounding.** Every sentence in the script is traced directly back
-  to a field already present in the Phase 3/4 record. An LLM, even with
-  a tight system prompt, can paraphrase, embellish, or state something
-  plausible-but-wrong about code it wasn't shown in full — exactly the
-  failure mode the locked accuracy rule ("speak only verified claims...
-  leave unverified claims out of the speech") exists to prevent.
-- **Determinism and testability.** The same input record always
-  produces the same script, byte for byte — which is what makes 16
-  dedicated `script_builder` tests and 5 pipeline-integration tests
-  possible at all. An LLM call would be non-deterministic (or require
-  expensive golden-output comparisons with fuzzy matching) and would
-  also introduce a network dependency, latency, and cost into every
-  single chunk of every pipeline run.
-- **Cost and reliability at scale.** Feature-wise chunking can produce
-  dozens of chunks per repo; a per-chunk LLM call multiplies cost and
-  introduces a new failure mode (rate limits, API errors, quota) for
-  every run. The template approach has zero marginal cost per chunk
-  beyond CPU time.
-- This is explicitly framed as a *starting point*, not a rejection of
-  the original idea: "An LLM-elaborated version (same structure, richer
-  prose) is a natural later upgrade, not required by the locked rules."
-  The honest finding below (only 2/22 chunks land in the 90–180s target
-  band) is the concrete evidence for exactly when that upgrade would
-  earn its cost — see [`13-known-gaps-and-roadmap.md`](./13-known-gaps-and-roadmap.md).
+- **Grounding.** Every sentence traces back to a Phase 3/4 field. An
+  LLM can paraphrase or state something plausible-but-wrong.
+- **Determinism and testability.** Same input → same script.
+- **Cost and reliability at scale.** Dozens of chunks; no per-chunk
+  API cost or quota failure mode.
 
-### `pronunciation.py: split_identifier(identifier)` / `PRONOUNCEABLE_ACRONYMS`
+An LLM-elaborated version (same structure, richer prose) remains a
+**roadmap** upgrade — the `llm:` config block is unused. The old 2/22
+in-band finding is historical evidence for when that upgrade would
+earn its cost, not a live dashboard. See
+[`13-known-gaps-and-roadmap.md`](./13-known-gaps-and-roadmap.md).
 
-**What it does:** splits camelCase/PascalCase/snake_case/kebab-case/
-route-segment identifiers into spoken words, and maps a small table of
-acronyms to either a pronounceable word (`JSON` → "Jason", `SQL` →
-"sequel") or letter-by-letter spelling (`API`, `URL`, `ID`, `DB`,
-`HTTP`, `HTML`, `CSS`, `JWT`, `UUID`).
+### `function_narration.py` + `build_item_beats`
 
-**Why a documented, hand-curated table instead of a general
-pronunciation-prediction algorithm (e.g. grapheme-to-phoneme rules):**
-the correct spoken form of an acronym is a matter of *convention*, not
-phonetic prediction — "JSON" really is commonly said as "Jason" by
-practice, not because English pronunciation rules derive that from the
-letters. A general phonetic algorithm would get many of these wrong in
-ways a lookup table simply doesn't, and the module's own docstring is
-upfront that this list "is a judgment call, not a sourced rule" —
-flagged precisely so a reviewer can correct or extend it without
-archaeology.
+**What it does:** for each `importantFunctions` entry, speak a short
+summary then a longer grounded description: attributed doc comment
+("Its own documentation says: …"), callers / callees / exported,
+errors raised, hooks, in-range API calls and side effects. `pause_after_ms`
+scales 1–3 seconds of real silence by `lineCount` so the viewer can
+read the highlighted body.
+
+**Why not "The X function runs next" for every symbol:** that sentence
+names the function and nothing else. The extra fields from
+`function_context.py` (`description`, `exported`, `calledBy`, `calls`,
+`raisesError`, `reactHooks`, …) exist so the narrator can describe a
+function instead of only naming it. Empty facts are omitted, not
+invented.
+
+Routes, event handlers, and API calls still use short templates, with
+the same hedge rule. Inline JSX handlers add one extra sentence that
+they are bound inline.
+
+### `file_overview.py`
+
+**What it does:** a structured card for each file: purpose (from
+`fileDescription` / header comment), layer, callers, callees, routes,
+side effects, risks, and an `unavailable` map explaining missing
+fields instead of showing empty rows.
+
+**Why a card before the walkthrough:** `FullVideo` concatenates every
+chunk. Without a boundary, the last line of one file cuts to the first
+line of the next. The card is the visible chapter title.
+
+### `pronunciation.py` — built, not spoken
+
+**What it does:** splits camelCase/PascalCase/snake_case/kebab-case
+identifiers and maps a small acronym table (`JSON` → "Jason", `API`
+letter-by-letter, …).
+
+**What actually reaches TTS:** the identifier **as written**
+(`handleSubmit`, not "handle submit"). Doc 15 is the live rule. The
+table is kept for a **future** TTS pass (SSML is not implemented). Do
+not document camelCase splitting as what the viewer hears.
 
 ### `visual_cues.py: generate_visual_cues(record)`
 
-**What it does:** generates exactly one `VISUAL[HIGHLIGHT:id]` token per
-`importantFunctions` entry that has a usable `lineRange` — and
-deliberately generates **no** cue for `eventHandlers`, `dataModels`, or
-`routes`, because none of those carry a `lineRange` in the current
-Phase 3 schema.
+**What it does:** one `VISUAL[HIGHLIGHT:id]` token per entry in
+`CUE_SOURCE_FIELDS` (`importantFunctions`, `eventHandlers`, `routes`)
+that has a usable `lineRange`. `eventHandlers` **do** carry
+`lineRange` now (`json_builder.py`, single-line range at the bind
+site), so handler sentences get a highlight. `dataModels` still do
+not; no cue is fabricated for them.
 
-**Why not synthesize a plausible line range for those other fields so
-every narrated item gets a highlight:** doing so would be inventing
-grounding data that doesn't exist in the extraction's actual symbol
-table — a direct violation of the accuracy rule this entire pipeline is
-built around. The module's docstring calls this exactly what it is:
-"an honest gap, not an oversight, flagged in code for a future schema
-addition" — the fix belongs in Phase 3's schema (adding `lineRange` to
-those fields), not in Phase 5 pretending data it doesn't have.
+**Why not invent a line range:** same accuracy rule as extraction.
 
 ### `glossary.py: dependency_first_order(records)`
 
-**What it does:** a deterministic ordering heuristic over
-`featureMapping` edges: process the chunk with the fewest
-not-yet-processed links first, ties broken by chunk ID.
+Unchanged: `featureMapping` is a symmetric undirected link list, so
+this is "fewest unseen links first," ties broken by chunk ID — not a
+topological sort. Determinism keeps "covered earlier" / "covered
+later" stable across reruns.
 
-**Why a heuristic ordering instead of a real topological sort:**
-`featureMapping` is explicitly a **symmetric, undirected** link list (a
-link is written onto both ends by `extractor.py`'s
-`_apply_feature_mapping()`), not a directed dependency graph — so there
-is no single "correct" dependency order a topological sort could even
-compute; topological sort is defined over directed acyclic graphs, and
-this isn't one. The chosen heuristic — process the chunk with fewest
-unseen links first — achieves the practical goal (minimize chunks that
-have to forward-preview something not yet explained) deterministically
-and reproducibly, without pretending to be solving a problem the data
-doesn't actually represent. The docstring is explicit about this: "this
-heuristic is documented here rather than presented as a real dependency
-analysis."
+### `build_flow_beats` / item-beat splitting
 
-**Why determinism (tie-break by chunk ID) matters here specifically:**
-narration scripts reference other chunks by name ("builds on X, covered
-earlier" / "also connects to Y, covered later"). If the processing
-order changed between runs with no source change, the same chunk could
-be narrated as "covered earlier" in one run and "covered later" in
-another — confusing and seemingly arbitrary to a viewer. A stable,
-reproducible order keeps narration consistent across reruns, matching
-the project's broader content-hash-based reuse philosophy (Phase 4):
-nothing about a chunk's narrated description should change unless the
-underlying code did.
+Flow still splits near ~60s at a **sentence boundary**. Item beats
+are the spoken flow; `build_flow_sentences` remains as the older
+concatenated form used by estimates and tests.
 
-### `script_builder.py: build_flow_beats(sentences)`
+### `_hedge` and `HEDGE_PHRASE`
 
-**What it does:** joins flow sentences into one beat unless the
-combined estimated duration exceeds ~60 seconds, in which case it
-splits at the sentence boundary closest to the halfway point —
-**never mid-sentence**.
+One fixed phrase, "It looks like," for every assumed claim.
 
-**Why split at a sentence boundary instead of simply truncating at a
-word/character count once the time budget is hit:** cutting mid-sentence
-would produce a nonsensical half-thought in a *spoken* narration,
-which is far more jarring to a listener than a long written paragraph
-would be to a reader. A word-count-based split without a sentence
-boundary check would frequently land mid-sentence purely by chance.
-Iterating sentence-by-sentence and tracking cumulative estimated
-duration guarantees the split always falls on a real semantic boundary.
+## Length target
 
-### `_hedge(sentence, assumed)` and the single fixed `HEDGE_PHRASE`
-
-**What it does:** every flow sentence built from a field that carries
-`assumed: true` is prefixed with the exact phrase "It looks like"
-(lower-casing the sentence's first letter to stay grammatical);
-unassumed sentences are spoken plainly.
-
-**Why one single, fixed hedge phrase for every kind of assumed claim,
-rather than a different hedge wording per field type (e.g. "possibly,"
-"it appears," "this seems to"):** the locked rule calls for "a fixed
-hedge phrase from the script" — a single, consistent phrase lets a
-listener learn, over the course of one video, that this specific phrase
-always signals "this claim wasn't fully verified," functioning as a
-reliable spoken convention. Varying the wording per field type would
-dilute that signal and make it harder for a listener to reliably notice
-when a claim is hedged.
-
-## The honest finding this phase surfaced
-
-Only 2/22 real chunks land in the 90–180s target band (the two richest
-admin chunks, at 95s and 124s); the other 20 range 21.8–71.7s. This is
-explicitly **not** treated as a bug or patched over by artificially
-inflating word counts. It's recorded as a genuine finding to flag for a
-later phase: either the target band is meant for feature-rich chunks
-only, or an LLM-elaborated script stage (the natural upgrade already
-anticipated above) is needed to pad small chunks to length without
-inventing ungrounded content. See
-[`13-known-gaps-and-roadmap.md`](./13-known-gaps-and-roadmap.md).
+90–180s remains the locked target (`TARGET_MIN_SECONDS` /
+`TARGET_MAX_SECONDS`). Function-aware item beats plus real pauses
+make small files longer than the original templates, but the band is
+still **unmet** for many small files and is not padded with ungrounded
+content. Treat Alumni-web 2/22 as historical.

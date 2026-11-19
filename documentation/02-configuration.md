@@ -13,6 +13,11 @@ a `PipelineConfig` dataclass. Missing top-level sections (`source`,
 rather than defaulting silently — config correctness is checked once, at
 startup, not discovered mid-run.
 
+`detection`, `llm`, `audio`, and `video` are loaded into
+`PipelineConfig.detection` / `PipelineConfig.raw` and **are not read**
+by the live pipeline. They stay in the example file so the intended
+shape is documented; comments in the YAML mark each unused key.
+
 ### `source`
 
 ```yaml
@@ -36,7 +41,7 @@ keeps "any repo as input" true in practice: nothing needs to be edited
 in `pipeline.config.yaml` to point a single pilot run at a different
 repo.
 
-### `detection`
+### `detection` (unused at runtime)
 
 ```yaml
 detection:
@@ -48,12 +53,22 @@ detection:
     docker: ["Dockerfile", "docker-compose.yml"]
 ```
 
-Documents the marker files Phase 1 looks for. (Note: `detect_project_type()`
-in `src/detect/project_type.py` currently keeps its own `MARKER_FILES`
-table as the actual source of truth used at runtime — this config block
-mirrors it for documentation/extension purposes. Extending either to a
-new stack means adding a marker and a grouping function; see
-[`04-phase1-project-type-detection.md`](./04-phase1-project-type-detection.md).)
+This block is **documentation-only**. `detect_project_type()` in
+`src/detect/project_type.py` uses its own `MARKER_FILES` /
+`DOCKER_MARKERS` tables. Extending detection means editing that Python
+table (and a grouping function); editing this YAML does nothing.
+
+**Code table** (`MARKER_FILES` + `DOCKER_MARKERS`):
+
+| Stack key | Marker files in code |
+|---|---|
+| `react_or_angular` | `package.json` |
+| `python` | `requirements.txt`, `pyproject.toml`, `setup.py` |
+| `go` | `go.mod` |
+| `spring_boot` | `pom.xml`, `build.gradle`, **`build.gradle.kts`** (YAML example omits `.kts`) |
+| Docker (separate flag) | `Dockerfile`, `docker-compose.yml`, `docker-compose.yaml`, `compose.yml`, `compose.yaml` |
+
+See [`04-phase1-project-type-detection.md`](./04-phase1-project-type-detection.md).
 
 ### `chunking`
 
@@ -68,8 +83,8 @@ chunking:
 |---|---|
 | `small_max_lines` | A feature at or under this many total lines becomes exactly one chunk. |
 | `medium_max_lines` | Above `small_max_lines` and at or under this: one chunk **per file** in the feature. |
-| (implicit) `large` | Above `medium_max_lines`: same per-file split, but each oversized file is also flagged `needs_further_split=True` for a future statement-level split (not yet implemented — see gaps doc). |
-| `target_narration_seconds` | The narrator's target band (90–180s). Used by `script_builder.py` to decide when a flow beat needs splitting and by the Phase 7 pilot report to measure how many chunks land in-band. |
+| (implicit) `large` | Above `medium_max_lines`: same per-file split, but each oversized file is also flagged `needs_further_split=True` for a future statement-level split (not yet implemented — the flag is unused). |
+| `target_narration_seconds` | The narrator's target band (90–180s). Used by `script_builder.py` to classify `within_target_range` and by the Phase 7 pilot report. The Alumni-web 2/22 figure is a **historical** snapshot of the old short templates; re-measure rather than citing it as current. |
 
 ### `storage`
 
@@ -81,7 +96,9 @@ storage:
 
 `mirror_root` is where Phase 4 writes one JSON file per chunk, at
 `<mirror_root>/<filePath>.json` — mirroring the source repo's own
-directory layout exactly (see Phase 4 doc for why).
+directory layout exactly (see Phase 4 doc for why). Reuse also keys off
+`extractorVersion` (currently `4` in `mirror_store.py`), which is not a
+config field.
 
 ### `security`
 
@@ -99,7 +116,7 @@ project's non-negotiable rule that secret scanning runs before any
 snippet reaches a chunk file. See
 [`03-phase0-scaffolding-and-security.md`](./03-phase0-scaffolding-and-security.md).
 
-### `llm` / `audio` / `video`
+### `llm` / `audio` / `video` (unused at runtime)
 
 ```yaml
 llm:
@@ -107,25 +124,40 @@ llm:
   api_key_env: ANTHROPIC_API_KEY
 
 audio:
-  tts_provider: null   # fill in when Phase 5/6 begins
+  tts_provider: null   # unused; live path is Piper then espeak-ng
 
 video:
   fps: 30
   resolution: "1280x720"
 ```
 
-- `llm` is a placeholder for a future LLM-elaborated narration stage
-  (see the Phase 5 doc's "why template, not an LLM call" section and
-  the gaps doc) — the implemented pipeline does **not** currently call
-  an LLM anywhere; every script is built mechanically.
-- `audio.tts_provider` documents that `tts.py` currently hardcodes
-  `espeak-ng` as a local, offline, no-API-key engine; swapping in a
-  real value here (and a matching branch in `tts.py: synthesize()`)
-  is the documented upgrade path to a commercial TTS vendor.
-- `video.fps` / `video.resolution` feed `highlight_config.py`'s
-  `frame = seconds * fps` conversion and the Remotion composition's
-  `width`/`height` (currently `1280x720`, `fps: 30`, matching the
-  Remotion `<Composition>` definition in `render-app/src/CodeExplainerChunk.tsx`).
+These sections are stored on `PipelineConfig.raw` and **never read**.
+
+- `llm` is a **roadmap** placeholder for an LLM-elaborated narration
+  stage. The implemented pipeline does not call an LLM anywhere; every
+  script is built mechanically. See the Phase 5 doc and the gaps doc.
+- `audio.tts_provider` is unused. Live engines are **Piper**
+  (`piper:en_IN-ljspeech`) then **espeak-ng** (`espeak-ng:en-us`). Which
+  one actually ran is recorded on the render bundle as `ttsEngine`.
+- `video.fps` / `video.resolution` are unused. Remotion compositions
+  hardcode **30 fps** and **1280×720** (`FullVideo.tsx`, `ChunkView.tsx`).
+  `highlight_config.py` defaults `fps=30` independently.
+
+## Piper voice cache
+
+`./run-local.sh` (when rendering is on) runs
+`python scripts/ensure_piper_voice.py` once. That downloads ~64MB of
+Indian-English Piper model files from Hugging Face into
+`.cache/piper-voices/en_IN/` (`en_IN-ljspeech.onnx` + config JSON).
+
+- Non-fatal: if Hugging Face is blocked, the script warns and exits 0;
+  `tts.py` falls back to espeak-ng.
+- Not a per-render network call — same shape as `npm install`.
+- Licensing: Piper engine is GPL-3.0-or-later; the voice model is tagged
+  AGPL-3.0. Both are invoked as subprocesses (see `src/render/tts.py`).
+
+espeak-ng remains a **required** system binary even when Piper is
+present (fallback + `run-local.sh` preflight).
 
 ## Running against a different repo
 

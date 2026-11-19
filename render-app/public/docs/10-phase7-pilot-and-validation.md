@@ -1,9 +1,16 @@
 # Phase 7 — Pilot and Validation
 
-Status: done. 12 new tests (10 schema_check, 2 run_pilot — the render
-one running real espeak-ng, skipped only if it's not installed), 147
-passing overall at phase completion (now 168, after the post-code-review
-security fixes — see [`13-known-gaps-and-roadmap.md`](./13-known-gaps-and-roadmap.md)).
+Status: done. 12 new tests at original phase completion (10
+`schema_check`, 2 `run_pilot`). **Do not treat 147 / 168 as live.**
+
+**Tests (2026-11-19):** `pytest -q` → **245 passed, 3 skipped**. Re-run
+locally; pin a new dated count here when it changes.
+
+Phases 0–7 run end-to-end. Extraction is **not** complete for all
+advertised stacks. Schema validation is **report-only**: invalid
+Python/Spring/Express placeholders still get narrated and can still
+produce an mp4 (`run_pilot.py` records `schemaValidation.invalid` then
+unconditionally continues).
 
 ## What this phase delivers
 
@@ -14,12 +21,18 @@ security fixes — see [`13-known-gaps-and-roadmap.md`](./13-known-gaps-and-road
    — the single entry point that runs **every** phase's pipeline over
    one repo end to end and writes one `pilot_report.json` with honest
    numbers, never a bare pass/fail verdict.
+3. `scripts/run_backend_pilot.py` (what `./run-local.sh` actually
+   calls) — wraps `run_pilot`, then **stages** every successfully
+   rendered chunk into `render-app/public/chunks/<chunkId>/` plus
+   `render-app/public/chunks/manifest.json` so `FullVideo` can render
+   the whole repo. The first chunk is also copied to
+   `public/sample-chunk/` for the demo composition.
 
 ## Locked rules this phase implements
 
 No new locked rule of its own — this phase's job is to *verify* every
 earlier phase's locked rules actually hold on real data, end to end, in
-one command.
+one command. It does **not** halt render on schema failure.
 
 ## Key functions and why they were chosen
 
@@ -37,94 +50,73 @@ accepted, documented state). Also validates `lineRange` is a real
 
 **Why check "key exists" rather than "value is non-null" specifically
 for `pullRequest`, while every other required field must be non-null:**
-this single exception is deliberate and documented, not an oversight —
-the rules doc calls `pullRequest` required, but Phase 3/4 established
-(for entirely legitimate reasons: a shallow clone has no PR metadata, a
-third-party repo has no API access) that its *value* can honestly be
-`null`. A validator that demanded non-null here would force every
-caller to either fabricate a PR URL or fail validation for a state the
-pipeline has already decided is acceptable — neither of which is
-correct. Checking only for the key's presence enforces "the field was
-considered and explicitly recorded as unknown," which is exactly what
-this pipeline's honesty stance calls for.
+this single exception is deliberate and documented — the rules doc
+calls `pullRequest` required, but Phase 3/4 established that its
+*value* can honestly be `null`. Checking only for the key's presence
+enforces "the field was considered and explicitly recorded as unknown."
 
-**Why a Phase-3 placeholder record for an unimplemented stack (Python/
-Spring Boot extraction) is allowed to legitimately *fail* this
-validator, rather than being special-cased to pass:** the module's own
-docstring states this is "by design — the gap is surfaced, not
-hidden." Special-casing the placeholder to pass validation would hide
-a real, known limitation behind a green checkmark; letting it fail
-honestly is what makes the Phase 7 pilot report's "problems" list a
-trustworthy inventory of real gaps rather than a sanitized summary.
+**Why a Phase-3 placeholder record for an unimplemented stack (Python /
+Spring Boot / Express) is allowed to legitimately *fail* this
+validator:** the gap is surfaced, not hidden. Special-casing the
+placeholder to pass would hide a known limitation. **Angular is the
+opposite failure:** empty content lists are schema-valid, so this
+check does **not** catch the silent-success path (confidence is now
+0.3; the record still validates). See doc 14.
 
-### `run_pilot(repo_root, output_root, render=True)` — running extraction *twice* inside one pilot run
+**Report-only:** `run_pilot` still narrates and renders invalid
+records. A stack with no extractor can still produce an mp4. Closing
+that is a code follow-up, not a docs fiction.
+
+### `run_pilot(repo_root, output_root, render=True)` — extraction twice
 
 **What it does:** runs `extract_repo_with_reuse()` once, then
 **immediately again** on the same repo/output, specifically to prove
-reuse actually triggers on this exact run, not just that the mechanism
-exists in isolated unit tests.
+reuse actually triggers on this exact run. After an
+`EXTRACTOR_VERSION` bump, the second run reanalyzes until records are
+rewritten at the new version.
 
-**Why re-run extraction a second time inside the pilot itself, instead
-of trusting Phase 4's own unit tests to have already proven reuse
-works:** a unit test proves the mechanism is *correct in isolation*,
-against a small synthetic fixture. It does not prove reuse actually
-*happens* for a specific real repo's specific real file layout and
-content-hash values on a from-scratch run — there could be a
-real-world edge case (e.g. a path-normalization mismatch between what
-the chunker produces and what the mirror store expects) that a
-synthetic test wouldn't catch. The pilot's own `reuseProvenCorrect`
-check (`reuse_check_stats["reused"] == reuse_check_stats["total"]`) is
-exactly the kind of "proven, not just asserted" verification this
-project applies consistently — the same standard used for the Phase 4
-reuse claim and the Phase 6 real-audio render.
+**Why re-run extraction a second time inside the pilot itself:** a unit
+test proves the mechanism in isolation. The pilot's
+`reuseProvenCorrect` check is "proven, not just asserted" on this
+repo's real paths. Version invalidation is part of that story now.
+
+### Staging for FullVideo
+
+`run_backend_pilot.py` copies each successful render bundle (and source
+snippet / audio) to `render-app/public/chunks/<chunkId>/` and writes
+`{"chunkIds": [...]}` to `public/chunks/manifest.json`. `./run-local.sh`
+then `npx remotion render FullVideo output/video.mp4`. Without this
+staging step there is nothing for Remotion to play back. Undocumented
+in the original Phase 7 writeup.
 
 ### `run_pilot()`'s report shape — honest numbers, not a verdict
 
-**What it does:** the final `pilot_report.json` reports raw counts
-(`chunkCount`, `validCount`/`invalidCount`, `narration.withinTargetBand`,
-per-chunk render results including `alignmentSource` and `allCuesAssumed`)
-— there is no single `"passed": true/false` field anywhere in the
-report.
+The final `pilot_report.json` reports raw counts (`chunkCount`,
+`validCount`/`invalidCount`, `narration.withinTargetBand`, per-chunk
+render results including `alignmentSource` and `ttsEngine`) — there is
+no single `"passed": true/false` field.
 
-**Why report numbers instead of a verdict:** a single pass/fail boolean
-would have to make an arbitrary judgment call about *which* gaps are
-acceptable (is 2/22 chunks in the target narration band a "pass" or a
-"fail"? Is an unimplemented Python extractor a "fail" for the whole
-pilot, or an expected, out-of-scope gap?). Reporting the actual numbers
-and letting a human (or a later automated threshold, if one is ever
-added) interpret them is more honest and more useful — it's also
-exactly how every other phase in this project reports its own findings
-(e.g. Phase 5's narration-length distribution, Phase 6's per-chunk
-alignment sources), so Phase 7's report format is consistent with the
-project's established voice rather than introducing a new, different
-kind of output at the very end.
+Live render rows should show `"alignmentSource": "measured-beats"`,
+not `"estimated"`. Treat older reports that say every cue was
+`assumed=true` because whisper.cpp was blocked as **historical**.
 
-## Full real-repo pilot results (22 chunks)
+## Full real-repo pilot results (22 chunks) — historical Alumni-web snapshot
 
 - **Extraction + reuse:** run 1 → `{reused: 0, reanalyzed: 22}`; run 2 →
-  `{reused: 22, reanalyzed: 0}`.
-- **Schema validation:** 22/22 valid, 0 problems.
-- **Narration:** 22/22 chunks got a script; 2/22 land in the 90–180s
-  target band (95.0s, 124.1s); the other 20 range 21.8s–71.7s.
-- **Render:** all 22 chunks ran through TTS + alignment +
-  highlight-config generation with zero errors; durations 17.9s–131.9s;
-  all 22 used the `"estimated"` alignment source (the real whisper.cpp
-  path's model download is blocked in this sandbox); 21/22 chunks got
-  at least one visual cue — the one exception (a file with no
-  `importantFunctions` carrying a `lineRange`) correctly got **zero**
-  cues rather than a fabricated one.
+  `{reused: 22, reanalyzed: 0}` (pre-`extractorVersion` bump).
+- **Schema validation:** 22/22 valid, 0 problems (React + Go only —
+  that repo has no Angular/Python/Spring/Express chunks).
+- **Narration:** 22/22 chunks got a script; **2/22 in the 90–180s
+  band** on the **old short templates**. Re-measure after
+  function-aware item beats; do not cite 2/22 as current.
+- **Render (then):** all 22 used `"estimated"` alignment. **Now** the
+  live path writes `"measured-beats"` and prefers Piper over espeak-ng.
 
-## The explicit production decision this phase states
+## Production voice / timing (updated)
 
-espeak-ng + estimated alignment is good enough to **prove the full
-mechanism** (every stage runs, every number is honestly labeled,
-nothing is faked) but is explicitly **NOT recommended for a real
-shipped product as-is** — the voice is robotic and no cue timing is
-ever verified in this environment (100% of cues come back
-`assumed=true`). The stated production path: swap `tts.py`'s
-`synthesize()` for a commercial TTS vendor (already isolated to one
-function for exactly this reason), and run
-`render-app/scripts/transcribe.mjs` somewhere the `huggingface.co`
-model host is reachable (or ship the model file with the deployment)
-so the real whisper.cpp alignment path — already built and tested,
-just network-blocked here — becomes the path actually taken.
+espeak-ng remains the required fallback; Piper is the default when the
+voice is cached. Measured-beat alignment is the live timing source.
+Commercial TTS is still a one-function swap. `transcribe.mjs` is
+**not** the production aligner — leftover / unused by
+`build_render_bundle`. Voice quality for a shipped product is still an
+open gap (see [`13-known-gaps-and-roadmap.md`](./13-known-gaps-and-roadmap.md)).

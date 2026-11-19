@@ -5,11 +5,15 @@ structural rules in `08-phase5-narration.md`: that document says what
 the narrator must say, this one says how it should sound and why.
 
 Most of what follows is already enforced in code
-(`src/narrate/script_builder.py`, `function_narration.py`). Where that
-is the case it is marked **[enforced]** with the mechanism, so a reader
-can tell a rule that holds automatically from a rule that depends on
-whoever writes the next template. Rules that are not yet enforced are
-marked **[by convention]** — these are the ones to check in review.
+(`src/narrate/script_builder.py`, `function_narration.py`,
+`file_overview.py`). Where that is the case it is marked **[enforced]**
+with the mechanism, so a reader can tell a rule that holds
+automatically from a rule that depends on whoever writes the next
+template. Rules that are not yet enforced are marked **[by convention]**
+— these are the ones to check in review.
+
+When this file and `08-phase5-narration.md` disagree on identifiers,
+**this file wins** and matches runtime.
 
 ---
 
@@ -89,13 +93,23 @@ Two corollaries that are easy to get wrong:
 
 ## 4. Structure of a section
 
-Four beats, in this order. **[enforced]** — `build_beats()`.
+Each **file** is introduced by a **FileCard** before the four-beat
+walkthrough. **[enforced]** — `file_overview.py` + `FileCard.tsx`. The
+card speaks the file name and its purpose from `fileDescription` (the
+file's own header comment), then shows callers/callees/layer/risks.
+Fields the repo cannot answer are shown as `unavailable` reasons, not
+empty rows. Same voice as the walkthrough: third person, present,
+grounded.
+
+Then four beats, in this order. **[enforced]** — `build_beats()` /
+`build_item_beats()`.
 
 1. **Purpose** — what this file is for, before any mechanism.
 2. **Connections** — how it relates to chunks covered elsewhere, or
    plainly that it stands alone.
-3. **Flow** — the items in turn: what each does, who calls it, why it
-   matters. Split in two if it would run past ~60 seconds. **[enforced]**
+3. **Flow** — the items in turn (one beat per function/route/handler/
+   API call): what each does, who calls it, why it matters. Split if
+   it would run past ~60 seconds. **[enforced]**
 4. **Recap** — what was covered, and explicitly what was not.
 
 Purpose before mechanism is the load-bearing one. A viewer who does not
@@ -112,14 +126,20 @@ Silence is part of the narration, not an absence of it.
 - The viewer is reading code while listening. Narration that runs
   continuously gives them no moment to look at the thing being
   described.
-- A section runs **90–180 seconds** as a target. **[enforced]** —
-  `TARGET_MIN_SECONDS` / `TARGET_MAX_SECONDS`.
+- A section runs **90–180 seconds** as a target. **[enforced as a
+  classifier, not a pad]** — `TARGET_MIN_SECONDS` / `TARGET_MAX_SECONDS`.
+  Small files often land short; do not invent content to fill the band.
+  The Alumni-web 2/22 figure is historical (old short templates).
 
 ## 6. Naming things
 
 - **Identifiers are spoken as written.** `handleSubmit` is
   "handleSubmit", not "handle submit". The viewer is reading the name
   on screen and needs to match what they hear to what they see.
+  **[enforced by omission]** — `pronunciation.py` still builds a
+  camelCase-splitting table (and an acronym map) but that table is
+  **not applied** to TTS. Identifier-splitting is **not enforced**.
+  SSML pronunciation tags are **not implemented**.
 - **Paths are spoken in full the first time** and may be shortened
   afterwards.
 - **Never invent a friendly name** for a symbol. If a Fiber v3 inline

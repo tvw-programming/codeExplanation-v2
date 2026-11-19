@@ -187,5 +187,28 @@ Each field is keyed by name. Each entry has: required (yes/no) and rules.
 
 ---
 
-## Open items
-- The alumni repo's GitHub link is needed to run the example.
+## Implementation notes (code vs these rules — annotate, do not rewrite)
+
+These rules remain the locked source of truth. The live pipeline
+diverges in the following ways; see `documentation/` for the narrative.
+
+- **`outputs`**: required-in-rules as an optional field; **always `[]`
+  in code** (`json_builder.py`). Known gap.
+- **SSML pronunciation tags**: specified under Identifiers; the
+  pronunciation table is **built and never applied**. Identifiers are
+  spoken as written (see `documentation/15-narration-style-guide.md`).
+- **WhisperX word timings / Shiki decorations**: specified under
+  Linking narration to code highlights. Live path is **measured-beat
+  alignment** (`alignmentSource: "measured-beats"`) and a **CSS
+  selection bar** in `ChunkView.tsx`. `shiki` is a dependency, unused.
+  `transcribe.mjs` / `estimated_alignment.py` are leftover.
+- **Long-function snapshot splitting + coverage ledger**: specified
+  under Long functions split across snapshots. **Not implemented.**
+  Oversized files are only flagged `needs_further_split`.
+- **Reuse rule**: hash match is no longer sufficient.
+  `extractorVersion` (currently 4) forces re-analysis when extractors
+  change even if source bytes did not.
+- Extra record fields not listed above: `fileDescription`,
+  `extractorVersion`, `secretsRedacted`, function-context keys,
+  `eventHandlers[].lineRange`. Extra bundle fields: `ttsEngine`,
+  `fileOverview`, `cardNarration`, `narrationSegments`.

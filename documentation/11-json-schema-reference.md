@@ -25,9 +25,9 @@ one ever disagree, the `docs/` file wins.
 |---|---|---|---|
 | `inputs` | no | Props/inputs/request params/function args | `json_builder.py` (from `ts.find_props_interface`) |
 | `outputs` | no | Callbacks/return values/response bodies | not yet populated (always `[]`) — see gaps doc |
-| `eventHandlers` | no | Every handler, none skipped; assumed+note if uncertain | `ts_extractor.py: extract_event_handlers()` |
+| `eventHandlers` | no | Every handler, none skipped; assumed+note if uncertain; **`lineRange` is `[bindLine, bindLine]`** | `ts_extractor.py: extract_event_handlers()` + `json_builder.py` |
 | `apiCalls` | no | Postman-style: method, URL/pattern, assumed if URL is a variable | `ts_extractor.py: extract_api_calls()` |
-| `importantFunctions` | no | Name/signature/description/lineRange + mandatory 120-line-trimmed snippet | `ts_extractor.py`/`go_extractor.py: extract_functions()` |
+| `importantFunctions` | no | Name/signature/description/lineRange + mandatory 120-line-trimmed snippet, plus function-context keys | `ts_extractor.py`/`go_extractor.py: extract_functions()` + `function_context.py` |
 | `sideEffects` | no | DB writes, external calls, global state, timers, logging | `extract_side_effects()` (both extractors) |
 | `dependencies` | no | Internal file imports, with what each is used for | `json_builder.py` (from internal `imports`) |
 | `dataModels` | no | Interfaces/structs/models with mandatory snippet | `ts_extractor.py: extract_interfaces()` / `go_extractor.py: extract_structs()` |
@@ -47,8 +47,25 @@ one ever disagree, the `docs/` file wins.
 | Field | Required | Rule | Implemented by |
 |---|---|---|---|
 | `contentHash` | yes | SHA-256 of the primary file's raw bytes | `common.py: content_hash()` |
+| `extractorVersion` | yes (implementation) | Integer; currently `4`. Hash match is **not** enough to reuse — version mismatch forces re-analysis | `mirror_store.EXTRACTOR_VERSION` / `json_builder.py` |
+| `fileDescription` | no | File header comment; FileCard purpose | `file_header_comment()` |
 | `lastUpdated` | yes | ISO-8601 UTC timestamp of last analysis | `common.py: now_iso()` |
 | `pullRequest` | yes (key); value may be `null` | Full PR URL, when determinable | `pull_request_lookup.py: find_last_pull_request_url()` |
+
+## Extra function-context keys (on each `importantFunctions` entry)
+
+Implemented by `function_context.build_function_context()`:
+
+`description`, `descriptionSource` (`"doc-comment"` or null),
+`exported`, `calledBy`, `calls`, `params`, `raisesError`, `isAsync`,
+`reactHooks`, `apiCalls` (in-range), `sideEffects` (in-range),
+`lineCount`. Plus snippet flags `secretsRedacted`, `truncated`,
+`continuationNote`.
+
+Empty Angular records still include the required identity/storage keys
+and empty content lists — schema-valid, `confidence` 0.3. Placeholder
+Python/Spring/Express records omit several required keys and fail
+validation. `outputs` is always `[]`.
 
 ## Narration/render fields (produced outside the stored chunk record)
 
@@ -57,11 +74,15 @@ not on the stored chunk JSON itself:
 
 | Field | Produced by | Notes |
 |---|---|---|
-| `purpose` / `connections` / `flow` / `recap` | `script_builder.py: build_narration_script()` | the four locked beats |
-| `visualCues` (`VISUAL[HIGHLIGHT:id]` tokens) | `visual_cues.py: generate_visual_cues()` | only for `importantFunctions` entries with a `lineRange` |
-| `pronunciationTable` | `pronunciation.py: build_pronunciation_table()` | per-identifier spoken form |
-| `highlightConfig` (`fromFrame`/`toFrame`/`assumed`) | `highlight_config.py: build_highlight_config()` | `frame = seconds × fps` |
-| `alignmentSource` (`"whisper-cpp"` / `"estimated"`) | `render_pipeline.py: build_render_bundle()` | always honestly recorded |
+| `purpose` / `connections` / item beats / `recap` | `script_builder.py: build_beats()` / `build_item_beats()` | four-beat *structure*; flow is per-item spoken text, not "The X function runs next" |
+| `visualCues` (`VISUAL[HIGHLIGHT:id]` tokens) | `visual_cues.py: generate_visual_cues()` | `importantFunctions`, `eventHandlers`, and `routes` with a `lineRange` |
+| `pronunciationTable` | `pronunciation.py: build_pronunciation_table()` | built; **not applied** to TTS |
+| `highlightConfig` (`fromFrame`/`toFrame`/`assumed`) | `highlight_config.py: build_highlight_config()` | `frame = seconds × fps`; CSS bar in `ChunkView`, not Shiki |
+| `alignmentSource` | `render_pipeline.py: build_render_bundle()` | live value **`"measured-beats"`**; leftover modules may still emit `"whisper-cpp"` / `"estimated"` |
+| `ttsEngine` | `tts.py` via the bundle | `piper:en_IN-ljspeech` or `espeak-ng:en-us` |
+| `fileOverview` | `file_overview.py` | FileCard payload (callers, layer, risks, `unavailable`) |
+| `cardNarration` | `render_pipeline._build_card_narration()` | spoken intro over the card (`card.wav`) |
+| `narrationSegments` | `narration_segments.py` | per-beat start/end frames from measured placements |
 
 ## Narrator script rules (not a JSON field, governs how the above is spoken)
 
