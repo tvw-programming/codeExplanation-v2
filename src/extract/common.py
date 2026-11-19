@@ -100,13 +100,28 @@ def trim_snippet(lines: list[str], start_line: int, end_line: int,
     return CodeSnippet(text=text, truncated=True, continuation_note=note, secrets_redacted=redacted)
 
 
+# What to report when an extractor came away with nothing at all. Low
+# rather than high: see confidence_from_flags.
+EMPTY_EXTRACTION_CONFIDENCE = 0.3
+
+
 def confidence_from_flags(total_claims: int, assumed_claims: int, base: float = 0.95) -> float:
     """A simple, documented confidence formula: start from `base` and
     subtract proportionally for every claim this extractor had to mark
     assumed. Not a validated scoring model — a starting point, same as
-    the project's own 0.85 threshold."""
+    the project's own 0.85 threshold.
+
+    Finding nothing scores LOW, not high. It used to return `base`,
+    which meant a file the extractor could not read at all — an Angular
+    component, whose class methods, @Input()s and HttpClient calls match
+    none of the TypeScript patterns — was reported at 0.95 with every
+    list empty and no risks flagged. "I have nothing to say about this
+    file" is the least confident an extractor can be, not the most, and
+    reporting it as high confidence hid the one signal that would have
+    revealed the stack was unsupported.
+    """
     if total_claims == 0:
-        return base
+        return EMPTY_EXTRACTION_CONFIDENCE
     penalty = 0.5 * (assumed_claims / total_claims)
     return round(max(0.05, base - penalty), 2)
 
