@@ -190,6 +190,7 @@ const VideoBody: React.FC<VideoProps> = ({
                   visualTheme={v.visualTheme}
                   securityFlags={v.securityFlags}
                   narration={v.treeNarration}
+                  filePath={overview?.filePath}
                 />
               </Series.Sequence>,
             );
@@ -204,6 +205,7 @@ const VideoBody: React.FC<VideoProps> = ({
                   visualTheme={v.visualTheme}
                   securityFlags={v.securityFlags}
                   narration={v.lifecycleNarration}
+                  filePath={overview?.filePath}
                 />
               </Series.Sequence>,
             );

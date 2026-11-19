@@ -13,7 +13,9 @@ export const CEV_BG_VIDEO = "#0F1419";
 export const CEV_FG_PRIMARY = "#F3F4F6";
 export const CEV_FG_MUTED = "#9CA3AF";
 export const CEV_SECURITY = "#F59E0B";
+export const CEV_FG_ON_LIGHT = "#111827";
 
+/** Locked multi-stack plan §3.2 tokens (canonical stack keys). */
 export const VISUAL_THEME_BY_STACK: Record<string, VisualTheme> = {
   react: {
     stack: "react",
@@ -23,7 +25,14 @@ export const VISUAL_THEME_BY_STACK: Record<string, VisualTheme> = {
     logoAssetId: "react-logo-ondark",
     logoPath: "visuals/logos/react.svg",
   },
-
+  angular: {
+    stack: "angular",
+    primary: "#DD0031",
+    secondary: "#C3002F",
+    onDark: "#FF4D6A",
+    logoAssetId: "angular-logo-ondark",
+    logoPath: "visuals/logos/angular.svg",
+  },
   vue: {
     stack: "vue",
     primary: "#42B883",
@@ -64,38 +73,6 @@ export const VISUAL_THEME_BY_STACK: Record<string, VisualTheme> = {
     logoAssetId: "python-logo-ondark",
     logoPath: "visuals/logos/python.svg",
   },
-  spring_boot: {
-    stack: "spring_boot",
-    primary: "#6DB33F",
-    secondary: "#6DB33F",
-    onDark: "#8BC34A",
-    logoAssetId: "spring-logo-ondark",
-    logoPath: "visuals/logos/spring.svg",
-  },
-  express: {
-    stack: "express",
-    primary: "#2C2C2C",
-    secondary: "#FFFFFF",
-    onDark: "#FFFFFF",
-    logoAssetId: "express-logo-ondark",
-    logoPath: "visuals/logos/express.svg",
-  },
-  rust: {
-    stack: "rust",
-    primary: "#D34516",
-    secondary: "#1E2650",
-    onDark: "#FF6B35",
-    logoAssetId: "rust-logo-ondark",
-    logoPath: "visuals/logos/rust.svg",
-  },
-  angular: {
-    stack: "angular",
-    primary: "#DD0031",
-    secondary: "#C3002F",
-    onDark: "#FF4D6A",
-    logoAssetId: "angular-logo-ondark",
-    logoPath: "visuals/logos/angular.svg",
-  },
   go: {
     stack: "go",
     primary: "#00ADD8",
@@ -120,6 +97,47 @@ export const VISUAL_THEME_BY_STACK: Record<string, VisualTheme> = {
     logoAssetId: "go-fiber-logo-ondark",
     logoPath: "visuals/logos/go-fiber.svg",
   },
+  spring_boot: {
+    stack: "spring_boot",
+    primary: "#6DB33F",
+    secondary: "#6DB33F",
+    onDark: "#8BC34A",
+    logoAssetId: "spring-logo-ondark",
+    logoPath: "visuals/logos/spring.svg",
+  },
+  /** Alias used by some detect paths. */
+  java: {
+    stack: "java",
+    primary: "#6DB33F",
+    secondary: "#6DB33F",
+    onDark: "#8BC34A",
+    logoAssetId: "spring-logo-ondark",
+    logoPath: "visuals/logos/spring.svg",
+  },
+  spring: {
+    stack: "spring_boot",
+    primary: "#6DB33F",
+    secondary: "#6DB33F",
+    onDark: "#8BC34A",
+    logoAssetId: "spring-logo-ondark",
+    logoPath: "visuals/logos/spring.svg",
+  },
+  express: {
+    stack: "express",
+    primary: "#2C2C2C",
+    secondary: "#FFFFFF",
+    onDark: "#FFFFFF",
+    logoAssetId: "express-logo-ondark",
+    logoPath: "visuals/logos/express.svg",
+  },
+  rust: {
+    stack: "rust",
+    primary: "#D34516",
+    secondary: "#1E2650",
+    onDark: "#FF6B35",
+    logoAssetId: "rust-logo-ondark",
+    logoPath: "visuals/logos/rust.svg",
+  },
 };
 
 export function themeForStack(stack: string | undefined | null): VisualTheme {
@@ -135,6 +153,22 @@ export function themeForStack(stack: string | undefined | null): VisualTheme {
     logoAssetId: "unknown",
     logoPath: null,
   };
+}
+
+/** Stroke / edge accent on the dark video plane (plan §3.1). */
+export function videoAccent(theme: VisualTheme): string {
+  return theme.onDark || theme.primary;
+}
+
+/**
+ * Label text on dark-video nodes.
+ * JS yellow pills use dark secondary text; others use light fg.
+ */
+export function videoLabelColor(theme: VisualTheme): string {
+  if (theme.stack === "javascript") {
+    return theme.secondary || CEV_FG_ON_LIGHT;
+  }
+  return CEV_FG_PRIMARY;
 }
 
 /** Logo safe zone: 24px inset, 28px logo height (Remotion 1280×720). */

@@ -1,16 +1,18 @@
 import { AbsoluteFill, Audio, staticFile, useCurrentFrame } from "remotion";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
-import { StackLogo } from "./StackLogo";
 import type { ClipNarration, SecurityFlag } from "./ComponentTreeClip";
+import { DiagramHeader } from "./DiagramHeader";
 import {
   CEV_BG_VIDEO,
-  CEV_FG_MUTED,
   CEV_FG_PRIMARY,
   CEV_SECURITY,
   type VisualTheme,
   themeForStack,
+  videoAccent,
+  videoLabelColor,
 } from "./visualTheme";
+import { HEADER_HEIGHT } from "./treeLayout";
 
 export type LifecycleStep = {
   order: number;
@@ -46,11 +48,14 @@ export const LifecycleFlowClip: React.FC<{
   visualTheme?: VisualTheme | null;
   securityFlags?: SecurityFlag[];
   narration?: ClipNarration | null;
-}> = ({ chunkDir, flows, visualTheme, securityFlags = [], narration }) => {
+  filePath?: string | null;
+}> = ({ chunkDir, flows, visualTheme, securityFlags = [], narration, filePath }) => {
   const frame = useCurrentFrame();
   const theme = visualTheme || themeForStack("react");
   const flow = flows[0];
   const steps = flow?.steps || [];
+  const accentBase = videoAccent(theme);
+  const labelColor = videoLabelColor(theme);
 
   const activeBeatIndex = (narration?.beats || []).findIndex(
     (b) =>
@@ -62,12 +67,22 @@ export const LifecycleFlowClip: React.FC<{
 
   return (
     <AbsoluteFill style={{ backgroundColor: CEV_BG_VIDEO }}>
-      <StackLogo theme={theme} />
-      <Box sx={{ position: "absolute", top: 24, left: 28, right: 120 }}>
-        <Typography sx={{ color: CEV_FG_MUTED, fontSize: 13, letterSpacing: 1 }}>
-          LIFECYCLE
-        </Typography>
-        <Typography sx={{ color: CEV_FG_PRIMARY, fontSize: 22, fontWeight: 600 }}>
+      <DiagramHeader
+        theme={theme}
+        filePath={filePath}
+        eyebrow="Lifecycle"
+        titleFallback={flow?.title || "handler"}
+      />
+
+      <Box
+        sx={{
+          position: "absolute",
+          top: HEADER_HEIGHT + 28,
+          left: 28,
+          right: 28,
+        }}
+      >
+        <Typography sx={{ color: CEV_FG_PRIMARY, fontSize: 22, fontWeight: 600, mb: 2 }}>
           {flow?.title || "handler"}
         </Typography>
       </Box>
@@ -75,27 +90,31 @@ export const LifecycleFlowClip: React.FC<{
       <Box
         sx={{
           position: "absolute",
-          top: 140,
+          top: HEADER_HEIGHT + 80,
           left: 40,
-          right: 120,
+          right: 40,
           display: "flex",
           alignItems: "center",
+          justifyContent: "center",
           gap: "12px",
           flexWrap: "wrap",
         }}
       >
         {steps.map((step, i) => {
           const active = i === activeStep;
-          // Fiber middleware steps use Fiber green (secondary); others use primary.
           const accent =
-            step.action === "middleware" ? theme.secondary || theme.primary : theme.primary;
+            step.action === "middleware" ? theme.secondary || accentBase : accentBase;
           return (
             <Box key={`${step.order}-${step.label}`} sx={{ display: "flex", alignItems: "center", gap: "12px" }}>
               <Box
                 sx={{
                   border: `2px ${step.assumed ? "dashed" : "solid"} ${accent}`,
                   bgcolor: active ? accent : `${accent}22`,
-                  color: active ? "#0b1020" : CEV_FG_PRIMARY,
+                  color: active
+                    ? theme.stack === "javascript"
+                      ? theme.secondary
+                      : "#0b1020"
+                    : labelColor,
                   opacity: step.assumed && !active ? 0.7 : 1,
                   borderRadius: "999px",
                   px: 2,
@@ -123,7 +142,7 @@ export const LifecycleFlowClip: React.FC<{
                 ) : null}
               </Box>
               {i < steps.length - 1 ? (
-                <Typography sx={{ color: theme.primary, fontSize: 22 }}>→</Typography>
+                <Typography sx={{ color: accentBase, fontSize: 22 }}>→</Typography>
               ) : null}
             </Box>
           );

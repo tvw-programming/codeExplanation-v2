@@ -16,19 +16,21 @@ export const StackLogo: React.FC<{
   if (!theme.logoPath) {
     return null;
   }
+  // On dark video, tint the pill with onDark so Express white / JS yellow read.
+  const pill = `${theme.onDark || theme.primary}40`;
   return (
     <Box
       sx={{
         position: "absolute",
         top: inset,
         right: inset,
-        zIndex: 5,
+        zIndex: 7,
         pointerEvents: "none",
         opacity: LOGO_OPACITY,
         display: "flex",
         alignItems: "center",
         gap: "8px",
-        bgcolor: `${theme.primary}40`,
+        bgcolor: pill,
         borderRadius: "6px",
         px: "8px",
         py: "4px",
