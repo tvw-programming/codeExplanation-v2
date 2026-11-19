@@ -30,6 +30,12 @@ Unavailable visual segments are **omitted** — no placeholder slides.
 `FullVideo` only adds a clip when its frame count is non-zero and the
 graph/flows/narration artifacts are present.
 
+**Manifest order:** `run_backend_pilot` writes each `StackVideo-<stack>`
+manifest with visual-bearing chunks first (stable within each group).
+That way `--preview` reaches Go Fiber `route_tree` files (often only
+`cmd/server/main.go`) instead of spending minutes on handler/repo
+chunks that correctly stay `unavailable`.
+
 | Record field | Role |
 |---|---|
 | `visualAvailability.*` | `available` / `partial` / `unavailable` per capability |

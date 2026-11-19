@@ -24,11 +24,14 @@
 #   ./run-local.sh --preview=30         # first 30s only
 #
 # --preview renders only the opening stretch of the same video, to
-# output/video-preview.mp4, so you can check a change in a minute or
+# output/video-<stack>-preview.mp4, so you can check a change in a minute or
 # two instead of waiting out the full render. It limits the frame range
 # only: the repo is still detected, chunked, extracted, narrated and
 # staged in full, and the composition still reports its true duration,
 # so a preview shows exactly what the real video's opening looks like.
+# Per-stack manifests put chunks that have tree/lifecycle/breakdown
+# graphs first, so --preview reaches Go Fiber route trees (and similar)
+# instead of spending the window on handler files with no visuals.
 # It is never written over output/video.mp4.
 #   ./run-local.sh --stop-docs-server   # stop a server from a previous run
 #   ./run-local.sh --help

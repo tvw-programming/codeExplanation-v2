@@ -98,6 +98,42 @@ def _stage_one_chunk(chunk_id: str, dest_dir: Path, resolved_root: Path, output_
     return True
 
 
+def _bundle_has_visual_clips(bundle_path: Path) -> bool:
+    """True when the staged bundle carries a graph (or flows) for FullVideo."""
+    if not bundle_path.is_file():
+        return False
+    try:
+        data = json.loads(bundle_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return False
+    if data.get("visualGraph") and (
+        data.get("treeNarration") or data.get("breakdownNarration")
+    ):
+        return True
+    if (data.get("lifecycleFlows") or []) and data.get("lifecycleNarration"):
+        return True
+    return False
+
+
+def _prioritize_visual_chunks(stack_dir: Path, chunk_ids: list[str]) -> list[str]:
+    """Put chunks with tree/lifecycle/breakdown first (stable within each group).
+
+    Dependency-first extract order often parks Go Fiber's only route_tree
+    file (e.g. cmd/server/main.go) after ~25+ minutes of handler/repo
+    chunks that correctly have visualAvailability=unavailable. --preview
+    then never reaches the graph. Playback order does not affect already-
+    baked narration scripts, so reordering the Remotion manifest is safe.
+    """
+    with_visuals: list[str] = []
+    without: list[str] = []
+    for cid in chunk_ids:
+        if _bundle_has_visual_clips(stack_dir / cid / "bundle.json"):
+            with_visuals.append(cid)
+        else:
+            without.append(cid)
+    return with_visuals + without
+
+
 def _stage_all_chunks(report: dict, resolved_root: Path, output_root: Path) -> dict[str, list[str]]:
     """Stages EVERY successfully-rendered chunk into
     render-app/public/chunks/<stack>/<chunkId>/, grouped by the stack
@@ -145,12 +181,25 @@ def _stage_all_chunks(report: dict, resolved_root: Path, output_root: Path) -> d
                 # so the combined manifest's paths still resolve.
                 _stage_one_chunk(chunk_id, CHUNKS_DIR / chunk_id, resolved_root, output_root)
 
-    # Write per-stack manifests.
-    for stack, chunk_ids in staged_by_stack.items():
+    # Write per-stack manifests — visual-bearing chunks first so
+    # StackVideo-<stack> and --preview show trees/lifecycle early.
+    for stack, chunk_ids in list(staged_by_stack.items()):
         stack_dir = CHUNKS_DIR / stack
         stack_dir.mkdir(parents=True, exist_ok=True)
+        ordered = _prioritize_visual_chunks(stack_dir, chunk_ids)
+        staged_by_stack[stack] = ordered
+        n_visual = sum(
+            1 for cid in ordered
+            if _bundle_has_visual_clips(stack_dir / cid / "bundle.json")
+        )
+        if n_visual and ordered and ordered[0] != chunk_ids[0]:
+            print(
+                f"[backend] {stack}: prioritized {n_visual} visual chunk(s) "
+                f"first in StackVideo-{stack} (was buried after non-visual files).",
+                flush=True,
+            )
         (stack_dir / "manifest.json").write_text(
-            json.dumps({"stack": stack, "chunkIds": chunk_ids}, indent=2),
+            json.dumps({"stack": stack, "chunkIds": ordered}, indent=2),
             encoding="utf-8",
         )
 
@@ -179,9 +228,14 @@ def _stage_all_chunks(report: dict, resolved_root: Path, output_root: Path) -> d
             encoding="utf-8",
         )
 
-    # Legacy single-chunk sample.
-    if first_staged:
-        _stage_one_chunk(first_staged, SAMPLE_CHUNK_DIR, resolved_root, output_root)
+    # Legacy single-chunk sample — prefer a visual-bearing chunk when one exists.
+    sample_id = first_staged
+    for stack, chunk_ids in staged_by_stack.items():
+        if chunk_ids and _bundle_has_visual_clips(CHUNKS_DIR / stack / chunk_ids[0] / "bundle.json"):
+            sample_id = chunk_ids[0]
+            break
+    if sample_id:
+        _stage_one_chunk(sample_id, SAMPLE_CHUNK_DIR, resolved_root, output_root)
 
     return staged_by_stack
 
