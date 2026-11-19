@@ -1,6 +1,12 @@
 import { AbsoluteFill, Audio, interpolate, staticFile, useCurrentFrame } from "remotion";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
+import { DiagramHeader, shortFilePath } from "./DiagramHeader";
+import { HEADER_HEIGHT } from "./treeLayout";
+import {
+  type VisualTheme,
+  resolveVisualTheme,
+} from "./visualTheme";
 
 // The card that introduces each file before its walkthrough starts:
 // what the file is, where it sits, what it's built on, what calls it
@@ -63,10 +69,7 @@ const LAYER_COLORS: Record<string, string> = {
   Configuration: "#94a3b8",
 };
 
-const shortPath = (path: string): string => {
-  const parts = path.split("/");
-  return parts.length > 2 ? ".../" + parts.slice(-2).join("/") : path;
-};
+const shortPath = (path: string): string => shortFilePath(path) || path;
 
 const Badge: React.FC<{ text: string; color: string; textColor?: string }> = ({
   text,
@@ -214,7 +217,8 @@ export const FileCard: React.FC<{
   chunkDir?: string;
   position?: { index: number; total: number };
   sectionSeconds?: number;
-}> = ({ overview, narration, chunkDir, position, sectionSeconds }) => {
+  visualTheme?: VisualTheme | null;
+}> = ({ overview, narration, chunkDir, position, sectionSeconds, visualTheme }) => {
   const frame = useCurrentFrame();
   const fade = interpolate(frame, [0, 8], [0, 1], {
     extrapolateLeft: "clamp",
@@ -227,6 +231,7 @@ export const FileCard: React.FC<{
 
   const purpose = overview.purpose;
   const layerColor = LAYER_COLORS[overview.layer] ?? ACCENT;
+  const theme = resolveVisualTheme(visualTheme, overview.frameworks, overview.language);
 
   const subtitleBits: string[] = [];
   if (position) subtitleBits.push(`File ${position.index} of ${position.total}`);
@@ -241,11 +246,30 @@ export const FileCard: React.FC<{
   const interfaceLabel = overview.routes.length > 0 ? "Routes served" : "Outbound calls";
 
   return (
-    <AbsoluteFill style={{ backgroundColor: "#15171c", padding: "38px 46px", opacity: fade }}>
+    <AbsoluteFill style={{ backgroundColor: "#15171c", opacity: fade }}>
+      <DiagramHeader
+        theme={theme}
+        filePath={overview.filePath}
+        eyebrow="File overview"
+        titleFallback={overview.fileName}
+      />
       {narration && chunkDir ? (
         <Audio src={staticFile(`${chunkDir}/${narration.audio}`)} />
       ) : null}
 
+      <Box
+        sx={{
+          position: "absolute",
+          top: HEADER_HEIGHT,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          px: "46px",
+          pt: "24px",
+          pb: "28px",
+          boxSizing: "border-box",
+        }}
+      >
       <Box sx={{ transform: `translateY(${rise}px)`, height: "100%", display: "flex", flexDirection: "column" }}>
         <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 2 }}>
           <Typography
@@ -271,11 +295,6 @@ export const FileCard: React.FC<{
           </Box>
         </Box>
 
-        <Typography
-          sx={{ fontFamily: "Menlo, monospace", fontSize: 17, color: DIM_TEXT, mt: "4px" }}
-        >
-          {overview.filePath}
-        </Typography>
         {subtitleBits.length > 0 ? (
           <Typography
             sx={{
@@ -364,6 +383,7 @@ export const FileCard: React.FC<{
             </Card>
           ) : null}
         </Box>
+      </Box>
       </Box>
     </AbsoluteFill>
   );

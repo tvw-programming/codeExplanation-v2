@@ -2,14 +2,16 @@ import { AbsoluteFill, Audio, staticFile } from "remotion";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import type { ClipNarration, VisualGraph } from "./ComponentTreeClip";
-import { StackLogo } from "./StackLogo";
+import { DiagramHeader } from "./DiagramHeader";
 import {
   CEV_BG_VIDEO,
   CEV_FG_MUTED,
   CEV_FG_PRIMARY,
   type VisualTheme,
   themeForStack,
+  videoAccent,
 } from "./visualTheme";
+import { HEADER_HEIGHT } from "./treeLayout";
 
 const FPS = 30;
 export const BREAKDOWN_MIN_SECONDS = 3;
@@ -35,15 +37,24 @@ export const VisualBreakdownStill: React.FC<{
   const root = (visualGraph.nodes || []).find((n) => n.id === visualGraph.rootId);
   const edgeKind = isRouteTree ? "routes_to" : "mounts";
   const childCount = (visualGraph.edges || []).filter((e) => e.kind === edgeKind).length;
+  const accent = videoAccent(theme);
   const name = filePath?.split("/").pop() || root?.label || "this file";
 
   return (
     <AbsoluteFill style={{ backgroundColor: CEV_BG_VIDEO }}>
-      <StackLogo theme={theme} />
+      <DiagramHeader
+        theme={theme}
+        filePath={filePath}
+        eyebrow="Interactive breakdown"
+        titleFallback={name}
+      />
       <Box
         sx={{
           position: "absolute",
-          inset: 0,
+          top: HEADER_HEIGHT,
+          left: 0,
+          right: 0,
+          bottom: 0,
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
@@ -53,19 +64,19 @@ export const VisualBreakdownStill: React.FC<{
         }}
       >
         <Typography sx={{ color: CEV_FG_MUTED, fontSize: 13, letterSpacing: 1, mb: 1 }}>
-          INTERACTIVE BREAKDOWN
+          EXPLORE IN CHAT
         </Typography>
         <Typography sx={{ color: CEV_FG_PRIMARY, fontSize: 28, fontWeight: 700, mb: 1 }}>
           {name}
         </Typography>
-        <Typography sx={{ color: theme.primary, fontSize: 16, mb: 3 }}>
+        <Typography sx={{ color: accent, fontSize: 16, mb: 3 }}>
           {root?.label || (isRouteTree ? "routes" : "component")} · {childCount}{" "}
           {isRouteTree ? "route" : "mount"} edge{childCount === 1 ? "" : "s"}
         </Typography>
         <Box
           sx={{
-            border: `1px solid ${theme.primary}`,
-            bgcolor: `${theme.primary}18`,
+            border: `1px solid ${accent}`,
+            bgcolor: `${accent}18`,
             borderRadius: "10px",
             px: 3,
             py: 1.5,

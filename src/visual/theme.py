@@ -102,6 +102,14 @@ VISUAL_THEME_BY_STACK: dict[str, dict] = {
         "logoAssetId": "spring-logo-ondark",
         "logoPath": "visuals/logos/spring.svg",
     },
+    "spring": {
+        "stack": "spring_boot",
+        "primary": "#6DB33F",
+        "secondary": "#6DB33F",
+        "onDark": "#8BC34A",
+        "logoAssetId": "spring-logo-ondark",
+        "logoPath": "visuals/logos/spring.svg",
+    },
     "express": {
         "stack": "express",
         "primary": "#2C2C2C",

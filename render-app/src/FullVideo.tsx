@@ -175,6 +175,7 @@ const VideoBody: React.FC<VideoProps> = ({
                   chunkDir={dir}
                   position={{ index: i + 1, total: chunkIds.length }}
                   sectionSeconds={chunkFrames / FPS}
+                  visualTheme={v?.visualTheme}
                 />
               ) : null}
             </Series.Sequence>,
@@ -190,6 +191,7 @@ const VideoBody: React.FC<VideoProps> = ({
                   visualTheme={v.visualTheme}
                   securityFlags={v.securityFlags}
                   narration={v.treeNarration}
+                  filePath={overview?.filePath}
                 />
               </Series.Sequence>,
             );
@@ -204,6 +206,7 @@ const VideoBody: React.FC<VideoProps> = ({
                   visualTheme={v.visualTheme}
                   securityFlags={v.securityFlags}
                   narration={v.lifecycleNarration}
+                  filePath={overview?.filePath}
                 />
               </Series.Sequence>,
             );
@@ -211,7 +214,11 @@ const VideoBody: React.FC<VideoProps> = ({
 
           sequences.push(
             <Series.Sequence key={id} durationInFrames={chunkFrames}>
-              <ChunkView chunkDir={dir} />
+              <ChunkView
+                chunkDir={dir}
+                visualTheme={v?.visualTheme}
+                filePath={overview?.filePath}
+              />
             </Series.Sequence>,
           );
 
