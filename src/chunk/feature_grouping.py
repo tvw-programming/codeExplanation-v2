@@ -25,10 +25,12 @@ from pathlib import Path
 
 IGNORED_DIR_NAMES = {".git", "node_modules", "vendor", "venv", ".venv", "dist", "build", "__pycache__"}
 
-FRONTEND_SOURCE_EXTENSIONS = {".tsx", ".ts", ".jsx", ".js"}
+FRONTEND_SOURCE_EXTENSIONS = {".tsx", ".ts", ".jsx", ".js", ".vue"}
 GO_SOURCE_EXTENSION = ".go"
 PYTHON_SOURCE_EXTENSION = ".py"
 JAVA_SOURCE_EXTENSION = ".java"
+RUST_SOURCE_EXTENSION = ".rs"
+EXPRESS_SOURCE_EXTENSIONS = {".js", ".mjs", ".cjs", ".ts"}
 
 # Folder names that conventionally organize frontend features/routes.
 FRONTEND_ORGANIZING_DIR_NAMES = ["features", "pages", "routes", "views", "modules"]
@@ -294,6 +296,43 @@ def group_go_features(root: Path, backend_root: Path) -> list[Feature]:
 
 def group_spring_boot_features(root: Path, backend_root: Path, stack: str = "spring_boot") -> list[Feature]:
     return _group_by_resource_pairing(root, backend_root, JAVA_SOURCE_EXTENSION, stack=stack)
+
+
+def group_express_features(root: Path, backend_root: Path) -> list[Feature]:
+    """One feature per Express source file under the package root (developer-centric)."""
+    features: list[Feature] = []
+    if not backend_root.is_dir():
+        return features
+    for path in sorted(backend_root.rglob("*")):
+        if not path.is_file() or path.suffix not in EXPRESS_SOURCE_EXTENSIONS:
+            continue
+        if _is_under_ignored_dir(path, backend_root):
+            continue
+        if "node_modules" in path.parts:
+            continue
+        features.append(Feature(
+            name=path.stem,
+            stack="express",
+            files=[_relpath(root, path)],
+            primary_file=_relpath(root, path),
+        ))
+    return features
+
+
+def group_rust_features(root: Path, backend_root: Path) -> list[Feature]:
+    features: list[Feature] = []
+    if not backend_root.is_dir():
+        return features
+    for path in sorted(backend_root.rglob(f"*{RUST_SOURCE_EXTENSION}")):
+        if not path.is_file() or _is_under_ignored_dir(path, backend_root):
+            continue
+        features.append(Feature(
+            name=path.stem,
+            stack="rust",
+            files=[_relpath(root, path)],
+            primary_file=_relpath(root, path),
+        ))
+    return features
 
 
 # ---------------------------------------------------------------------------

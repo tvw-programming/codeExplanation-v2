@@ -1,13 +1,4 @@
-"""Phase 4 — the reuse-aware extraction pipeline.
-
-Wraps Phase 3's per-chunk builders with the storage/reuse rule: before
-extracting a chunk, compare its current content hash against the
-stored one; a match skips re-analysis entirely and reuses the stored
-record, and a mismatch (or no stored record) runs the extractor and
-writes the new result to the mirrored folder. featureMapping is always
-recomputed over the full set after this pass, since it is cheap and
-mechanical — only the per-file extraction itself is skipped on reuse.
-"""
+"""Phase 4 — the reuse-aware extraction pipeline."""
 
 from __future__ import annotations
 
@@ -18,10 +9,60 @@ from src.chunk.chunker import chunk_repo
 from src.storage.mirror_store import needs_reanalysis, read_stored, write_stored
 from src.storage.pull_request_lookup import find_last_pull_request_url
 from .json_builder import build_frontend_chunk_record, build_backend_go_chunk_record
+from .stack_records import (
+    build_python_chunk_record,
+    build_express_chunk_record,
+    build_spring_chunk_record,
+    build_angular_chunk_record,
+    build_vue_chunk_record,
+    build_solid_chunk_record,
+    build_qwik_chunk_record,
+    build_javascript_chunk_record,
+    build_rust_chunk_record,
+)
 from .ts_extractor import extract_base_url
 from .go_extractor import extract_module_path
 from .extractor import _apply_feature_mapping
 from .common import read_lines
+
+
+def _build_record(root, chunk, project_type_dict, package_json_dir, base_url, module_path, uses_fiber, current_hash):
+    stack = chunk.stack
+    if stack == "react":
+        return build_frontend_chunk_record(root, chunk, project_type_dict, package_json_dir, base_url)
+    if stack == "angular":
+        return build_angular_chunk_record(root, chunk, project_type_dict)
+    if stack == "go":
+        return build_backend_go_chunk_record(root, chunk, project_type_dict, module_path, uses_fiber)
+    if stack == "python":
+        return build_python_chunk_record(root, chunk, project_type_dict)
+    if stack == "express":
+        return build_express_chunk_record(root, chunk, project_type_dict)
+    if stack in ("spring_boot", "java"):
+        return build_spring_chunk_record(root, chunk, project_type_dict)
+    if stack == "vue":
+        return build_vue_chunk_record(root, chunk, project_type_dict)
+    if stack == "solid":
+        return build_solid_chunk_record(root, chunk, project_type_dict)
+    if stack == "qwik":
+        return build_qwik_chunk_record(root, chunk, project_type_dict)
+    if stack == "javascript":
+        return build_javascript_chunk_record(root, chunk, project_type_dict)
+    if stack == "rust":
+        return build_rust_chunk_record(root, chunk, project_type_dict)
+
+    from src.visual.pipeline import attach_visuals
+    return attach_visuals({
+        "chunkId": chunk.chunk_id,
+        "filePath": chunk.file_path,
+        "featureName": chunk.feature_name,
+        "projectType": project_type_dict,
+        "stack": stack,
+        "notes": f"Extraction for stack '{stack}' is not yet implemented in Phase 3.",
+        "confidence": 0,
+        "confidenceLevel": "low",
+        "contentHash": current_hash,
+    }, stack=stack)
 
 
 def extract_repo_with_reuse(
@@ -31,9 +72,6 @@ def extract_repo_with_reuse(
     github_owner: str | None = None,
     github_repo: str | None = None,
 ) -> tuple[list[dict], dict, dict[str, str]]:
-    """Returns (records, stats, chunk_stacks). stats has reused/reanalyzed
-    counts so a caller (or test) can verify reuse is actually happening,
-    not just trust the code. chunk_stacks maps chunkId -> stack name."""
     root = Path(root)
     output_root = Path(output_root)
     result = chunk_repo(root, project_type)
@@ -41,7 +79,7 @@ def extract_repo_with_reuse(
 
     base_url = None
     for chunk in result.chunks:
-        if chunk.stack in ("react", "angular") and "client" in Path(chunk.file_path).stem.lower():
+        if chunk.stack in ("react", "angular", "vue", "solid", "qwik") and "client" in Path(chunk.file_path).stem.lower():
             text = "\n".join(read_lines(root, chunk.file_path))
             found = extract_base_url(text)
             if found:
@@ -60,7 +98,7 @@ def extract_repo_with_reuse(
             continue
 
     package_json_dir = ""
-    for hit in project_type.marker_hits.get("react_or_angular", []):
+    for hit in (project_type.marker_hits.get("js_ecosystem") or project_type.marker_hits.get("react_or_angular") or []):
         package_json_dir = hit.directory
         break
 
@@ -77,23 +115,10 @@ def extract_repo_with_reuse(
             reused_count += 1
             continue
 
-        if chunk.stack in ("react", "angular"):
-            record = build_frontend_chunk_record(root, chunk, project_type_dict, package_json_dir, base_url)
-        elif chunk.stack == "go":
-            record = build_backend_go_chunk_record(root, chunk, project_type_dict, module_path, uses_fiber)
-        else:
-            from src.visual.pipeline import attach_visuals
-            record = attach_visuals({
-                "chunkId": chunk.chunk_id,
-                "filePath": chunk.file_path,
-                "featureName": chunk.feature_name,
-                "projectType": project_type_dict,
-                "stack": chunk.stack,
-                "notes": f"Extraction for stack '{chunk.stack}' is not yet implemented in Phase 3.",
-                "confidence": 0,
-                "confidenceLevel": "low",
-                "contentHash": current_hash,
-            }, stack=chunk.stack)
+        record = _build_record(
+            root, chunk, project_type_dict, package_json_dir,
+            base_url, module_path, uses_fiber, current_hash,
+        )
 
         if github_owner and github_repo:
             pr_url = find_last_pull_request_url(github_owner, github_repo, chunk.file_path)
@@ -109,8 +134,6 @@ def extract_repo_with_reuse(
     for record in records:
         write_stored(output_root, record["filePath"], record)
 
-    # Map chunkId -> stack so callers (run_pilot, run_backend_pilot) can
-    # group chunks by technology without re-running detection.
     chunk_stacks: dict[str, str] = {
         chunk.chunk_id: chunk.stack for chunk in result.chunks
     }

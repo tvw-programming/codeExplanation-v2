@@ -318,7 +318,7 @@ export const StackVideoCompositions: React.FC = () => {
   // approach: register a fixed set of well-known stacks. Any stack
   // that doesn't have a manifest simply produces a 1-frame empty
   // video (calculateMetadata catches the fetch error).
-  const KNOWN_STACKS = ["react", "angular", "go", "python", "spring-boot", "express", "unknown"];
+  const KNOWN_STACKS = ["react", "angular", "vue", "solid", "qwik", "javascript", "go", "python", "spring-boot", "express", "rust", "unknown"];
 
   return (
     <>

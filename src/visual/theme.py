@@ -1,7 +1,6 @@
 """Per-stack brand tokens for Remotion / canvas / Mermaid.
 
-Hex values match the locked multi-stack plan §3. Renderers resolve
-theme from `stack` — do not hardcode stack colors in compositions.
+Hex values match the locked multi-stack plan §3.
 """
 
 from __future__ import annotations
@@ -23,10 +22,42 @@ VISUAL_THEME_BY_STACK: dict[str, dict] = {
         "logoAssetId": "angular-logo-ondark",
         "logoPath": "visuals/logos/angular.svg",
     },
+    "vue": {
+        "stack": "vue",
+        "primary": "#42B883",
+        "secondary": "#35495E",
+        "onDark": "#42B883",
+        "logoAssetId": "vue-logo-ondark",
+        "logoPath": "visuals/logos/vue.svg",
+    },
+    "solid": {
+        "stack": "solid",
+        "primary": "#2C4F7C",
+        "secondary": "#0CDC73",
+        "onDark": "#0CDC73",
+        "logoAssetId": "solid-logo-ondark",
+        "logoPath": "visuals/logos/solid.svg",
+    },
+    "qwik": {
+        "stack": "qwik",
+        "primary": "#009DFD",
+        "secondary": "#AC7EF4",
+        "onDark": "#009DFD",
+        "logoAssetId": "qwik-logo-ondark",
+        "logoPath": "visuals/logos/qwik.svg",
+    },
+    "javascript": {
+        "stack": "javascript",
+        "primary": "#F7DF1E",
+        "secondary": "#323330",
+        "onDark": "#F7DF1E",
+        "logoAssetId": "javascript-logo-ondark",
+        "logoPath": "visuals/logos/javascript.svg",
+    },
     "go": {
         "stack": "go",
         "primary": "#00ADD8",
-        "secondary": "#00C853",  # Fiber green — middleware edges / accent
+        "secondary": "#00C853",
         "onDark": "#00E5FF",
         "logoAssetId": "go-fiber-logo-ondark",
         "logoPath": "visuals/logos/go-fiber.svg",
@@ -63,6 +94,14 @@ VISUAL_THEME_BY_STACK: dict[str, dict] = {
         "logoAssetId": "spring-logo-ondark",
         "logoPath": "visuals/logos/spring.svg",
     },
+    "java": {
+        "stack": "java",
+        "primary": "#6DB33F",
+        "secondary": "#6DB33F",
+        "onDark": "#8BC34A",
+        "logoAssetId": "spring-logo-ondark",
+        "logoPath": "visuals/logos/spring.svg",
+    },
     "express": {
         "stack": "express",
         "primary": "#2C2C2C",
@@ -71,9 +110,16 @@ VISUAL_THEME_BY_STACK: dict[str, dict] = {
         "logoAssetId": "express-logo-ondark",
         "logoPath": "visuals/logos/express.svg",
     },
+    "rust": {
+        "stack": "rust",
+        "primary": "#D34516",
+        "secondary": "#1E2650",
+        "onDark": "#FF6B35",
+        "logoAssetId": "rust-logo-ondark",
+        "logoPath": "visuals/logos/rust.svg",
+    },
 }
 
-# Shared chrome (dark video plane).
 CEV_BG_VIDEO = "#0F1419"
 CEV_BG_CANVAS = "#111827"
 CEV_FG_PRIMARY = "#F3F4F6"

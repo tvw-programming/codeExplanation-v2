@@ -69,10 +69,19 @@ type LayoutNode = VisualNode & { x: number; y: number; depth: number };
 
 /** Structural parent→child edges used for layout (FE mounts or BE routes). */
 function structuralEdges(graph: VisualGraph): VisualEdge[] {
-  const kinds =
-    graph.kind === "route_tree"
-      ? new Set(["routes_to"])
-      : new Set(["mounts", "provides"]);
+  const kinds = new Set([
+    "mounts",
+    "provides",
+    "routes_to",
+    "imports",
+    "injects",
+    "depends_on",
+    "input_bind",
+    "output_bind",
+    "owns_state",
+    "resumable_boundary",
+  ]);
+  // Prefer hierarchy edges for layout; middleware drawn separately.
   return (graph.edges || []).filter((e) => kinds.has(e.kind));
 }
 

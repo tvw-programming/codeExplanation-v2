@@ -10,14 +10,17 @@ from .mermaid_export import export_mermaid
 from .theme import theme_for_stack
 
 
-def package_react_interactive_breakdown(record: dict) -> dict | None:
-    """Embed this file's graph + flows. Refuse when interactiveBreakdown unavailable."""
+def package_interactive_breakdown(record: dict) -> dict | None:
+    """Embed this unit's graph + flows. Refuse when interactiveBreakdown unavailable."""
     return _package_interactive_breakdown(record)
+
+
+def package_react_interactive_breakdown(record: dict) -> dict | None:
+    return package_interactive_breakdown(record)
 
 
 def package_go_fiber_interactive_breakdown(record: dict) -> dict | None:
-    """Embed this file/package route tree + flows for Go Fiber."""
-    return _package_interactive_breakdown(record)
+    return package_interactive_breakdown(record)
 
 
 def _package_interactive_breakdown(record: dict) -> dict | None:

@@ -268,7 +268,7 @@ def test_full_go_record_from_fixture(tmp_path):
         root, chunk, {"frontend": None, "backend": ["go"]},
         "github.com/example/cev-go-fixture", True,
     )
-    assert record["extractorVersion"] == EXTRACTOR_VERSION == 7
+    assert record["extractorVersion"] == EXTRACTOR_VERSION == 8
     assert record["fidelity"] == "regex"
     assert record.get("middleware")
     assert is_present(record["visualAvailability"]["componentTree"])

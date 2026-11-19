@@ -26,9 +26,13 @@ LANGUAGE_BY_EXTENSION = {
     ".ts": "TypeScript",
     ".jsx": "JavaScript",
     ".js": "JavaScript",
+    ".mjs": "JavaScript",
+    ".cjs": "JavaScript",
+    ".vue": "Vue",
     ".go": "Go",
     ".py": "Python",
     ".java": "Java",
+    ".rs": "Rust",
 }
 
 

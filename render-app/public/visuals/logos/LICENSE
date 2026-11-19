@@ -8,3 +8,8 @@ Go Fiber mark (go-fiber.svg): original simplified mark using Go brand cyan
 frames only. Go and the gopher are trademarks of the Go project; Fiber is a
 trademark of its maintainers. No affiliation or endorsement implied.
 SPDX-License-Identifier: CC0-1.0 (this simplified identifying glyph).
+
+Additional stack marks (angular, vue, solid, qwik, javascript, python, spring,
+express, rust): original simplified glyphs using each project's documented
+brand colors for identification on dark Remotion/canvas frames only.
+No affiliation or endorsement implied. SPDX-License-Identifier: CC0-1.0.
