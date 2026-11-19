@@ -20,9 +20,18 @@ FUNC_RE = re.compile(
 )
 
 # Fiber route group: `v1 := app.Group("/api/v1")` or similar.
+# The parent variable is captured as well as the new one: a group's full
+# prefix is its own segment appended to its parent's, and `api :=
+# app.Group("/api")` followed by `v1 := api.Group("/v1")` only composes
+# to "/api/v1" if we know v1 came from api.
 ROUTE_GROUP_RE = re.compile(
-    r"(?P<var>\w+)\s*:=\s*\w+\.Group\(\s*(?P<quote>['\"])(?P<prefix>[^'\"]*)(?P=quote)"
+    r"(?P<var>\w+)\s*:=\s*(?P<parent>\w+)\.Group\(\s*(?P<quote>['\"])(?P<prefix>[^'\"]*)(?P=quote)"
 )
+
+# `app := fiber.New()` — the root of a prefix chain, carrying no prefix
+# of its own. Matching this rather than assuming the name "app" is what
+# lets a chain rooted at `srv := fiber.New()` resolve too.
+FIBER_APP_RE = re.compile(r"(?P<var>\w+)\s*:=\s*fiber\.New\(")
 
 # Fiber route registration: `v1.Get("/alumni", alumni.List)` or `app.Get(...)`.
 ROUTE_REGISTER_RE = re.compile(
@@ -175,6 +184,35 @@ def extract_side_effects(text: str) -> list[tuple[str, int]]:
 USE_CALL_RE = re.compile(r"(?P<var>\w+)\.Use\(\s*(?P<call>[^)]*)\)")
 
 
+def _resolve_group_prefix(
+    var: str,
+    group_parents: dict[str, tuple[str, str]],
+    roots: set[str],
+) -> tuple[str, bool]:
+    """Walk a group's parent chain to its root and join the segments.
+
+    Returns (full_prefix, fully_resolved). fully_resolved is False when
+    the chain runs into a variable this file never defines — a router
+    passed in as a parameter, say, where the prefix is decided at the
+    call site in another file. The caller marks those paths assumed
+    rather than reporting a confidently wrong URL.
+    """
+    segments: list[str] = []
+    seen: set[str] = set()
+    current = var
+
+    while current in group_parents:
+        if current in seen:  # defensive: a cycle can't happen in valid Go
+            return "".join(reversed(segments)), False
+        seen.add(current)
+        parent, prefix = group_parents[current]
+        segments.append(prefix.rstrip("/"))
+        current = parent
+
+    full = "".join(reversed(segments))
+    return full, current in roots
+
+
 def extract_routes(text: str, uses_fiber: bool) -> list[ExtractedRoute]:
     """Resolve Fiber route groups and registrations into full paths.
 
@@ -190,9 +228,21 @@ def extract_routes(text: str, uses_fiber: bool) -> list[ExtractedRoute]:
     marked assumed=True regardless of the result, since this is still
     file-local and not real call-graph analysis.
     """
-    group_prefixes: dict[str, str] = {}
+    # var -> (parent var, this group's own prefix segment)
+    group_parents: dict[str, tuple[str, str]] = {}
     for m in ROUTE_GROUP_RE.finditer(text):
-        group_prefixes[m.group("var")] = m.group("prefix")
+        group_parents[m.group("var")] = (m.group("parent"), m.group("prefix"))
+
+    roots = {m.group("var") for m in FIBER_APP_RE.finditer(text)}
+    roots.add("app")  # the conventional name, even when fiber.New() is elsewhere
+
+    group_prefixes: dict[str, str] = {}
+    unresolved_groups: set[str] = set()
+    for var in group_parents:
+        full, resolved = _resolve_group_prefix(var, group_parents, roots)
+        group_prefixes[var] = full
+        if not resolved:
+            unresolved_groups.add(var)
 
     protected_vars: set[str] = set()
     for m in USE_CALL_RE.finditer(text):
@@ -202,8 +252,10 @@ def extract_routes(text: str, uses_fiber: bool) -> list[ExtractedRoute]:
     routes: list[ExtractedRoute] = []
     for m in ROUTE_REGISTER_RE.finditer(text):
         var = m.group("var")
-        prefix = group_prefixes.get(var, "" if var == "app" else None)
-        prefix_assumed = prefix is None
+        prefix = group_prefixes.get(var, "" if var in roots else None)
+        # Unresolved either because the variable is unknown here, or
+        # because its chain ran off into another file.
+        prefix_assumed = prefix is None or var in unresolved_groups
         prefix = prefix or ""
 
         path = prefix.rstrip("/") + m.group("path")

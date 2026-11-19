@@ -103,3 +103,55 @@ v1.Get("/alumni", alumni.List)
     routes = go.extract_routes(text, uses_fiber=True)
     assert routes[0].protected is True
     assert routes[0].assumed is True  # always assumed, even when it looks protected
+
+
+def test_nested_group_prefixes_compose_into_the_full_path():
+    """api := app.Group("/api"); v1 := api.Group("/v1"); v1.Get("/users")
+    is /api/v1/users. Recording only each group's own segment made this
+    /v1/users — a confidently narrated URL that does not exist in the
+    running app."""
+    source = """package main
+func main() {
+	app := fiber.New()
+	api := app.Group("/api")
+	v1 := api.Group("/v1")
+	v1.Get("/users", listUsers)
+}"""
+    routes = go.extract_routes(source, True)
+    assert len(routes) == 1
+    assert routes[0].path == "/api/v1/users"
+    assert "incomplete" not in (routes[0].note or "")
+
+
+def test_a_chain_rooted_at_a_differently_named_app_still_resolves():
+    source = """package main
+func main() {
+	srv := fiber.New()
+	g := srv.Group("/x")
+	g.Get("/y", h)
+}"""
+    routes = go.extract_routes(source, True)
+    assert routes[0].path == "/x/y"
+
+
+def test_a_router_passed_in_from_another_file_is_flagged_not_guessed():
+    """The prefix is decided at the call site in another file, so the
+    path here is genuinely incomplete and must say so."""
+    source = """package routes
+func Register(r fiber.Router) {
+	r.Get("/users", listUsers)
+}"""
+    routes = go.extract_routes(source, True)
+    assert routes[0].assumed is True
+    assert "incomplete" in (routes[0].note or "")
+
+
+def test_a_route_on_the_app_itself_has_no_prefix():
+    source = """package main
+func main() {
+	app := fiber.New()
+	app.Get("/health", health)
+}"""
+    routes = go.extract_routes(source, True)
+    assert routes[0].path == "/health"
+    assert "incomplete" not in (routes[0].note or "")

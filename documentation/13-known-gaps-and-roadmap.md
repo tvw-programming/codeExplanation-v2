@@ -5,13 +5,26 @@ code/plan rather than silently dropped. This file consolidates them in
 one place, plus the two security incidents fixed after the engineering
 code review.
 
+> **Superseded in part by `14-stack-support-validation.md`.** A
+> six-stack validation found that this file understated the problem in
+> two ways. It framed the gap as "two stacks lack extractors", when in
+> fact **Angular** produces schema-valid, fully-empty records (worse
+> than a loud failure, because the video looks finished), **Express**
+> cannot even be detected as a backend stack, and **Go is not as well
+> supported as the text below implies** — generics, interface methods
+> and closure-returning middleware are all invisible to it. Read that
+> document for the current picture; the gaps below remain accurate as
+> far as they go.
+
 ## Carried-forward implementation gaps
 
 ### 1. Python and Spring Boot extraction are not implemented
 
 Feature *grouping* exists for both (`group_python_agent_features()`,
 `group_spring_boot_features()`), but Phase 3's `extract_repo()` only has
-real builders for React/Angular and Go — a chunk planned for either
+real builders for React/Angular and Go — note that the Angular path is
+the React builder, which matches almost nothing in an Angular file (see
+`14-stack-support-validation.md`) — a chunk planned for either
 other stack gets an honest placeholder record (`confidence: 0`,
 `notes: "Extraction for stack '<stack>' is not yet implemented in
 Phase 3."`), which correctly **fails** Phase 7's schema validation by
