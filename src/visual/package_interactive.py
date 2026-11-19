@@ -1,0 +1,81 @@
+"""Package interactive breakdown payloads for Cursor canvas / Mermaid."""
+
+from __future__ import annotations
+
+import json
+from pathlib import Path
+
+from .availability import is_present
+from .mermaid_export import export_mermaid
+from .theme import theme_for_stack
+
+
+def package_react_interactive_breakdown(record: dict) -> dict | None:
+    """Embed this file's graph + flows. Refuse when interactiveBreakdown unavailable."""
+    avail = (record.get("visualAvailability") or {}).get("interactiveBreakdown")
+    if not is_present(avail):
+        return None
+    graph = record.get("visualGraph")
+    if not graph or not graph.get("edges"):
+        return None
+
+    stack = _stack_of(record)
+    payload = {
+        "chunkId": record.get("chunkId"),
+        "filePath": record.get("filePath"),
+        "stack": stack,
+        "visualAvailability": record.get("visualAvailability"),
+        "fidelity": record.get("fidelity"),
+        "visualGraph": graph,
+        "lifecycleFlows": record.get("lifecycleFlows") or [],
+        "securityFlags": record.get("securityFlags") or [],
+        "visualTheme": record.get("visualTheme") or theme_for_stack(stack),
+    }
+    mermaid, mermaid_reason = export_mermaid(graph)
+    payload["mermaid"] = mermaid
+    if mermaid_reason:
+        payload["mermaidSkipReason"] = mermaid_reason
+    return payload
+
+
+def canvas_react_node_detail(node: dict, graph: dict, flows: list[dict] | None = None) -> dict:
+    """Developer-facing detail panel fields for one node."""
+    node_id = node.get("id")
+    children = [
+        e["to"] for e in (graph.get("edges") or [])
+        if e.get("from") == node_id and e.get("kind") == "mounts"
+    ]
+    related = []
+    for flow in flows or []:
+        for step in flow.get("steps") or []:
+            if step.get("nodeId") == node_id:
+                related.append({"flowId": flow.get("id"), "title": flow.get("title"), "step": step})
+    meta = node.get("meta") or {}
+    line = node.get("line")
+    file_path = node.get("filePath") or ""
+    return {
+        "kind": node.get("kind"),
+        "label": node.get("label"),
+        "filePath": file_path,
+        "line": line,
+        "location": f"{file_path}:{line}" if file_path and line else file_path or None,
+        "props": meta.get("props") or [],
+        "childCount": len(children),
+        "children": children,
+        "relatedLifecycleSteps": related,
+        "meta": {k: v for k, v in meta.items() if k != "props"},
+    }
+
+
+def write_interactive_artifact(payload: dict, dest_dir: Path) -> Path:
+    dest_dir.mkdir(parents=True, exist_ok=True)
+    path = dest_dir / "interactive.json"
+    path.write_text(json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8")
+    return path
+
+
+def _stack_of(record: dict) -> str:
+    pt = record.get("projectType") or {}
+    return pt.get("frontend") or (pt.get("backend") or ["unknown"])[0] if isinstance(pt.get("backend"), list) else (
+        pt.get("frontend") or "unknown"
+    )

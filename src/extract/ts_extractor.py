@@ -281,14 +281,21 @@ def extract_event_handlers(text: str, functions: list[ExtractedFunction]) -> lis
             ))
 
     named_handler_lines = {h.line for h in handlers}
+    named_handler_names = {h.name for h in handlers}
     for m in JSX_INLINE_HANDLER_RE.finditer(text):
         line = _line_of(text, m.start())
         if line in named_handler_lines:
             continue
+        # onClick={handleToggle} references a named function — not an
+        # anonymous inline arrow. Skip; the named handler already covers it.
+        line_text = text.splitlines()[line - 1]
+        ref = re.search(r"\bon(?P<ev>[A-Z]\w*)=\{(?P<ident>[A-Za-z_]\w*)\}", line_text)
+        if ref and ref.group("ident") in named_handler_names:
+            continue
         event = m.group("event")
         handlers.append(ExtractedEventHandler(
             name=f"inline_on{event}_L{line}",
-            signature=text.splitlines()[line - 1].strip(),
+            signature=line_text.strip(),
             event_type="user_action",
             line=line,
             assumed=True,
@@ -304,3 +311,258 @@ def find_props_interface(component_name: str, models: list[ExtractedDataModel]) 
         if model.name == target:
             return model
     return None
+
+
+# ---------------------------------------------------------------------------
+# React JSX mounts / hooks / HTML sinks (visual Slice A)
+# ---------------------------------------------------------------------------
+
+# PascalCase JSX opening tags (components). Self-closing or with children.
+JSX_COMPONENT_OPEN_RE = re.compile(
+    r"<(?P<name>[A-Z][A-Za-z0-9.]*)(?P<attrs>(?:\s[^>]*)?)(/?)\s*>",
+)
+
+# Prop bindings: name={...} or name="..." or name='...'
+JSX_PROP_RE = re.compile(
+    r"""(?P<name>[A-Za-z_][\w]*)\s*=\s*(?:
+          \{(?P<expr>[^{}]*)\}
+          |
+          "(?P<dstr>[^"]*)"
+          |
+          '(?P<sstr>[^']*)'
+        )
+    """,
+    re.VERBOSE,
+)
+
+HOOK_CALL_RE = re.compile(r"\b(?P<name>use[A-Z]\w*)\s*\(")
+HTML_SINK_RE = re.compile(r"\bdangerouslySetInnerHTML\b")
+# Dynamic children: something.map( ... <Child
+MAP_BEFORE_JSX_RE = re.compile(r"\.map\s*\(")
+
+PROVIDER_SUFFIXES = ("Provider", "Context.Provider")
+
+
+@dataclass
+class JsxPropBinding:
+    name: str
+    value_kind: str          # "literal" | "expression" | "boolean" | "spread"
+    value_preview: str | None
+    assumed: bool
+
+
+@dataclass
+class JsxMount:
+    parent: str
+    child: str
+    line: int
+    props: list[JsxPropBinding]
+    assumed: bool
+    note: str | None = None
+
+
+@dataclass
+class JsxProvider:
+    name: str
+    line: int
+    assumed: bool = True
+
+
+@dataclass
+class ExtractedHook:
+    name: str
+    kind: str
+    line: int
+    owner: str | None
+    assumed: bool = False
+
+
+@dataclass
+class SecurityHint:
+    id: str
+    rule_id: str
+    message: str
+    line: int
+    severity: str = "high"
+    assumed: bool = False
+
+
+def _parse_jsx_props(attrs: str) -> list[JsxPropBinding]:
+    props: list[JsxPropBinding] = []
+    if not attrs or not attrs.strip():
+        return props
+    if "{..." in attrs or re.search(r"\{\s*\.\.\.", attrs):
+        props.append(JsxPropBinding(
+            name="...",
+            value_kind="spread",
+            value_preview=None,
+            assumed=True,
+        ))
+    for m in JSX_PROP_RE.finditer(attrs):
+        name = m.group("name")
+        if not name:
+            continue
+        if m.group("expr") is not None:
+            expr = m.group("expr").strip()
+            preview = expr[:80] if expr else None
+            if re.search(r"(password|secret|token|api[_-]?key)", name, re.I):
+                preview = "[redacted]"
+            props.append(JsxPropBinding(
+                name=name,
+                value_kind="expression",
+                value_preview=preview,
+                assumed="..." in (expr or ""),
+            ))
+        elif m.group("dstr") is not None or m.group("sstr") is not None:
+            lit = m.group("dstr") if m.group("dstr") is not None else m.group("sstr")
+            if re.search(r"(password|secret|token|api[_-]?key)", name, re.I):
+                lit = "[redacted]"
+            props.append(JsxPropBinding(
+                name=name,
+                value_kind="literal",
+                value_preview=lit,
+                assumed=False,
+            ))
+    return props
+
+
+def _enclosing_component(line: int, functions: list[ExtractedFunction], file_stem: str) -> str:
+    """Prefer an uppercase-named function whose span contains `line`."""
+    enclosing: list[ExtractedFunction] = []
+    for fn in functions:
+        start, end = fn.line_range
+        if start <= line <= end:
+            enclosing.append(fn)
+    if not enclosing:
+        return file_stem
+    # Innermost span wins.
+    enclosing.sort(key=lambda f: (f.line_range[1] - f.line_range[0], f.line_range[0]))
+    for fn in enclosing:
+        if fn.name[:1].isupper():
+            return fn.name
+    # Fall back to file stem for lowercase helpers that still return JSX.
+    return file_stem
+
+
+def _is_inside_map(text: str, offset: int) -> bool:
+    """True when the JSX tag sits inside a nearby `.map(` call (assumed mount)."""
+    window_start = max(0, offset - 200)
+    prefix = text[window_start:offset]
+    # Count open map( vs close ) roughly: if last `.map(` has no balancing
+    # close before this tag, treat as dynamic.
+    last_map = None
+    for m in MAP_BEFORE_JSX_RE.finditer(prefix):
+        last_map = m
+    if last_map is None:
+        return False
+    after = prefix[last_map.end():]
+    depth = 1
+    for c in after:
+        if c == "(":
+            depth += 1
+        elif c == ")":
+            depth -= 1
+            if depth == 0:
+                return False
+    return depth > 0
+
+
+def extract_jsx_mounts(
+    text: str,
+    functions: list[ExtractedFunction],
+    file_stem: str,
+) -> tuple[list[JsxMount], list[JsxProvider]]:
+    """Parent→child JSX mounts for PascalCase tags in this file.
+
+    Dynamic `{items.map(<Child/>)}` regions are marked assumed. Intrinsic
+    HTML tags (lowercase) are ignored — they are not component mounts.
+    """
+    mounts: list[JsxMount] = []
+    providers: list[JsxProvider] = []
+    seen: set[tuple[str, str, int]] = set()
+
+    for m in JSX_COMPONENT_OPEN_RE.finditer(text):
+        child = m.group("name")
+        # Normalize Foo.Provider → treat as provider wrapper
+        line = _line_of(text, m.start())
+        parent = _enclosing_component(line, functions, file_stem)
+        if child == parent:
+            continue
+        attrs = m.group("attrs") or ""
+        assumed = _is_inside_map(text, m.start())
+        note = None
+        if assumed:
+            note = "Mounted inside a .map(...) — static subset only; dynamic children assumed."
+        props = _parse_jsx_props(attrs)
+        key = (parent, child, line)
+        if key in seen:
+            continue
+        seen.add(key)
+
+        if child.endswith("Provider") or child.endswith(".Provider"):
+            providers.append(JsxProvider(name=child, line=line, assumed=True))
+
+        mounts.append(JsxMount(
+            parent=parent,
+            child=child,
+            line=line,
+            props=props,
+            assumed=assumed,
+            note=note,
+        ))
+    return mounts, providers
+
+
+def extract_hooks(text: str, functions: list[ExtractedFunction], file_stem: str) -> list[ExtractedHook]:
+    hooks: list[ExtractedHook] = []
+    for m in HOOK_CALL_RE.finditer(text):
+        name = m.group("name")
+        line = _line_of(text, m.start())
+        owner = _enclosing_component(line, functions, file_stem)
+        kind = name if name.startswith("use") else "other"
+        hooks.append(ExtractedHook(
+            name=name,
+            kind=name,
+            line=line,
+            owner=owner,
+            assumed=False,
+        ))
+    return hooks
+
+
+def extract_html_sink_hints(text: str) -> list[SecurityHint]:
+    hints: list[SecurityHint] = []
+    for m in HTML_SINK_RE.finditer(text):
+        line = _line_of(text, m.start())
+        hints.append(SecurityHint(
+            id=f"xss_html_sink:L{line}",
+            rule_id="xss_html_sink",
+            message="dangerouslySetInnerHTML sink in this file.",
+            line=line,
+            severity="high",
+            assumed=False,
+        ))
+    return hints
+
+
+def callback_outputs_from_mounts(mounts: list[JsxMount]) -> list[dict]:
+    """Props that look like callbacks (onX / handleX) become chunk outputs."""
+    outputs: list[dict] = []
+    seen: set[str] = set()
+    for mount in mounts:
+        for prop in mount.props:
+            if not re.match(r"^(on|handle)[A-Z]", prop.name):
+                continue
+            key = f"{mount.child}.{prop.name}"
+            if key in seen:
+                continue
+            seen.add(key)
+            outputs.append({
+                "name": prop.name,
+                "type": "callback",
+                "target": mount.child,
+                "valuePreview": prop.value_preview,
+                "assumed": prop.assumed or mount.assumed,
+                "line": mount.line,
+            })
+    return outputs

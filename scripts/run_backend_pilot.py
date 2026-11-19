@@ -87,6 +87,14 @@ def _stage_one_chunk(chunk_id: str, dest_dir: Path, resolved_root: Path, output_
     card_src = output_root / "render" / chunk_id / "card.wav"
     if card_src.is_file():
         shutil.copyfile(card_src, dest_dir / "card.wav")
+
+    # Visual clip audio (Q4 measured-beat). Optional per Q5 skip rules —
+    # FullVideo omits segments when these files / bundle fields are absent.
+    render_dir = output_root / "render" / chunk_id
+    for visual_wav in ("tree.wav", "lifecycle.wav", "breakdown.wav"):
+        src = render_dir / visual_wav
+        if src.is_file():
+            shutil.copyfile(src, dest_dir / visual_wav)
     return True
 
 
