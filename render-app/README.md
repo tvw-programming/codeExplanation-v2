@@ -1,78 +1,79 @@
-# Remotion video
+# render-app — pipeline video + docs viewer
 
-<p align="center">
-  <a href="https://github.com/remotion-dev/logo">
-    <picture>
-      <source media="(prefers-color-scheme: dark)" srcset="https://github.com/remotion-dev/logo/raw/main/animated-logo-banner-dark.apng">
-      <img alt="Animated Remotion Logo" src="https://github.com/remotion-dev/logo/raw/main/animated-logo-banner-light.gif">
-    </picture>
-  </a>
-</p>
+This is the Remotion front end of **codeExplanation-v2**, not a stock
+Remotion starter. The Python pipeline (`./run-local.sh` from the repo
+root) stages per-chunk bundles here; this app turns them into video
+and also hosts the documentation viewer.
 
-Welcome to your Remotion project!
+## Compositions
+
+Registered in `src/Root.tsx`:
+
+| Composition | What it is | Who renders it |
+|---|---|---|
+| **`FullVideo`** | Every staged chunk, back-to-back, each introduced by a **FileCard** | `./run-local.sh` → `output/video.mp4` |
+| **`CodeExplainerChunk`** | One sample chunk from `public/sample-chunk/` | Studio / `npx remotion render CodeExplainerChunk` |
+| `MyComposition` | Remotion scaffold leftover | unused by the pipeline |
+
+`FullVideo` reads `public/chunks/manifest.json` (`chunkIds`) and, for
+each id, `public/chunks/<id>/bundle.json` + `narration.wav` (and
+`card.wav` when the file card has narration). Staging is done by
+`scripts/run_backend_pilot.py`, not by this app.
+
+Highlights are a **CSS selection bar** over plain text in
+`ChunkView.tsx`. `shiki` is in `package.json` but not imported.
 
 ## Commands
 
-**Install Dependencies**
+From this directory:
 
 ```console
 npm i --loglevel=error
+npm run dev                 # Remotion Studio — preview FullVideo / CodeExplainerChunk
+npx remotion render FullVideo ../output/video.mp4
 ```
 
-**Start Preview**
+From the **repo root**, prefer `./run-local.sh` (backend + optional
+`--preview` / `--preview=N` + browser/concurrency fallbacks). See the
+root `README.md`.
+
+Preview a truncated opening of the same composition:
 
 ```console
-npm run dev
+./run-local.sh --preview        # 120s → output/video-preview.mp4
+./run-local.sh --preview=30
 ```
 
-**Render video**
-
-```console
-npx remotion render
-```
-
-**Upgrade Remotion**
-
-```console
-npx remotion upgrade
-```
+Useful env vars (honored by `run-local.sh`):
+`REMOTION_BROWSER_EXECUTABLE`, `REMOTION_CONCURRENCY` (default 1),
+`RUN_LOCAL_VERBOSE=1`.
 
 ## Documentation viewer (MUI)
 
-This project also ships a documentation browser for the
-`/documentation` folder at the repo root — a tree sidebar (grouped by
-Start Here / Pipeline Phases / Reference / Roadmap) on the left,
-rendered markdown on the right. It's a small React + MUI app in
-`docs-viewer-src/`, built with Vite into `public/docs-viewer/`, and
-served as static files by Remotion's own dev server alongside the
-video-rendering UI — so no second server or toolchain is needed.
+A tree sidebar (Start Here / Pipeline Phases / Reference / Roadmap)
+plus rendered markdown. Source app: `docs-viewer-src/`, built with Vite
+into `public/docs-viewer/`.
 
 ```console
-npm run build:docs   # builds docs-viewer-src/ -> public/docs-viewer/
+npm run build:docs   # builds docs-viewer-src/ → public/docs-viewer/
 npm run dev           # then open http://localhost:3000/docs-viewer/
 ```
 
-Re-run `npm run build:docs` any time `../documentation/*.md` changes
-(the build copies nothing automatically — see `docs-viewer-src/vite.config.ts`
-and `public/docs/` for where the markdown source files are read from).
+**`npm run build:docs` does not copy markdown.** The viewer reads
+`public/docs/manifest.json` + `public/docs/*.md` — a **snapshot** of
+the canonical files in `../documentation/`. After editing
+documentation, copy `documentation/{01–15,README}.md` into
+`public/docs/` and refresh `manifest.json`. Recipe:
+[`documentation/README.md`](../documentation/README.md).
 
-Every component in render-app — this docs viewer and the
-`CodeExplainerChunk` Remotion composition in `src/` — shares one MUI
-theme (`shared/theme.ts`) and the same `@mui/material`/`@mui/x-tree-view`
-dependency versions declared in this project's own `package.json`.
+`./run-local.sh` serves the built viewer at
+`http://localhost:4173/docs-viewer/` (port via `$DOCS_PORT`).
 
-## Docs
+The viewer and the Remotion compositions share one MUI theme
+(`shared/theme.ts`).
 
-Get started with Remotion by reading the [fundamentals page](https://www.remotion.dev/docs/the-fundamentals).
+## Remotion docs / license
 
-## Help
-
-We provide help on our [Discord server](https://discord.gg/6VzzNDwUwV).
-
-## Issues
-
-Found an issue with Remotion? [File an issue here](https://github.com/remotion-dev/remotion/issues/new).
-
-## License
-
-Note that for some entities a company license is needed. [Read the terms here](https://github.com/remotion-dev/remotion/blob/main/LICENSE.md).
+Remotion fundamentals: https://www.remotion.dev/docs/the-fundamentals
+License: some entities need a company license —
+https://github.com/remotion-dev/remotion/blob/main/LICENSE.md

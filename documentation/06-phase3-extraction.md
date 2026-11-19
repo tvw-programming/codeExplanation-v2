@@ -1,17 +1,39 @@
 # Phase 3 — Extraction Into the JSON Structure
 
-Status: done, 66 tests passing at phase completion. Verified end to
-end: `AlumniAdminGrid.tsx` → 17 handlers + 2 functions, confidence
-0.5/low; `alumni_repository.go` → 4 structs, 11 functions, 7 real pgx
-calls, confidence 0.95/high.
+Status: done for the two real extractors (React TS/JSX and Go Fiber),
+with a regex ceiling documented in
+[`14-stack-support-validation.md`](./14-stack-support-validation.md).
+66 tests passed at original phase completion; see the documentation
+index for the live `pytest -q` count.
+
+Historical Alumni-web snapshot (not a live dashboard):
+`AlumniAdminGrid.tsx` → 17 handlers + 2 functions, confidence 0.5/low;
+`alumni_repository.go` → 4 structs, 11 functions, 7 real pgx calls,
+confidence 0.95/high.
+
+**Stack honesty:** Angular is routed to the React builder and produces
+**schema-valid empty records** (`confidence` 0.3 / `"low"` via
+`EMPTY_EXTRACTION_CONFIDENCE`). Python / Spring / Express take the
+placeholder branch (`confidence: 0`) and fail schema validation
+loudly. Nested Fiber group prefixes **are** composed in-file
+(`go_extractor._resolve_group_prefix`) — doc 14’s `/v1/users` example
+is stale. Generics, interfaces, and closure middleware are still
+missed.
 
 ## What this phase delivers
 
-`src/extract/extractor.py: extract_repo(root, project_type)` runs every
-planned chunk through a stack-specific extractor
-(`ts_extractor.py` for React/Angular, `go_extractor.py` for Go) and
-assembles each into the locked JSON record via `json_builder.py`, then
-resolves `featureMapping` across all chunks (`feature_mapping.py`).
+`src/extract/extractor.py: extract_repo(root, project_type)` (and
+`reuse_pipeline.py` in the live path) runs every planned chunk through
+a stack-specific extractor (`ts_extractor.py` for React **and**
+Angular, `go_extractor.py` for Go) and assembles each into the locked
+JSON record via `json_builder.py`, then resolves `featureMapping`
+across all chunks (`feature_mapping.py`).
+
+There are exactly two extractors. Angular is not a third path — it
+shares the React builder, whose regexes match almost nothing in an
+Angular class/template. Empty content lists are valid lists, so Phase 7
+reports 0 schema problems. The confidence lie (0.95 on zero claims) is
+fixed; the empty-valid path is not. Video still renders.
 
 ## Locked rules this phase implements
 
@@ -143,6 +165,28 @@ API call from the narrated explanation; guessing a concrete value would
 risk stating something false as fact. Keeping the variable expression
 itself, flagged, is the only option that is both complete and honest.
 
+### Extra fields the schema docs originally omitted
+
+`json_builder.py` writes more than the locked required list:
+
+| Field | Where | Notes |
+|---|---|---|
+| `fileDescription` | record | File header comment; FileCard purpose |
+| `extractorVersion` | record | Currently `4` (`mirror_store.EXTRACTOR_VERSION`); reuse invalidates on mismatch even if bytes match |
+| `secretsRedacted` | each snippet | Set by `trim_snippet()` |
+| `eventHandlers[].lineRange` | `[line, line]` at the bind site | `visual_cues.py` includes `eventHandlers` in `CUE_SOURCE_FIELDS` — 08 used to say handlers have no range |
+| Function-context keys on `importantFunctions` | `function_context.py` | `description`, `descriptionSource`, `exported`, `calledBy`, `calls`, `params`, `raisesError`, `isAsync`, `reactHooks`, `apiCalls`, `sideEffects`, `lineCount` |
+| `outputs` | record | Always `[]` — known gap |
+
+### Angular empty-valid path
+
+Dispatch at `reuse_pipeline.py` treats `chunk.stack in ("react", "angular")`
+as the frontend builder. Class methods, `@Input`, `HttpClient`, and
+templates are invisible to the TS regexes. `confidence_from_flags`
+returns `EMPTY_EXTRACTION_CONFIDENCE = 0.3` when `total_claims == 0`.
+Schema validation still passes. **Do not document Angular as a working
+extractor.**
+
 ### `ts_extractor.py`: `JSX_INLINE_HANDLER_RE` and always-`assumed` inline handlers
 
 **What it does:** a JSX prop bound directly to an inline arrow function
@@ -160,6 +204,7 @@ which the locked accuracy rule specifically forbids.
 
 ## Verified against the real repo
 
+Historical Alumni-web snapshot (not a live dashboard):
 `AlumniAdminGrid.tsx` (the richest real frontend chunk found): 17
 handlers + 2 functions, confidence 0.5 ("low" — reflecting how many of
 those 17 handlers are inline/assumed). `alumni_repository.go`: 4

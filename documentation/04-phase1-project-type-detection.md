@@ -1,7 +1,15 @@
 # Phase 1 — Project Type Detection
 
-Status: done, 26 tests passing at phase completion. Verified on the real
-alumni repo: `frontend=react, backend=[go], architecture=monolith, dockerized=true`.
+Status: done, 26 tests passing at phase completion. **Historical**
+Alumni-web snapshot: `frontend=react, backend=[go], architecture=monolith, dockerized=true`.
+
+Detection is marker-file based and is **not** "any stack." There is
+**no Express/Node backend value**. A `package.json` without `react` or
+`@angular/core` becomes frontend `"react_or_angular"`
+(`_detect_frontend_flavor`). `chunk_repo()` then uses
+`project_type.frontend_stack or "react"` — a silent React default the
+"no unknown fallback" rule forbids in spirit. See
+[`14-stack-support-validation.md`](./14-stack-support-validation.md).
 
 ## What this phase delivers
 
@@ -71,8 +79,16 @@ real alumni repo.
 ### `_detect_frontend_flavor(package_json_path)`
 
 **What it does:** given a `package.json`, returns `"react"`,
-`"angular"`, or `"react_or_angular"` (ambiguous/unreadable) by checking
-actual dependencies (`@angular/core`, `react`).
+`"angular"`, or `"react_or_angular"` (ambiguous/unreadable **or
+neither**) by checking actual dependencies (`@angular/core`, `react`).
+
+**Current detection bug — Express / Node:** there is no `"express"` /
+`"node"` backend stack. `package.json` is only a *frontend* marker.
+Express, a vanilla Node API, or any other Node backend is labeled
+`"react_or_angular"` with `backend: []`. Keep Express as a **roadmap**
+extractor, and also call this a **current detection bug**, not only a
+doc-14 footnote. The chunker then defaults that flavor to `"react"`
+(`chunker.py`: `stack = project_type.frontend_stack or "react"`).
 
 **Why check `dependencies`/`devDependencies` instead of assuming every
 `package.json` means React (since React is the stack this project
@@ -81,13 +97,18 @@ dynamic-design principle — `package.json` alone only proves "this is a
 JS/TS project," not which framework. Checking the actual declared
 dependency is the only way to tell React and Angular apart (or neither)
 without hardcoding an assumption that would silently misclassify any
-non-React frontend fed into the pipeline.
+non-React frontend fed into the pipeline. The remaining hole is the
+`"react_or_angular"` catch-all: "neither" is not the same as
+"ambiguous React-or-Angular."
 
 ### `_detect_java_flavor(root, directory)`
 
 **What it does:** distinguishes `spring_boot` from plain `java` by
 checking whether `pom.xml`/`build.gradle(.kts)` actually mentions
-`spring-boot`/`org.springframework.boot`.
+`spring-boot`/`org.springframework.boot`. Runtime `MARKER_FILES`
+includes `build.gradle.kts`; the example YAML `detection.markers` list
+does not (and is unused at runtime — see
+[`02-configuration.md`](./02-configuration.md)).
 
 **Why check file contents instead of treating any `pom.xml`/`build.gradle`
 as Spring Boot:** same reasoning as the React/Angular case — the
@@ -122,10 +143,10 @@ Dockerfile) from corrupting the other's inference.
 
 ## Verified against the real repo
 
-> "Verified on the real alumni repo: `frontend=react, backend=[go],
-> architecture=monolith, dockerized=true`."
+> Historical Alumni-web snapshot: `frontend=react, backend=[go],
+> architecture=monolith, dockerized=true`.
 
-This is the first point in the pipeline where a real-repo check could
-catch a false assumption, and it was run before Phase 2 began — the
-project's established practice of validating each phase against real
-data before building the next phase on top of it.
+This was the first point in the pipeline where a real-repo check could
+catch a false assumption, and it was run before Phase 2 began. It is
+not a live dashboard, and it does not prove Express/Angular/Python
+detection quality.

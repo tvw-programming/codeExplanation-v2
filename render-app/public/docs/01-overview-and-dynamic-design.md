@@ -3,15 +3,24 @@
 ## What this project is
 
 `codeExplanation-v2` is an automated pipeline that turns a software
-repository into a set of narrated, highlighted-code explainer videos —
-one video "chunk" per feature or file, each with:
+repository into a **single concatenated explainer video** (`FullVideo`)
+— one walkthrough per feature or file, each introduced by a FileCard,
+each with:
 
 - a structured JSON record of what that chunk of code actually does
   (functions, routes, API calls, data models, side effects — all
-  mechanically extracted, never guessed without being flagged),
-- a four-beat narration script generated from that record,
-- a rendered audio track + frame-accurate code-highlight timeline,
-  assembled into a Remotion video composition.
+  mechanically extracted **where an extractor exists**, never guessed
+  without being flagged),
+- a four-beat narration script (purpose / connections / per-item flow /
+  recap) generated from that record,
+- a rendered audio track + measured-beat code-highlight timeline,
+  assembled by Remotion.
+
+Extraction is **not** equally complete for every stack. Honest matrix
+(detect / chunk / extract / narrate / render): root `README.md` and
+[`14-stack-support-validation.md`](./14-stack-support-validation.md).
+How to add a stack is sketched there (marker → grouping → extractor →
+schema → narration hedges).
 
 This is the production implementation that followed an earlier,
 more exploratory requirement/plan (see the original `Requirement`
@@ -40,16 +49,19 @@ Features → ChunkPlans (feature-wise, size-bounded)
 Per-chunk JSON records (locked schema, confidence-scored)
         │  Phase 4 — mirror_store + content-hash reuse + PR lookup
         ▼
-Stored records (only changed files re-extracted on later runs)
+Stored records (hash mismatch **or** extractorVersion bump re-extracts)
         │  Phase 5 — generate_narration_for_repo()
         ▼
-Per-chunk NarrationScript (4 beats + visual cues)
+Per-chunk NarrationScript (4 beats + item beats + file overview)
         │  Phase 6 — build_render_bundle()
         ▼
-Per-chunk audio + word-aligned highlight config
-        │  Phase 7 — run_pilot()
+Per-chunk audio + measured-beat highlight config (Piper | espeak-ng)
+        │  staging → render-app/public/chunks/ + FullVideo
         ▼
-Schema-validated, pilot-reported, ready-to-render video bundles
+FileCard → walkthrough → next file → output/video.mp4
+        │  Phase 7 — run_pilot() (schema report-only; does not halt render)
+        ▼
+pilot_report.json + staged bundles
 ```
 
 Each arrow is a phase, and each phase is a separate, independently
@@ -68,11 +80,13 @@ enforced at every layer:
    used throughout testing is explicitly treated as "the first proof
    case," not a special-cased target (see `README.md` at the repo root
    and every phase doc below reiterates this).
-2. **No hardcoded stack.** `detect_project_type()` looks for marker
+2. **No hardcoded *repo*.** `detect_project_type()` looks for marker
    files (`package.json`, `go.mod`, `requirements.txt`, `pom.xml`, …) —
-   it never assumes "this is a React+Go project." A repo with a
-   different stack combination is detected the same way, with no code
-   changes.
+   it never assumes "this is a React+Go project." It is **not** "any
+   stack": there is no Express/Node backend value; a non-React
+   non-Angular `package.json` becomes `"react_or_angular"`; the chunker
+   defaults missing frontend flavor to `"react"`. See
+   [`04-phase1-project-type-detection.md`](./04-phase1-project-type-detection.md).
 3. **No hardcoded folder names.** `feature_grouping.py`'s docstring is
    explicit about this: grouping works off *generic structural signals*
    (an organizing folder like `features/`/`pages/`/`routes/`, or a
@@ -105,3 +119,16 @@ Every phase doc in this folder calls out the specific functions that
 implement this principle for that phase, and the alternative each one
 deliberately avoided (hardcoding a repo, a stack, a folder name, or a
 field list).
+
+## Failure modes worth knowing before you run it
+
+- **Empty-but-valid Angular:** detected, chunked, schema-valid, video
+  still renders, almost nothing true is said. Confidence is 0.3, not
+  0.95.
+- **Placeholder Python / Spring / Express:** grouping (Python/Spring)
+  or mis-detection (Express) still produces a record that **fails**
+  schema validation — and is narrated and rendered anyway.
+- **Schema validation does not stop the mp4.**
+
+"Verified against the real repo" sections later in this folder are
+**historical Alumni-web snapshots**, not a live dashboard.

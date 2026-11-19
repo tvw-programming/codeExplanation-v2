@@ -1,5 +1,12 @@
 # Implementation Plan — Phased
 
+> **Status banner.** Phases 0–7 shipped; later work (Piper, file cards,
+> FullVideo, measured beats, stack audit) is documented in
+> `documentation/`, not in this file's original phase sections. Keep
+> this file as a **phase diary**. Test counts in the sections below
+> (14 / 26 / 40 / … / 168) are completion snapshots, not the live
+> suite — see `documentation/10-phase7-pilot-and-validation.md`.
+
 Status: Phase 7 complete. All 8 planned phases (0-7) done and verified against the real alumni repo.
 
 Test repo for the pipeline: https://github.com/tvw-programming/Alumni-web (dynamic input — any repo URL works; this is only the first test case).
@@ -84,3 +91,16 @@ Remotion side (render-app/, scaffolded with `create-video`):
 - Python and Spring Boot extraction are not implemented (grouping exists; no real repo of either stack was available to validate real extraction against).
 - The real whisper.cpp alignment path and Remotion's own Chromium download both work correctly but are network-blocked in this specific sandbox; neither has been exercised end to end with real (non-estimated) data in this session.
 - The narrator's 90-180s target band is reliably met only for feature-rich chunks with this template-only script generator; a richer (LLM-elaborated) script stage would be needed to close that gap for small chunks without inventing ungrounded content.
+
+## After Phase 7 (not rewritten into the diary above)
+
+Documented in `documentation/`, not back-ported into the original phase sections:
+
+- Piper TTS preferred, espeak-ng fallback; `ttsEngine` on the bundle.
+- File cards (`file_overview.py`, `FileCard.tsx`) before each walkthrough.
+- `FullVideo` concatenates every staged chunk (`public/chunks/manifest.json`).
+- Measured-beat alignment replaced whisper.cpp / estimated as the live path.
+- Function-aware narration (`function_context.py`, `function_narration.py`).
+- `EXTRACTOR_VERSION` reuse invalidation; handler `lineRange`; empty-extraction confidence 0.3; flat organizing-folder files; nested Fiber prefixes composed in-file.
+- Six-stack audit: `documentation/14-stack-support-validation.md`.
+- Narration style guide: `documentation/15-narration-style-guide.md`.

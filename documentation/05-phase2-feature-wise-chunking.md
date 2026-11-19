@@ -1,8 +1,13 @@
 # Phase 2 — Feature-Wise Dynamic Chunking
 
-Status: done, 40 tests passing at phase completion. Verified against
-the real alumni repo: 14 features, 22 chunks, 3 files correctly flagged
+Status: done, 40 tests passing at phase completion. **Historical**
+Alumni-web snapshot: 14 features, 22 chunks, 3 files correctly flagged
 for further splitting.
+
+`needs_further_split` is still only a flag — nothing consumes it to
+perform a statement-level split. Flat files sitting **directly** in an
+organizing folder (`features/` / `pages/` / `routes/` / …) are now
+claimed (fixed after a silent empty-chunking bug; described in doc 14).
 
 ## What this phase delivers
 
@@ -30,9 +35,18 @@ Two steps, implemented as two sub-modules tied together by
 
 **What it does:** if an organizing folder (`features/`, `pages/`,
 `routes/`, `views/`, `modules/`) exists, each of its immediate
-subdirectories is one feature; any other top-level subdirectory of
-`src_root` is also its own feature; loose files with no subdirectory
-are grouped into one feature named after `src_root` itself.
+subdirectories is one feature; **files sitting directly in that
+organizing folder** (a flat `src/pages/Home.tsx` layout) are claimed
+exactly once as a feature named after the organizing folder; any other
+top-level subdirectory of `src_root` is also its own feature; remaining
+loose files with no subdirectory are grouped into one feature named
+after `src_root` itself.
+
+Older wording of this doc said only *subdirectories* of the organizing
+folder became features. That dropped every flat page/route file and
+could produce `features: []` on a successful-looking run. The fix lives
+in `feature_grouping.py` (regression tests in
+`tests/test_feature_grouping.py`).
 
 **Why look for *any* of five conventional organizing-folder names
 instead of assuming one specific layout (e.g. always `features/`):**
@@ -128,6 +142,10 @@ avoids duplicating parsing logic, and `needs_further_split` is the
 explicit, documented handoff between the two phases — not a silent
 TODO.
 
+**The handoff is still unused.** Nothing in Phase 3 (or later) reads
+`needs_further_split` to actually split an oversized file. Keep
+statement-level split as **roadmap**.
+
 ### `make_chunk_id(feature_name, file_path)`
 
 **What it does:** produces a chunk ID like `auth-login-3f9a2c` — a
@@ -148,8 +166,7 @@ readable slug prefix.
 
 ## Verified against the real repo
 
-14 features, 22 chunks, 3 files correctly flagged `needs_further_split`
-— all from the real alumni-web repo's actual layout, with no
-repo-specific code written to make this come out "correctly." The
-feature/chunk counts are an emergent property of the generic grouping
-rules above being applied to that repo's real folder structure.
+Historical Alumni-web snapshot: 14 features, 22 chunks, 3 files
+correctly flagged `needs_further_split` — from that repo's actual
+layout, with no repo-specific grouping code. Not a live dashboard. The
+flagged files were **not** further split.

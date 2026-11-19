@@ -23,7 +23,12 @@ here are what that write-up draws on.
   audit of this repository's own source, with file paths and line
   numbers, and was produced by running the real pipeline modules
   against synthetic fixtures for each stack. Its findings are
-  reproducible here rather than cited from the web.
+  reproducible here rather than cited from the web. **It predates later
+  fixes** (Angular confidence 0.3, nested Fiber prefix composition,
+  flat organizing-folder files, side-effect `type` key, `.java` layer
+  label) — do not treat its recorded Angular confidence 0.95 or
+  uncomposed Fiber paths as current. See the "Current vs snapshot" box
+  on `documentation/14-stack-support-validation.md`.
 - Where a researcher could not reach a source, it says so. Several
   pages were blocked or rate-limited during this research and the
   affected claims are flagged in each file's caveats.

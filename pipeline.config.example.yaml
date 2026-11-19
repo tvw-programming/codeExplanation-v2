@@ -9,7 +9,10 @@ source:
   prefer: git           # which to use if both are set
 
 detection:
-  # Marker files used in Phase 1 to detect project type. Extend as new stacks are added.
+  # DOCUMENTATION ONLY — unused at runtime. detect_project_type() reads
+  # MARKER_FILES in src/detect/project_type.py, which also includes
+  # build.gradle.kts (this YAML list does not). Compose YAML names live
+  # in DOCKER_MARKERS in that same module, not here.
   markers:
     react_or_angular: ["package.json"]
     python: ["requirements.txt", "pyproject.toml", "setup.py"]
@@ -26,6 +29,8 @@ storage:
   mirror_root: "./output/chunks"   # dummy folder mirroring the client repo's structure
   required_fields: ["contentHash", "lastUpdated", "pullRequest"]
 
+# UNUSED AT RUNTIME — stored on PipelineConfig.raw only. Roadmap for an
+# LLM-elaborated narration stage; the live narrator is template-based.
 llm:
   provider: anthropic          # anthropic | gemini | openai
   api_key_env: ANTHROPIC_API_KEY
@@ -37,9 +42,15 @@ security:
     - "*secrets*"
   secret_scan_before_write: true
 
+# UNUSED AT RUNTIME. Live TTS engines are Piper (preferred, Indian-English
+# voice via scripts/ensure_piper_voice.py → .cache/piper-voices/) then
+# espeak-ng fallback. See src/render/tts.py. This key is not read.
 audio:
-  tts_provider: null   # fill in when Phase 5/6 begins
+  tts_provider: null   # unused; live path is Piper then espeak-ng
 
+# UNUSED AT RUNTIME. Remotion compositions hardcode 30 fps, 1280×720
+# (see render-app/src/FullVideo.tsx and ChunkView.tsx). highlight_config
+# defaults fps=30 independently of this block.
 video:
   fps: 30
   resolution: "1280x720"

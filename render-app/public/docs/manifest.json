@@ -24,13 +24,15 @@
     "group": "Reference",
     "items": [
       { "file": "11-json-schema-reference.md", "title": "JSON Schema Reference" },
-      { "file": "12-function-rationale-index.md", "title": "Function Rationale Index" }
+      { "file": "12-function-rationale-index.md", "title": "Function Rationale Index" },
+      { "file": "15-narration-style-guide.md", "title": "Narration Style Guide" }
     ]
   },
   {
     "group": "Roadmap",
     "items": [
-      { "file": "13-known-gaps-and-roadmap.md", "title": "Known Gaps & Roadmap" }
+      { "file": "13-known-gaps-and-roadmap.md", "title": "Known Gaps & Roadmap" },
+      { "file": "14-stack-support-validation.md", "title": "Stack Support Validation" }
     ]
   }
 ]
