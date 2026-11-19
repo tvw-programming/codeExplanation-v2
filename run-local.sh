@@ -35,7 +35,9 @@
 #
 # Fixed locations:
 #   Videos:         ./output/video-<stack>.mp4 (one per detected stack)
-#   Docs server:    http://localhost:4173/docs-viewer/  (port via $DOCS_PORT)
+#   Frontend:       http://localhost:4173/              (docs-server root over
+#                   render-app/public; port via $DOCS_PORT)
+#   Docs viewer:    http://localhost:4173/docs-viewer/  (same server)
 #   Backend data:   ./.local-run/  (resolved source clone + pilot report)
 #
 # Prerequisites this script does NOT install for you: python3, node/npm,
@@ -54,6 +56,10 @@ RENDER_FLAG=""
 RENDER_ENABLED=1
 
 DOCS_PORT="${DOCS_PORT:-4173}"
+# Docs server (python http.server over render-app/public): root = frontend
+# static tree; /docs-viewer/ = MUI documentation viewer (from build:docs).
+FRONTEND_URL="http://localhost:${DOCS_PORT}/"
+DOCS_VIEWER_URL="http://localhost:${DOCS_PORT}/docs-viewer/"
 LOCAL_RUN_DIR="$PROJECT_ROOT/.local-run"
 DOCS_PID_FILE="$LOCAL_RUN_DIR/docs-server.pid"
 DOCS_LOG_FILE="$LOCAL_RUN_DIR/docs-server.log"
@@ -120,6 +126,15 @@ for arg in "$@"; do
 done
 
 log() { printf '\n\033[1;36m==> %s\033[0m\n' "$1"; }
+
+# Print the live frontend and docs-viewer URLs for this script's docs server.
+# Ports/paths on main: DOCS_PORT (default 4173), docs viewer at /docs-viewer/.
+print_local_urls() {
+  echo ""
+  echo "Local URLs:"
+  echo "  Frontend:     $FRONTEND_URL"
+  echo "  Docs viewer:  $DOCS_VIEWER_URL"
+}
 
 # ---------------------------------------------------------------------
 # Preflight: catch missing native tools with a clear, OS-specific
@@ -252,8 +267,9 @@ run_docs_server() {
   sleep 0.5
 
   if kill -0 "$(cat "$DOCS_PID_FILE")" 2>/dev/null; then
-    echo "Documentation server running at: http://localhost:$DOCS_PORT/docs-viewer/"
-    echo "(left running in the background — stop it with: ./run-local.sh --stop-docs-server)"
+    echo "Documentation server running (background)."
+    print_local_urls
+    echo "(stop it with: ./run-local.sh --stop-docs-server)"
   else
     echo "Documentation server failed to start — see $DOCS_LOG_FILE" >&2
   fi
@@ -438,7 +454,7 @@ if [ "$RUN_DOCS_SERVER" = "1" ]; then run_docs_server; fi
 if [ "$RUN_VIDEO_RENDER" = "1" ]; then run_video_render; fi
 
 log "Done."
-if [ "$RUN_DOCS_SERVER" = "1" ]; then echo "Documentation: http://localhost:$DOCS_PORT/docs-viewer/"; fi
+if [ "$RUN_DOCS_SERVER" = "1" ]; then print_local_urls; fi
 if [ "$RUN_VIDEO_RENDER" = "1" ]; then
   echo "Videos:        $OUTPUT_DIR/video-<stack>.mp4 (one per detected stack)"
 fi
