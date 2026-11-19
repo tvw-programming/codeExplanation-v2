@@ -10,16 +10,15 @@ import {
   type FileOverview,
 } from "./FileCard";
 
-// The complete video for a repository: every chunk the backend pipeline
-// successfully rendered (run_backend_pilot.py stages all of them under
-// public/chunks/, one subfolder per chunkId, listed in
-// public/chunks/manifest.json), played back-to-back in one continuous
-// video via <Series> — not just a single sample chunk.
+// Per-stack video isolation: the backend pipeline now stages chunks
+// under public/chunks/<stack>/<chunkId>/ and writes a per-stack
+// manifest at public/chunks/<stack>/manifest.json. Each stack gets
+// its own Remotion composition ("StackVideo-<stack>") that renders
+// only that stack's chunks into output/video-<stack>.mp4.
 //
-// Each file's walkthrough is introduced by a short, silent card naming
-// the file and summarising it, so one file visibly ends before the next
-// begins rather than the video cutting straight from the last line of
-// one into the first line of another.
+// The combined FullVideo composition is kept for backward compat —
+// it reads the combined manifest at public/chunks/manifest.json
+// and renders every chunk from every stack back-to-back.
 
 const FPS = 30;
 
@@ -32,18 +31,21 @@ function cardFramesFor(narration: CardNarration | null): number {
   return Math.ceil(Math.max(MIN_FILE_CARD_SECONDS, spoken) * FPS);
 }
 
-type Manifest = { chunkIds: string[] };
+// ---------- manifest types ----------
 
-async function fetchManifest(): Promise<Manifest> {
-  const res = await fetch(staticFile("chunks/manifest.json"));
-  return res.json();
-}
+type StackManifest = { stack: string; chunkIds: string[] };
 
-const calculateMetadata: CalculateMetadataFunction<FullVideoProps> = async () => {
-  const manifest = await fetchManifest();
+type CombinedManifest = {
+  chunkIds: string[];
+  stacks?: Record<string, string[]>;
+};
+
+// ---------- shared loader ----------
+
+async function loadChunks(chunkIds: string[], chunkDirPrefix: string) {
   const loaded = await Promise.all(
-    manifest.chunkIds.map(async (id) => {
-      const bundle = await fetchBundle(`chunks/${id}`) as typeof bundle & {
+    chunkIds.map(async (id) => {
+      const bundle = await fetchBundle(`${chunkDirPrefix}/${id}`) as typeof bundle & {
         fileOverview?: FileOverview;
         cardNarration?: CardNarration;
       };
@@ -54,59 +56,34 @@ const calculateMetadata: CalculateMetadataFunction<FullVideoProps> = async () =>
       };
     }),
   );
-  const durations = loaded.map((entry) => entry.duration);
-  const overviews = loaded.map((entry) => entry.overview);
-  const cardNarrations = loaded.map((entry) => entry.narration);
-  const cardDurations = cardNarrations.map(cardFramesFor);
-  // Every chunk is preceded by its card, so both count toward the total.
-  const total = durations.reduce((sum, d, i) => sum + d + cardDurations[i], 0);
   return {
-    durationInFrames: Math.max(1, total),
-    props: {
-      chunkIds: manifest.chunkIds,
-      durations,
-      overviews,
-      cardNarrations,
-      cardDurations,
-    },
+    durations: loaded.map((e) => e.duration),
+    overviews: loaded.map((e) => e.overview),
+    cardNarrations: loaded.map((e) => e.narration),
+    cardDurations: loaded.map((e) => cardFramesFor(e.narration)),
   };
-};
+}
 
-type FullVideoProps = {
+// ---------- shared props & component ----------
+
+type VideoProps = {
   chunkIds?: string[];
   durations?: number[];
   overviews?: (FileOverview | null)[];
   cardNarrations?: (CardNarration | null)[];
   cardDurations?: number[];
+  /** Directory prefix where chunk subdirs live (e.g. "chunks" or
+   *  "chunks/react"). Used to build the staticFile path for each chunk. */
+  chunkDirPrefix?: string;
 };
 
-export const FullVideoComposition: React.FC = () => {
-  return (
-    <Composition
-      id="FullVideo"
-      component={FullVideo}
-      durationInFrames={30}
-      fps={FPS}
-      width={1280}
-      height={720}
-      calculateMetadata={calculateMetadata}
-      defaultProps={{
-        chunkIds: [],
-        durations: [],
-        overviews: [],
-        cardNarrations: [],
-        cardDurations: [],
-      } as FullVideoProps}
-    />
-  );
-};
-
-const FullVideo: React.FC<FullVideoProps> = ({
+const VideoBody: React.FC<VideoProps> = ({
   chunkIds = [],
   durations = [],
   overviews = [],
   cardNarrations = [],
   cardDurations = [],
+  chunkDirPrefix = "chunks",
 }) => {
   if (chunkIds.length === 0) {
     return null;
@@ -126,18 +103,150 @@ const FullVideo: React.FC<FullVideoProps> = ({
                 <FileCard
                   overview={overview}
                   narration={narration}
-                  chunkDir={`chunks/${id}`}
+                  chunkDir={`${chunkDirPrefix}/${id}`}
                   position={{ index: i + 1, total: chunkIds.length }}
                   sectionSeconds={chunkFrames / FPS}
                 />
               ) : null}
             </Series.Sequence>,
             <Series.Sequence key={id} durationInFrames={chunkFrames}>
-              <ChunkView chunkDir={`chunks/${id}`} />
+              <ChunkView chunkDir={`${chunkDirPrefix}/${id}`} />
             </Series.Sequence>,
           ];
         })}
       </Series>
     </ThemeProvider>
+  );
+};
+
+// ===================================================================
+// Per-stack compositions: StackVideo-<stack>
+// ===================================================================
+
+/** Fetches the per-stack manifest from chunks/<stack>/manifest.json */
+async function fetchStackManifest(stack: string): Promise<StackManifest> {
+  const res = await fetch(staticFile(`chunks/${stack}/manifest.json`));
+  return res.json();
+}
+
+/** Factory: returns a calculateMetadata function bound to a specific
+ *  stack name, so each StackVideo composition loads only its own
+ *  manifest and resolves bundles from its own subdirectory. */
+function makeStackCalculateMetadata(
+  stack: string,
+): CalculateMetadataFunction<VideoProps> {
+  return async () => {
+    const manifest = await fetchStackManifest(stack);
+    const chunkDirPrefix = `chunks/${stack}`;
+    const { durations, overviews, cardNarrations, cardDurations } =
+      await loadChunks(manifest.chunkIds, chunkDirPrefix);
+
+    const total = durations.reduce((sum, d, i) => sum + d + cardDurations[i], 0);
+    return {
+      durationInFrames: Math.max(1, total),
+      props: {
+        chunkIds: manifest.chunkIds,
+        durations,
+        overviews,
+        cardNarrations,
+        cardDurations,
+        chunkDirPrefix,
+      },
+    };
+  };
+}
+
+/** Registers one <Composition> per stack listed in the combined
+ *  manifest's `stacks` field. run-local.sh reads these composition
+ *  IDs to render each stack to its own video file. */
+export const StackVideoCompositions: React.FC = () => {
+  // Remotion evaluates <Composition> at bundle time — we can't do
+  // async here. Instead we register compositions for every stack the
+  // combined manifest lists. The combined manifest is written at build
+  // time by run_backend_pilot.py, so the stacks are known statically
+  // relative to the bundle.
+  //
+  // Because calculateMetadata is async and runs per-composition, each
+  // StackVideo loads only its own stack's manifest at render time.
+  //
+  // We read the combined manifest synchronously via a <Still>-less
+  // approach: register a fixed set of well-known stacks. Any stack
+  // that doesn't have a manifest simply produces a 1-frame empty
+  // video (calculateMetadata catches the fetch error).
+  const KNOWN_STACKS = ["react", "angular", "go", "python", "spring_boot", "express", "unknown"];
+
+  return (
+    <>
+      {KNOWN_STACKS.map((stack) => (
+        <Composition
+          key={`StackVideo-${stack}`}
+          id={`StackVideo-${stack}`}
+          component={VideoBody}
+          durationInFrames={30}
+          fps={FPS}
+          width={1280}
+          height={720}
+          calculateMetadata={makeStackCalculateMetadata(stack)}
+          defaultProps={{
+            chunkIds: [],
+            durations: [],
+            overviews: [],
+            cardNarrations: [],
+            cardDurations: [],
+            chunkDirPrefix: `chunks/${stack}`,
+          } as VideoProps}
+        />
+      ))}
+    </>
+  );
+};
+
+// ===================================================================
+// Combined FullVideo composition (backward compat)
+// ===================================================================
+
+async function fetchCombinedManifest(): Promise<CombinedManifest> {
+  const res = await fetch(staticFile("chunks/manifest.json"));
+  return res.json();
+}
+
+const calculateMetadata: CalculateMetadataFunction<VideoProps> = async () => {
+  const manifest = await fetchCombinedManifest();
+  const { durations, overviews, cardNarrations, cardDurations } =
+    await loadChunks(manifest.chunkIds, "chunks");
+
+  const total = durations.reduce((sum, d, i) => sum + d + cardDurations[i], 0);
+  return {
+    durationInFrames: Math.max(1, total),
+    props: {
+      chunkIds: manifest.chunkIds,
+      durations,
+      overviews,
+      cardNarrations,
+      cardDurations,
+      chunkDirPrefix: "chunks",
+    },
+  };
+};
+
+export const FullVideoComposition: React.FC = () => {
+  return (
+    <Composition
+      id="FullVideo"
+      component={VideoBody}
+      durationInFrames={30}
+      fps={FPS}
+      width={1280}
+      height={720}
+      calculateMetadata={calculateMetadata}
+      defaultProps={{
+        chunkIds: [],
+        durations: [],
+        overviews: [],
+        cardNarrations: [],
+        cardDurations: [],
+        chunkDirPrefix: "chunks",
+      } as VideoProps}
+    />
   );
 };

@@ -5,13 +5,16 @@ one default configuration, no manual CLI arguments required.
 
 When rendering is on (the default), it stages EVERY successfully
 -rendered chunk's bundle.json/narration.wav/source file into
-render-app/public/chunks/<chunkId>/, plus a manifest.json listing them
-in order — the fixed path the FullVideo Remotion composition reads
-from (see render-app/src/FullVideo.tsx) to render one continuous video
-covering the whole repository, not just a single sample chunk. It also
-stages the first chunk into the older render-app/public/sample-chunk/
-path for the single-chunk CodeExplainerChunk composition, kept for
-quick single-chunk demos/debugging.
+render-app/public/chunks/<stack>/<chunkId>/, grouped by detected stack
+(react, go, python, spring_boot, etc.), with a separate manifest.json
+per stack at render-app/public/chunks/<stack>/manifest.json. Each stack
+produces its own video file (output/video-<stack>.mp4). A combined
+manifest.json is also written at render-app/public/chunks/manifest.json
+listing all stacks for the FullVideo composition (backward compat).
+
+The first chunk is still staged into the older
+render-app/public/sample-chunk/ path for the single-chunk
+CodeExplainerChunk composition, kept for quick demos/debugging.
 
 Usage (always run from the repo root, which run-local.sh does for you):
     python scripts/run_backend_pilot.py [--no-render]
@@ -87,19 +90,24 @@ def _stage_one_chunk(chunk_id: str, dest_dir: Path, resolved_root: Path, output_
     return True
 
 
-def _stage_all_chunks(report: dict, resolved_root: Path, output_root: Path) -> list[str]:
+def _stage_all_chunks(report: dict, resolved_root: Path, output_root: Path) -> dict[str, list[str]]:
     """Stages EVERY successfully-rendered chunk into
-    render-app/public/chunks/<chunkId>/, in the same order run_pilot
-    processed them, and writes render-app/public/chunks/manifest.json
-    listing them in that order — what the FullVideo composition reads
-    to render the complete, multi-chunk video. Also stages the first
-    one into the older render-app/public/sample-chunk/ path for the
-    single-chunk CodeExplainerChunk composition.
+    render-app/public/chunks/<stack>/<chunkId>/, grouped by the stack
+    each chunk belongs to, and writes one manifest.json per stack at
+    render-app/public/chunks/<stack>/manifest.json. A combined
+    manifest.json at render-app/public/chunks/manifest.json is also
+    written for backward compatibility (the FullVideo composition).
 
-    Returns the list of chunkIds actually staged (in order)."""
+    Also stages the first chunk into the older
+    render-app/public/sample-chunk/ path for the single-chunk
+    CodeExplainerChunk composition.
+
+    Returns {stack: [chunkId, ...]} of actually staged chunks."""
     render_results = report.get("render")
     if not isinstance(render_results, list):
-        return []
+        return {}
+
+    chunk_stacks: dict[str, str] = report.get("chunkStacks", {})
 
     # Start from a clean slate: a previous run's chunks for a
     # different repo/subset shouldn't linger and end up in this run's
@@ -107,21 +115,63 @@ def _stage_all_chunks(report: dict, resolved_root: Path, output_root: Path) -> l
     if CHUNKS_DIR.is_dir():
         shutil.rmtree(CHUNKS_DIR)
 
-    staged: list[str] = []
+    # Stage each chunk under its stack subdirectory.
+    staged_by_stack: dict[str, list[str]] = {}
+    first_staged: str | None = None
+
     for result in render_results:
         if "error" in result:
             continue
         chunk_id = result["chunkId"]
-        if _stage_one_chunk(chunk_id, CHUNKS_DIR / chunk_id, resolved_root, output_root):
-            staged.append(chunk_id)
+        stack = chunk_stacks.get(chunk_id, "unknown")
+        stack_dir = CHUNKS_DIR / stack
+        if _stage_one_chunk(chunk_id, stack_dir / chunk_id, resolved_root, output_root):
+            staged_by_stack.setdefault(stack, []).append(chunk_id)
+            if first_staged is None:
+                first_staged = chunk_id
+                # Also keep a flat symlink/copy at CHUNKS_DIR/<chunkId>
+                # so the combined manifest's paths still resolve.
+                _stage_one_chunk(chunk_id, CHUNKS_DIR / chunk_id, resolved_root, output_root)
 
-    if staged:
-        (CHUNKS_DIR / "manifest.json").write_text(
-            json.dumps({"chunkIds": staged}, indent=2), encoding="utf-8",
+    # Write per-stack manifests.
+    for stack, chunk_ids in staged_by_stack.items():
+        stack_dir = CHUNKS_DIR / stack
+        stack_dir.mkdir(parents=True, exist_ok=True)
+        (stack_dir / "manifest.json").write_text(
+            json.dumps({"stack": stack, "chunkIds": chunk_ids}, indent=2),
+            encoding="utf-8",
         )
-        _stage_one_chunk(staged[0], SAMPLE_CHUNK_DIR, resolved_root, output_root)
 
-    return staged
+    # Write combined manifest for backward compatibility (FullVideo).
+    all_staged = [cid for ids in staged_by_stack.values() for cid in ids]
+    if all_staged:
+        # Stage ALL chunks flat under CHUNKS_DIR too so the combined
+        # manifest resolves (FullVideo reads chunks/<chunkId>/).
+        for result in render_results:
+            if "error" in result:
+                continue
+            chunk_id = result["chunkId"]
+            if chunk_id in {c for ids in staged_by_stack.values() for c in ids}:
+                dest = CHUNKS_DIR / chunk_id
+                if not dest.is_dir():
+                    _stage_one_chunk(chunk_id, dest, resolved_root, output_root)
+
+        (CHUNKS_DIR / "manifest.json").write_text(
+            json.dumps({
+                "chunkIds": all_staged,
+                "stacks": {
+                    stack: chunk_ids
+                    for stack, chunk_ids in staged_by_stack.items()
+                },
+            }, indent=2),
+            encoding="utf-8",
+        )
+
+    # Legacy single-chunk sample.
+    if first_staged:
+        _stage_one_chunk(first_staged, SAMPLE_CHUNK_DIR, resolved_root, output_root)
+
+    return staged_by_stack
 
 
 def main() -> int:
@@ -156,10 +206,16 @@ def main() -> int:
     print(f"[backend] Full report written to: {output_root / 'pilot_report.json'}")
 
     if render:
-        staged_chunk_ids = _stage_all_chunks(report, resolved.local_root, output_root)
-        if staged_chunk_ids:
-            print(f"[backend] Staged {len(staged_chunk_ids)}/{report['chunkCount']} "
-                  f"chunk(s) for the full video -> {CHUNKS_DIR}")
+        staged_by_stack = _stage_all_chunks(report, resolved.local_root, output_root)
+        total_staged = sum(len(ids) for ids in staged_by_stack.values())
+        if staged_by_stack:
+            stacks_summary = ", ".join(
+                f"{stack}({len(ids)})" for stack, ids in staged_by_stack.items()
+            )
+            print(f"[backend] Staged {total_staged}/{report['chunkCount']} "
+                  f"chunk(s) across {len(staged_by_stack)} stack(s): {stacks_summary}")
+            for stack in staged_by_stack:
+                print(f"[backend]   -> {CHUNKS_DIR / stack}/manifest.json")
         else:
             print("[backend] No successfully-rendered chunk to stage for video "
                   "rendering.", file=sys.stderr)

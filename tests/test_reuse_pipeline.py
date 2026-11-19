@@ -36,7 +36,7 @@ def test_first_run_creates_all_stored_chunks(tmp_path):
     _build_repo(repo)
     project_type = detect_project_type(repo)
 
-    records, stats = extract_repo_with_reuse(repo, project_type, output)
+    records, stats, _ = extract_repo_with_reuse(repo, project_type, output)
 
     assert stats["reused"] == 0
     assert stats["reanalyzed"] == stats["total"] == 2
@@ -53,7 +53,7 @@ def test_second_run_with_no_changes_reuses_everything(tmp_path):
     project_type = detect_project_type(repo)
 
     extract_repo_with_reuse(repo, project_type, output)
-    records_2, stats_2 = extract_repo_with_reuse(repo, project_type, output)
+    records_2, stats_2, _ = extract_repo_with_reuse(repo, project_type, output)
 
     assert stats_2["reused"] == stats_2["total"] == 2
     assert stats_2["reanalyzed"] == 0
@@ -65,7 +65,7 @@ def test_changing_one_file_reanalyzes_only_that_one(tmp_path):
     _build_repo(repo)
     project_type = detect_project_type(repo)
 
-    records_1, _ = extract_repo_with_reuse(repo, project_type, output)
+    records_1, _, _ = extract_repo_with_reuse(repo, project_type, output)
     widget_record_1 = next(r for r in records_1 if "WidgetList" in r["filePath"])
     profile_record_1 = next(r for r in records_1 if "ProfilePage" in r["filePath"])
 
@@ -76,7 +76,7 @@ export default function WidgetList() {
 }
 """)
 
-    records_2, stats_2 = extract_repo_with_reuse(repo, project_type, output)
+    records_2, stats_2, _ = extract_repo_with_reuse(repo, project_type, output)
     widget_record_2 = next(r for r in records_2 if "WidgetList" in r["filePath"])
     profile_record_2 = next(r for r in records_2 if "ProfilePage" in r["filePath"])
 
@@ -120,11 +120,11 @@ def test_a_record_from_an_older_extractor_is_reanalyzed(tmp_path):
     _build_repo(root)
     project_type = detect_project_type(root)
 
-    records, first = extract_repo_with_reuse(root, project_type, out)
+    records, first, _ = extract_repo_with_reuse(root, project_type, out)
     assert first["reanalyzed"] == first["total"]
 
     # Unchanged source re-runs as pure reuse.
-    _, second = extract_repo_with_reuse(root, project_type, out)
+    _, second, _ = extract_repo_with_reuse(root, project_type, out)
     assert second["reused"] == second["total"]
 
     # Age one stored record back to the previous extractor version.
@@ -133,7 +133,7 @@ def test_a_record_from_an_older_extractor_is_reanalyzed(tmp_path):
     stale["extractorVersion"] = EXTRACTOR_VERSION - 1
     write_stored(out, stale["filePath"], stale)
 
-    _, third = extract_repo_with_reuse(root, project_type, out)
+    _, third, _ = extract_repo_with_reuse(root, project_type, out)
     assert third["reanalyzed"] == 1, "the aged record should be re-extracted"
     assert third["reused"] == third["total"] - 1
 

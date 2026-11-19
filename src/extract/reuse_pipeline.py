@@ -30,10 +30,10 @@ def extract_repo_with_reuse(
     output_root: str | Path,
     github_owner: str | None = None,
     github_repo: str | None = None,
-) -> tuple[list[dict], dict]:
-    """Returns (records, stats). stats has reused/reanalyzed counts so a
-    caller (or test) can verify reuse is actually happening, not just
-    trust the code."""
+) -> tuple[list[dict], dict, dict[str, str]]:
+    """Returns (records, stats, chunk_stacks). stats has reused/reanalyzed
+    counts so a caller (or test) can verify reuse is actually happening,
+    not just trust the code. chunk_stacks maps chunkId -> stack name."""
     root = Path(root)
     output_root = Path(output_root)
     result = chunk_repo(root, project_type)
@@ -107,5 +107,11 @@ def extract_repo_with_reuse(
     for record in records:
         write_stored(output_root, record["filePath"], record)
 
+    # Map chunkId -> stack so callers (run_pilot, run_backend_pilot) can
+    # group chunks by technology without re-running detection.
+    chunk_stacks: dict[str, str] = {
+        chunk.chunk_id: chunk.stack for chunk in result.chunks
+    }
+
     stats = {"reused": reused_count, "reanalyzed": reanalyzed_count, "total": len(records)}
-    return records, stats
+    return records, stats, chunk_stacks

@@ -1,6 +1,6 @@
 import { MyComposition } from "./Composition";
 import { CodeExplainerChunkComposition } from "./CodeExplainerChunk";
-import { FullVideoComposition } from "./FullVideo";
+import { FullVideoComposition, StackVideoCompositions } from "./FullVideo";
 
 export const RemotionRoot: React.FC = () => {
   return (
@@ -8,6 +8,7 @@ export const RemotionRoot: React.FC = () => {
       <MyComposition />
       <CodeExplainerChunkComposition />
       <FullVideoComposition />
+      <StackVideoCompositions />
     </>
   );
 };

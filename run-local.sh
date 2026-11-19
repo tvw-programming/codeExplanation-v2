@@ -11,8 +11,8 @@
 #   3. Start a local web server and leave it running, so you can open
 #      the documentation (the MUI tree viewer over /documentation) in
 #      a browser at http://localhost:4173/docs-viewer/
-#   4. Render the pipeline's output to a real video file at a fixed
-#      path: ./output/video.mp4
+#   4. Render the pipeline's output to per-stack video files at
+#      ./output/video-<stack>.mp4 (e.g. video-react.mp4, video-go.mp4)
 #
 # Usage:
 #   ./run-local.sh                  # all four steps
@@ -34,7 +34,7 @@
 #   ./run-local.sh --help
 #
 # Fixed locations:
-#   Video:          ./output/video.mp4
+#   Videos:         ./output/video-<stack>.mp4 (one per detected stack)
 #   Docs server:    http://localhost:4173/docs-viewer/  (port via $DOCS_PORT)
 #   Backend data:   ./.local-run/  (resolved source clone + pilot report)
 #
@@ -263,16 +263,6 @@ run_docs_server() {
 # 4) Render the pipeline's output to a real video file at a fixed path
 # ---------------------------------------------------------------------
 run_video_render() {
-  # A preview is written beside the real video rather than over it, so a
-  # truncated clip can never be mistaken for the finished deliverable.
-  if [ -n "$PREVIEW_SECONDS" ]; then
-    RENDER_TARGET="$OUTPUT_PREVIEW"
-    log "[4/4] Video: rendering a ${PREVIEW_SECONDS}s PREVIEW to output/video-preview.mp4"
-  else
-    RENDER_TARGET="$OUTPUT_VIDEO"
-    log "[4/4] Video: rendering output/video.mp4"
-  fi
-
   if [ ! -f render-app/public/chunks/manifest.json ]; then
     echo "No rendered chunks are staged at render-app/public/chunks/ —" >&2
     echo "run the backend step first without --no-render so there is" >&2
@@ -283,6 +273,8 @@ run_video_render() {
   mkdir -p "$OUTPUT_DIR"
 
   cd "$PROJECT_ROOT/render-app"
+
+  # ---- browser detection (shared across all renders) ----
 
   # In some sandboxed Linux CI/dev environments, Remotion's own
   # headless-Chromium download is blocked by the network allowlist
@@ -338,59 +330,105 @@ run_video_render() {
   # far more reliable on a laptop. Override with REMOTION_CONCURRENCY.
   RENDER_CONCURRENCY="${REMOTION_CONCURRENCY:-1}"
 
-  RENDER_ARGS=(FullVideo "$RENDER_TARGET" "--concurrency=$RENDER_CONCURRENCY")
-  if [ -n "$BROWSER_EXECUTABLE" ]; then
-    RENDER_ARGS+=(--browser-executable="$BROWSER_EXECUTABLE")
-  fi
-  # Preview mode renders only the opening stretch of the SAME video, by
-  # limiting the frame range Remotion is asked for. Nothing upstream
-  # changes: the repo is chunked, narrated and staged in full, and the
-  # composition still reports its full duration — so what you see in a
-  # preview is exactly what the first PREVIEW_SECONDS of the real video
-  # look like, just produced in a fraction of the time.
-  if [ -n "$PREVIEW_SECONDS" ]; then
-    LAST_PREVIEW_FRAME=$(( PREVIEW_SECONDS * VIDEO_FPS - 1 ))
-    if [ "$LAST_PREVIEW_FRAME" -lt 0 ]; then
-      LAST_PREVIEW_FRAME=0
+  # ---- helper: render one composition to one video file ----
+  render_one_composition() {
+    local COMP_ID="$1"
+    local TARGET="$2"
+    local LABEL="$3"
+
+    local RENDER_ARGS=("$COMP_ID" "$TARGET" "--concurrency=$RENDER_CONCURRENCY")
+    if [ -n "$BROWSER_EXECUTABLE" ]; then
+      RENDER_ARGS+=(--browser-executable="$BROWSER_EXECUTABLE")
     fi
-    RENDER_ARGS+=("--frames=0-$LAST_PREVIEW_FRAME")
-  fi
-  if [ "${RUN_LOCAL_VERBOSE:-0}" = "1" ]; then
-    RENDER_ARGS+=(--log=verbose)
+    if [ -n "$PREVIEW_SECONDS" ]; then
+      local LAST_PREVIEW_FRAME=$(( PREVIEW_SECONDS * VIDEO_FPS - 1 ))
+      if [ "$LAST_PREVIEW_FRAME" -lt 0 ]; then
+        LAST_PREVIEW_FRAME=0
+      fi
+      RENDER_ARGS+=("--frames=0-$LAST_PREVIEW_FRAME")
+    fi
+    if [ "${RUN_LOCAL_VERBOSE:-0}" = "1" ]; then
+      RENDER_ARGS+=(--log=verbose)
+    fi
+
+    echo "  Rendering $LABEL -> $TARGET"
+    if ! npx remotion render "${RENDER_ARGS[@]}"; then
+      echo "" >&2
+      echo "Video render failed for $LABEL ($COMP_ID)." >&2
+      echo "This is almost always Remotion's headless Chromium crashing" >&2
+      echo "on launch or mid-render (see https://remotion.dev/docs/target-closed)." >&2
+      echo "Currently using browser executable:" >&2
+      echo "  ${BROWSER_EXECUTABLE:-<the Chrome Headless Shell that Remotion itself downloaded>}" >&2
+      echo "See run-local.sh --help for troubleshooting." >&2
+      return 1
+    fi
+  }
+
+  # ---- discover which stacks have per-stack manifests ----
+  # The combined manifest's "stacks" field lists them, but we can also
+  # just look for <stack>/manifest.json directories on disk.
+  DETECTED_STACKS=()
+  for stack_manifest in "$PROJECT_ROOT"/render-app/public/chunks/*/manifest.json; do
+    if [ -f "$stack_manifest" ]; then
+      stack_name="$(basename "$(dirname "$stack_manifest")")"
+      DETECTED_STACKS+=("$stack_name")
+    fi
+  done
+
+  if [ "${#DETECTED_STACKS[@]}" -gt 0 ]; then
+    # ---- per-stack rendering ----
+    if [ -n "$PREVIEW_SECONDS" ]; then
+      log "[4/4] Video: rendering ${PREVIEW_SECONDS}s PREVIEW per stack (${DETECTED_STACKS[*]})"
+    else
+      log "[4/4] Video: rendering per-stack videos (${DETECTED_STACKS[*]})"
+    fi
+
+    RENDERED_VIDEOS=()
+    RENDER_FAILED=0
+    for stack in "${DETECTED_STACKS[@]}"; do
+      if [ -n "$PREVIEW_SECONDS" ]; then
+        TARGET="$OUTPUT_DIR/video-${stack}-preview.mp4"
+      else
+        TARGET="$OUTPUT_DIR/video-${stack}.mp4"
+      fi
+      if render_one_composition "StackVideo-${stack}" "$TARGET" "$stack"; then
+        RENDERED_VIDEOS+=("$TARGET")
+      else
+        RENDER_FAILED=1
+      fi
+    done
+
+    if [ "$RENDER_FAILED" = "1" ] && [ "${#RENDERED_VIDEOS[@]}" -eq 0 ]; then
+      cd "$PROJECT_ROOT"
+      echo "All per-stack renders failed." >&2
+      exit 1
+    fi
+  else
+    # ---- fallback: single combined video (no per-stack manifests) ----
+    if [ -n "$PREVIEW_SECONDS" ]; then
+      RENDER_TARGET="$OUTPUT_PREVIEW"
+      log "[4/4] Video: rendering a ${PREVIEW_SECONDS}s PREVIEW to output/video-preview.mp4"
+    else
+      RENDER_TARGET="$OUTPUT_VIDEO"
+      log "[4/4] Video: rendering output/video.mp4"
+    fi
+
+    if ! render_one_composition "FullVideo" "$RENDER_TARGET" "combined"; then
+      cd "$PROJECT_ROOT"
+      exit 1
+    fi
+    RENDERED_VIDEOS=("$RENDER_TARGET")
   fi
 
-  if ! npx remotion render "${RENDER_ARGS[@]}"; then
-    cd "$PROJECT_ROOT"
-    echo "" >&2
-    echo "Video render failed. This is almost always Remotion's headless" >&2
-    echo "Chromium crashing on launch or mid-render (see" >&2
-    echo "https://remotion.dev/docs/target-closed), not a bug in the" >&2
-    echo "pipeline's output. Currently using browser executable:" >&2
-    echo "  ${BROWSER_EXECUTABLE:-<the Chrome Headless Shell that Remotion itself downloaded>}" >&2
-    echo "Things to try, in order:" >&2
-    echo "  1. Point at a real, already-installed Chrome/Chromium/Edge/Brave" >&2
-    echo "     (this is Remotion's own documented workaround for this error" >&2
-    echo "     and is usually the fix on macOS):" >&2
-    echo "       REMOTION_BROWSER_EXECUTABLE=\"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome\" \\" >&2
-    echo "         ./run-local.sh --skip-docs-server" >&2
-    echo "  2. Clear Remotion's own cached browser download and let it" >&2
-    echo "     re-fetch a fresh copy (fixes a corrupted/partial download):" >&2
-    echo "       rm -rf render-app/node_modules/.remotion" >&2
-    echo "       cd render-app && npx remotion browser ensure && cd .." >&2
-    echo "  3. Re-run with full Chromium logs to see what actually happened:" >&2
-    echo "       RUN_LOCAL_VERBOSE=1 ./run-local.sh --skip-docs-server" >&2
-    echo "  4. If it's a low-memory machine, close other apps and retry — the" >&2
-    echo "     render already uses --concurrency=1 to use as little as possible." >&2
-    exit 1
-  fi
   cd "$PROJECT_ROOT"
 
   if [ -n "$PREVIEW_SECONDS" ]; then
-    echo "Preview written to: $RENDER_TARGET (first ${PREVIEW_SECONDS}s only)"
-    echo "This is a preview, not the finished video — re-run without"
-    echo "--preview to produce the complete output/video.mp4."
+    echo "Preview(s) written (first ${PREVIEW_SECONDS}s only):"
+    for v in "${RENDERED_VIDEOS[@]}"; do echo "  $v"; done
+    echo "Re-run without --preview to produce the complete video(s)."
   else
-    echo "Video written to: $RENDER_TARGET"
+    echo "Video(s) written:"
+    for v in "${RENDERED_VIDEOS[@]}"; do echo "  $v"; done
   fi
 }
 
@@ -402,11 +440,7 @@ if [ "$RUN_VIDEO_RENDER" = "1" ]; then run_video_render; fi
 log "Done."
 if [ "$RUN_DOCS_SERVER" = "1" ]; then echo "Documentation: http://localhost:$DOCS_PORT/docs-viewer/"; fi
 if [ "$RUN_VIDEO_RENDER" = "1" ]; then
-  if [ -n "$PREVIEW_SECONDS" ]; then
-    echo "Preview:       $OUTPUT_PREVIEW (first ${PREVIEW_SECONDS}s)"
-  else
-    echo "Video:         $OUTPUT_VIDEO"
-  fi
+  echo "Videos:        $OUTPUT_DIR/video-<stack>.mp4 (one per detected stack)"
 fi
 
 exit 0

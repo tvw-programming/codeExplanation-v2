@@ -27,10 +27,10 @@ def run_pilot(repo_root: str | Path, output_root: str | Path, render: bool = Tru
 
     project_type = detect_project_type(repo_root)
 
-    records, extraction_stats = extract_repo_with_reuse(repo_root, project_type, output_root / "chunks")
+    records, extraction_stats, chunk_stacks = extract_repo_with_reuse(repo_root, project_type, output_root / "chunks")
     # Run again immediately to prove reuse actually triggers on this repo
     # as-is, not just that the mechanism exists.
-    _, reuse_check_stats = extract_repo_with_reuse(repo_root, project_type, output_root / "chunks")
+    _, reuse_check_stats, _ = extract_repo_with_reuse(repo_root, project_type, output_root / "chunks")
 
     schema_result = validate_records(records)
 
@@ -84,6 +84,7 @@ def run_pilot(repo_root: str | Path, output_root: str | Path, render: bool = Tru
             "estimatedSecondsDistribution": narration_seconds,
         },
         "render": render_results if render else "skipped",
+        "chunkStacks": chunk_stacks,
     }
 
     output_root.mkdir(parents=True, exist_ok=True)
