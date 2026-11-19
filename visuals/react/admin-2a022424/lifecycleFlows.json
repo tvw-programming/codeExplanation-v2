@@ -1,0 +1,452 @@
+[
+  {
+    "id": "flow:AlumniFormDialog:handleSave",
+    "title": "handleSave",
+    "trigger": "handleSave",
+    "steps": [
+      {
+        "order": 1,
+        "action": "event",
+        "label": "handleSave",
+        "nodeId": null,
+        "lineRange": [
+          85,
+          98
+        ],
+        "assumed": false
+      },
+      {
+        "order": 2,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          45,
+          45
+        ],
+        "assumed": true
+      },
+      {
+        "order": 3,
+        "action": "other",
+        "label": "useEffect",
+        "nodeId": null,
+        "lineRange": [
+          47,
+          47
+        ],
+        "assumed": true
+      },
+      {
+        "order": 4,
+        "action": "render",
+        "label": "re-render",
+        "nodeId": null,
+        "lineRange": null,
+        "assumed": true
+      }
+    ],
+    "assumed": true,
+    "confidence": 0.5
+  },
+  {
+    "id": "flow:AlumniFormDialog:inline_onBlur_L146",
+    "title": "inline_onBlur_L146",
+    "trigger": "inline_onBlur_L146",
+    "steps": [
+      {
+        "order": 1,
+        "action": "event",
+        "label": "inline_onBlur_L146",
+        "nodeId": null,
+        "lineRange": [
+          146,
+          146
+        ],
+        "assumed": true
+      },
+      {
+        "order": 2,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          45,
+          45
+        ],
+        "assumed": true
+      },
+      {
+        "order": 3,
+        "action": "other",
+        "label": "useEffect",
+        "nodeId": null,
+        "lineRange": [
+          47,
+          47
+        ],
+        "assumed": true
+      },
+      {
+        "order": 4,
+        "action": "render",
+        "label": "re-render",
+        "nodeId": null,
+        "lineRange": null,
+        "assumed": true
+      }
+    ],
+    "assumed": true,
+    "confidence": 0.5
+  },
+  {
+    "id": "flow:AlumniFormDialog:inline_onChange_L147",
+    "title": "inline_onChange_L147",
+    "trigger": "inline_onChange_L147",
+    "steps": [
+      {
+        "order": 1,
+        "action": "event",
+        "label": "inline_onChange_L147",
+        "nodeId": null,
+        "lineRange": [
+          147,
+          147
+        ],
+        "assumed": true
+      },
+      {
+        "order": 2,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          45,
+          45
+        ],
+        "assumed": true
+      },
+      {
+        "order": 3,
+        "action": "other",
+        "label": "useEffect",
+        "nodeId": null,
+        "lineRange": [
+          47,
+          47
+        ],
+        "assumed": true
+      },
+      {
+        "order": 4,
+        "action": "render",
+        "label": "re-render",
+        "nodeId": null,
+        "lineRange": null,
+        "assumed": true
+      }
+    ],
+    "assumed": true,
+    "confidence": 0.5
+  },
+  {
+    "id": "flow:AlumniFormDialog:inline_onChange_L180",
+    "title": "inline_onChange_L180",
+    "trigger": "inline_onChange_L180",
+    "steps": [
+      {
+        "order": 1,
+        "action": "event",
+        "label": "inline_onChange_L180",
+        "nodeId": null,
+        "lineRange": [
+          180,
+          180
+        ],
+        "assumed": true
+      },
+      {
+        "order": 2,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          45,
+          45
+        ],
+        "assumed": true
+      },
+      {
+        "order": 3,
+        "action": "other",
+        "label": "useEffect",
+        "nodeId": null,
+        "lineRange": [
+          47,
+          47
+        ],
+        "assumed": true
+      },
+      {
+        "order": 4,
+        "action": "render",
+        "label": "re-render",
+        "nodeId": null,
+        "lineRange": null,
+        "assumed": true
+      }
+    ],
+    "assumed": true,
+    "confidence": 0.5
+  },
+  {
+    "id": "flow:AlumniFormDialog:inline_onChange_L187",
+    "title": "inline_onChange_L187",
+    "trigger": "inline_onChange_L187",
+    "steps": [
+      {
+        "order": 1,
+        "action": "event",
+        "label": "inline_onChange_L187",
+        "nodeId": null,
+        "lineRange": [
+          187,
+          187
+        ],
+        "assumed": true
+      },
+      {
+        "order": 2,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          45,
+          45
+        ],
+        "assumed": true
+      },
+      {
+        "order": 3,
+        "action": "other",
+        "label": "useEffect",
+        "nodeId": null,
+        "lineRange": [
+          47,
+          47
+        ],
+        "assumed": true
+      },
+      {
+        "order": 4,
+        "action": "render",
+        "label": "re-render",
+        "nodeId": null,
+        "lineRange": null,
+        "assumed": true
+      }
+    ],
+    "assumed": true,
+    "confidence": 0.5
+  },
+  {
+    "id": "flow:AlumniFormDialog:inline_onClick_L191",
+    "title": "inline_onClick_L191",
+    "trigger": "inline_onClick_L191",
+    "steps": [
+      {
+        "order": 1,
+        "action": "event",
+        "label": "inline_onClick_L191",
+        "nodeId": null,
+        "lineRange": [
+          191,
+          191
+        ],
+        "assumed": true
+      },
+      {
+        "order": 2,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          45,
+          45
+        ],
+        "assumed": true
+      },
+      {
+        "order": 3,
+        "action": "other",
+        "label": "useEffect",
+        "nodeId": null,
+        "lineRange": [
+          47,
+          47
+        ],
+        "assumed": true
+      },
+      {
+        "order": 4,
+        "action": "render",
+        "label": "re-render",
+        "nodeId": null,
+        "lineRange": null,
+        "assumed": true
+      }
+    ],
+    "assumed": true,
+    "confidence": 0.5
+  },
+  {
+    "id": "flow:AlumniFormDialog:inline_onClick_L197",
+    "title": "inline_onClick_L197",
+    "trigger": "inline_onClick_L197",
+    "steps": [
+      {
+        "order": 1,
+        "action": "event",
+        "label": "inline_onClick_L197",
+        "nodeId": null,
+        "lineRange": [
+          197,
+          197
+        ],
+        "assumed": true
+      },
+      {
+        "order": 2,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          45,
+          45
+        ],
+        "assumed": true
+      },
+      {
+        "order": 3,
+        "action": "other",
+        "label": "useEffect",
+        "nodeId": null,
+        "lineRange": [
+          47,
+          47
+        ],
+        "assumed": true
+      },
+      {
+        "order": 4,
+        "action": "render",
+        "label": "re-render",
+        "nodeId": null,
+        "lineRange": null,
+        "assumed": true
+      }
+    ],
+    "assumed": true,
+    "confidence": 0.5
+  },
+  {
+    "id": "flow:AlumniFormDialog:inline_onClick_L207",
+    "title": "inline_onClick_L207",
+    "trigger": "inline_onClick_L207",
+    "steps": [
+      {
+        "order": 1,
+        "action": "event",
+        "label": "inline_onClick_L207",
+        "nodeId": null,
+        "lineRange": [
+          207,
+          207
+        ],
+        "assumed": true
+      },
+      {
+        "order": 2,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          45,
+          45
+        ],
+        "assumed": true
+      },
+      {
+        "order": 3,
+        "action": "other",
+        "label": "useEffect",
+        "nodeId": null,
+        "lineRange": [
+          47,
+          47
+        ],
+        "assumed": true
+      },
+      {
+        "order": 4,
+        "action": "render",
+        "label": "re-render",
+        "nodeId": null,
+        "lineRange": null,
+        "assumed": true
+      }
+    ],
+    "assumed": true,
+    "confidence": 0.5
+  },
+  {
+    "id": "flow:AlumniFormDialog:inline_onClose_L101",
+    "title": "inline_onClose_L101",
+    "trigger": "inline_onClose_L101",
+    "steps": [
+      {
+        "order": 1,
+        "action": "event",
+        "label": "inline_onClose_L101",
+        "nodeId": null,
+        "lineRange": [
+          101,
+          101
+        ],
+        "assumed": true
+      },
+      {
+        "order": 2,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          45,
+          45
+        ],
+        "assumed": true
+      },
+      {
+        "order": 3,
+        "action": "other",
+        "label": "useEffect",
+        "nodeId": null,
+        "lineRange": [
+          47,
+          47
+        ],
+        "assumed": true
+      },
+      {
+        "order": 4,
+        "action": "render",
+        "label": "re-render",
+        "nodeId": null,
+        "lineRange": null,
+        "assumed": true
+      }
+    ],
+    "assumed": true,
+    "confidence": 0.5
+  }
+]

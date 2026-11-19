@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 1,
+  "kind": "component_tree",
+  "rootId": "component:excelWorkbook",
+  "nodes": [
+    {
+      "id": "component:AlumniDraft",
+      "kind": "component",
+      "label": "AlumniDraft",
+      "filePath": "src/features/admin/excelWorkbook.ts",
+      "line": 104,
+      "assumed": false,
+      "meta": {
+        "props": []
+      }
+    },
+    {
+      "id": "component:Blob",
+      "kind": "component",
+      "label": "Blob",
+      "filePath": "src/features/admin/excelWorkbook.ts",
+      "line": 52,
+      "assumed": false,
+      "meta": {
+        "props": []
+      }
+    },
+    {
+      "id": "component:excelWorkbook",
+      "kind": "component",
+      "label": "excelWorkbook",
+      "filePath": "src/features/admin/excelWorkbook.ts",
+      "line": 1,
+      "assumed": false,
+      "meta": {
+        "role": "root"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "mounts:component:excelWorkbook->component:AlumniDraft:1",
+      "kind": "mounts",
+      "from": "component:excelWorkbook",
+      "to": "component:AlumniDraft",
+      "assumed": false,
+      "label": null,
+      "meta": {
+        "props": []
+      }
+    },
+    {
+      "id": "mounts:component:excelWorkbook->component:AlumniDraft:2",
+      "kind": "mounts",
+      "from": "component:excelWorkbook",
+      "to": "component:AlumniDraft",
+      "assumed": false,
+      "label": null,
+      "meta": {
+        "props": []
+      }
+    },
+    {
+      "id": "mounts:component:excelWorkbook->component:Blob:0",
+      "kind": "mounts",
+      "from": "component:excelWorkbook",
+      "to": "component:Blob",
+      "assumed": false,
+      "label": null,
+      "meta": {
+        "props": []
+      }
+    }
+  ]
+}

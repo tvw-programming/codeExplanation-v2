@@ -1,0 +1,450 @@
+{
+  "schemaVersion": 1,
+  "kind": "component_tree",
+  "rootId": "component:ProfilePage",
+  "nodes": [
+    {
+      "id": "component:Alert",
+      "kind": "component",
+      "label": "Alert",
+      "filePath": "src/features/alumni/ProfilePage.tsx",
+      "line": 50,
+      "assumed": false,
+      "meta": {
+        "props": [
+          {
+            "name": "severity",
+            "valueKind": "literal",
+            "valuePreview": "error",
+            "assumed": false
+          }
+        ]
+      }
+    },
+    {
+      "id": "component:Card",
+      "kind": "component",
+      "label": "Card",
+      "filePath": "src/features/alumni/ProfilePage.tsx",
+      "line": 52,
+      "assumed": false,
+      "meta": {
+        "props": [
+          {
+            "name": "variant",
+            "valueKind": "literal",
+            "valuePreview": "outlined",
+            "assumed": false
+          }
+        ]
+      }
+    },
+    {
+      "id": "component:CardContent",
+      "kind": "component",
+      "label": "CardContent",
+      "filePath": "src/features/alumni/ProfilePage.tsx",
+      "line": 53,
+      "assumed": false,
+      "meta": {
+        "props": []
+      }
+    },
+    {
+      "id": "component:ProfilePage",
+      "kind": "component",
+      "label": "ProfilePage",
+      "filePath": "src/features/alumni/ProfilePage.tsx",
+      "line": 1,
+      "assumed": false,
+      "meta": {
+        "role": "root"
+      }
+    },
+    {
+      "id": "component:SchemaFormWrapper",
+      "kind": "component",
+      "label": "SchemaFormWrapper",
+      "filePath": "src/features/alumni/ProfilePage.tsx",
+      "line": 54,
+      "assumed": false,
+      "meta": {
+        "props": [
+          {
+            "name": "schema",
+            "valueKind": "expression",
+            "valuePreview": "schema",
+            "assumed": false
+          },
+          {
+            "name": "submitButtonLabel",
+            "valueKind": "literal",
+            "valuePreview": "Save education",
+            "assumed": false
+          },
+          {
+            "name": "sourceFile",
+            "valueKind": "literal",
+            "valuePreview": "features/alumni/ProfilePage.tsx",
+            "assumed": false
+          }
+        ]
+      }
+    },
+    {
+      "id": "component:Snackbar",
+      "kind": "component",
+      "label": "Snackbar",
+      "filePath": "src/features/alumni/ProfilePage.tsx",
+      "line": 62,
+      "assumed": false,
+      "meta": {
+        "props": [
+          {
+            "name": "open",
+            "valueKind": "expression",
+            "valuePreview": "saved !== null",
+            "assumed": false
+          },
+          {
+            "name": "autoHideDuration",
+            "valueKind": "expression",
+            "valuePreview": "4000",
+            "assumed": false
+          }
+        ]
+      }
+    },
+    {
+      "id": "component:Stack",
+      "kind": "component",
+      "label": "Stack",
+      "filePath": "src/features/alumni/ProfilePage.tsx",
+      "line": 41,
+      "assumed": false,
+      "meta": {
+        "props": [
+          {
+            "name": "spacing",
+            "valueKind": "expression",
+            "valuePreview": "3",
+            "assumed": false
+          }
+        ]
+      }
+    },
+    {
+      "id": "component:Typography",
+      "kind": "component",
+      "label": "Typography",
+      "filePath": "src/features/alumni/ProfilePage.tsx",
+      "line": 43,
+      "assumed": false,
+      "meta": {
+        "props": [
+          {
+            "name": "variant",
+            "valueKind": "literal",
+            "valuePreview": "h6",
+            "assumed": false
+          }
+        ]
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "mounts:component:ProfilePage->component:Alert:3",
+      "kind": "mounts",
+      "from": "component:ProfilePage",
+      "to": "component:Alert",
+      "assumed": false,
+      "label": null,
+      "meta": {
+        "props": [
+          {
+            "name": "severity",
+            "valueKind": "literal",
+            "valuePreview": "error",
+            "assumed": false
+          }
+        ]
+      }
+    },
+    {
+      "id": "mounts:component:ProfilePage->component:Card:4",
+      "kind": "mounts",
+      "from": "component:ProfilePage",
+      "to": "component:Card",
+      "assumed": false,
+      "label": null,
+      "meta": {
+        "props": [
+          {
+            "name": "variant",
+            "valueKind": "literal",
+            "valuePreview": "outlined",
+            "assumed": false
+          }
+        ]
+      }
+    },
+    {
+      "id": "mounts:component:ProfilePage->component:CardContent:5",
+      "kind": "mounts",
+      "from": "component:ProfilePage",
+      "to": "component:CardContent",
+      "assumed": false,
+      "label": null,
+      "meta": {
+        "props": []
+      }
+    },
+    {
+      "id": "mounts:component:ProfilePage->component:SchemaFormWrapper:6",
+      "kind": "mounts",
+      "from": "component:ProfilePage",
+      "to": "component:SchemaFormWrapper",
+      "assumed": false,
+      "label": null,
+      "meta": {
+        "props": [
+          {
+            "name": "schema",
+            "valueKind": "expression",
+            "valuePreview": "schema",
+            "assumed": false
+          },
+          {
+            "name": "submitButtonLabel",
+            "valueKind": "literal",
+            "valuePreview": "Save education",
+            "assumed": false
+          },
+          {
+            "name": "sourceFile",
+            "valueKind": "literal",
+            "valuePreview": "features/alumni/ProfilePage.tsx",
+            "assumed": false
+          }
+        ]
+      }
+    },
+    {
+      "id": "mounts:component:ProfilePage->component:Snackbar:7",
+      "kind": "mounts",
+      "from": "component:ProfilePage",
+      "to": "component:Snackbar",
+      "assumed": false,
+      "label": null,
+      "meta": {
+        "props": [
+          {
+            "name": "open",
+            "valueKind": "expression",
+            "valuePreview": "saved !== null",
+            "assumed": false
+          },
+          {
+            "name": "autoHideDuration",
+            "valueKind": "expression",
+            "valuePreview": "4000",
+            "assumed": false
+          }
+        ]
+      }
+    },
+    {
+      "id": "mounts:component:ProfilePage->component:Stack:0",
+      "kind": "mounts",
+      "from": "component:ProfilePage",
+      "to": "component:Stack",
+      "assumed": false,
+      "label": null,
+      "meta": {
+        "props": [
+          {
+            "name": "spacing",
+            "valueKind": "expression",
+            "valuePreview": "3",
+            "assumed": false
+          }
+        ]
+      }
+    },
+    {
+      "id": "mounts:component:ProfilePage->component:Typography:1",
+      "kind": "mounts",
+      "from": "component:ProfilePage",
+      "to": "component:Typography",
+      "assumed": false,
+      "label": null,
+      "meta": {
+        "props": [
+          {
+            "name": "variant",
+            "valueKind": "literal",
+            "valuePreview": "h6",
+            "assumed": false
+          }
+        ]
+      }
+    },
+    {
+      "id": "mounts:component:ProfilePage->component:Typography:2",
+      "kind": "mounts",
+      "from": "component:ProfilePage",
+      "to": "component:Typography",
+      "assumed": false,
+      "label": null,
+      "meta": {
+        "props": [
+          {
+            "name": "variant",
+            "valueKind": "literal",
+            "valuePreview": "body2",
+            "assumed": false
+          },
+          {
+            "name": "color",
+            "valueKind": "literal",
+            "valuePreview": "text.secondary",
+            "assumed": false
+          }
+        ]
+      }
+    },
+    {
+      "id": "prop:component:ProfilePage->component:Alert:severity:3",
+      "kind": "passes_prop",
+      "from": "component:ProfilePage",
+      "to": "component:Alert",
+      "assumed": false,
+      "label": "severity",
+      "meta": {
+        "valueKind": "literal",
+        "valuePreview": "error"
+      }
+    },
+    {
+      "id": "prop:component:ProfilePage->component:Card:variant:4",
+      "kind": "passes_prop",
+      "from": "component:ProfilePage",
+      "to": "component:Card",
+      "assumed": false,
+      "label": "variant",
+      "meta": {
+        "valueKind": "literal",
+        "valuePreview": "outlined"
+      }
+    },
+    {
+      "id": "prop:component:ProfilePage->component:SchemaFormWrapper:schema:6",
+      "kind": "passes_prop",
+      "from": "component:ProfilePage",
+      "to": "component:SchemaFormWrapper",
+      "assumed": false,
+      "label": "schema",
+      "meta": {
+        "valueKind": "expression",
+        "valuePreview": "schema"
+      }
+    },
+    {
+      "id": "prop:component:ProfilePage->component:SchemaFormWrapper:sourceFile:6",
+      "kind": "passes_prop",
+      "from": "component:ProfilePage",
+      "to": "component:SchemaFormWrapper",
+      "assumed": false,
+      "label": "sourceFile",
+      "meta": {
+        "valueKind": "literal",
+        "valuePreview": "features/alumni/ProfilePage.tsx"
+      }
+    },
+    {
+      "id": "prop:component:ProfilePage->component:SchemaFormWrapper:submitButtonLabel:6",
+      "kind": "passes_prop",
+      "from": "component:ProfilePage",
+      "to": "component:SchemaFormWrapper",
+      "assumed": false,
+      "label": "submitButtonLabel",
+      "meta": {
+        "valueKind": "literal",
+        "valuePreview": "Save education"
+      }
+    },
+    {
+      "id": "prop:component:ProfilePage->component:Snackbar:autoHideDuration:7",
+      "kind": "passes_prop",
+      "from": "component:ProfilePage",
+      "to": "component:Snackbar",
+      "assumed": false,
+      "label": "autoHideDuration",
+      "meta": {
+        "valueKind": "expression",
+        "valuePreview": "4000"
+      }
+    },
+    {
+      "id": "prop:component:ProfilePage->component:Snackbar:open:7",
+      "kind": "passes_prop",
+      "from": "component:ProfilePage",
+      "to": "component:Snackbar",
+      "assumed": false,
+      "label": "open",
+      "meta": {
+        "valueKind": "expression",
+        "valuePreview": "saved !== null"
+      }
+    },
+    {
+      "id": "prop:component:ProfilePage->component:Stack:spacing:0",
+      "kind": "passes_prop",
+      "from": "component:ProfilePage",
+      "to": "component:Stack",
+      "assumed": false,
+      "label": "spacing",
+      "meta": {
+        "valueKind": "expression",
+        "valuePreview": "3"
+      }
+    },
+    {
+      "id": "prop:component:ProfilePage->component:Typography:color:2",
+      "kind": "passes_prop",
+      "from": "component:ProfilePage",
+      "to": "component:Typography",
+      "assumed": false,
+      "label": "color",
+      "meta": {
+        "valueKind": "literal",
+        "valuePreview": "text.secondary"
+      }
+    },
+    {
+      "id": "prop:component:ProfilePage->component:Typography:variant:1",
+      "kind": "passes_prop",
+      "from": "component:ProfilePage",
+      "to": "component:Typography",
+      "assumed": false,
+      "label": "variant",
+      "meta": {
+        "valueKind": "literal",
+        "valuePreview": "h6"
+      }
+    },
+    {
+      "id": "prop:component:ProfilePage->component:Typography:variant:2",
+      "kind": "passes_prop",
+      "from": "component:ProfilePage",
+      "to": "component:Typography",
+      "assumed": false,
+      "label": "variant",
+      "meta": {
+        "valueKind": "literal",
+        "valuePreview": "body2"
+      }
+    }
+  ]
+}

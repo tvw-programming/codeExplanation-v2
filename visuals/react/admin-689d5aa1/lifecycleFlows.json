@@ -1,0 +1,275 @@
+[
+  {
+    "id": "flow:ExcelImportDialog:handleFile",
+    "title": "handleFile",
+    "trigger": "handleFile",
+    "steps": [
+      {
+        "order": 1,
+        "action": "event",
+        "label": "handleFile",
+        "nodeId": null,
+        "lineRange": [
+          53,
+          82
+        ],
+        "assumed": false
+      },
+      {
+        "order": 2,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          36,
+          36
+        ],
+        "assumed": true
+      },
+      {
+        "order": 3,
+        "action": "render",
+        "label": "re-render",
+        "nodeId": null,
+        "lineRange": null,
+        "assumed": true
+      }
+    ],
+    "assumed": true,
+    "confidence": 0.5
+  },
+  {
+    "id": "flow:ExcelImportDialog:inline_onChange_L116",
+    "title": "inline_onChange_L116",
+    "trigger": "inline_onChange_L116",
+    "steps": [
+      {
+        "order": 1,
+        "action": "event",
+        "label": "inline_onChange_L116",
+        "nodeId": null,
+        "lineRange": [
+          116,
+          116
+        ],
+        "assumed": true
+      },
+      {
+        "order": 2,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          36,
+          36
+        ],
+        "assumed": true
+      },
+      {
+        "order": 3,
+        "action": "render",
+        "label": "re-render",
+        "nodeId": null,
+        "lineRange": null,
+        "assumed": true
+      }
+    ],
+    "assumed": true,
+    "confidence": 0.5
+  },
+  {
+    "id": "flow:ExcelImportDialog:inline_onClick_L103",
+    "title": "inline_onClick_L103",
+    "trigger": "inline_onClick_L103",
+    "steps": [
+      {
+        "order": 1,
+        "action": "event",
+        "label": "inline_onClick_L103",
+        "nodeId": null,
+        "lineRange": [
+          103,
+          103
+        ],
+        "assumed": true
+      },
+      {
+        "order": 2,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          36,
+          36
+        ],
+        "assumed": true
+      },
+      {
+        "order": 3,
+        "action": "render",
+        "label": "re-render",
+        "nodeId": null,
+        "lineRange": null,
+        "assumed": true
+      }
+    ],
+    "assumed": true,
+    "confidence": 0.5
+  },
+  {
+    "id": "flow:ExcelImportDialog:inline_onClick_L124",
+    "title": "inline_onClick_L124",
+    "trigger": "inline_onClick_L124",
+    "steps": [
+      {
+        "order": 1,
+        "action": "event",
+        "label": "inline_onClick_L124",
+        "nodeId": null,
+        "lineRange": [
+          124,
+          124
+        ],
+        "assumed": true
+      },
+      {
+        "order": 2,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          36,
+          36
+        ],
+        "assumed": true
+      },
+      {
+        "order": 3,
+        "action": "render",
+        "label": "re-render",
+        "nodeId": null,
+        "lineRange": null,
+        "assumed": true
+      }
+    ],
+    "assumed": true,
+    "confidence": 0.5
+  },
+  {
+    "id": "flow:ExcelImportDialog:inline_onClick_L179",
+    "title": "inline_onClick_L179",
+    "trigger": "inline_onClick_L179",
+    "steps": [
+      {
+        "order": 1,
+        "action": "event",
+        "label": "inline_onClick_L179",
+        "nodeId": null,
+        "lineRange": [
+          179,
+          179
+        ],
+        "assumed": true
+      },
+      {
+        "order": 2,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          36,
+          36
+        ],
+        "assumed": true
+      },
+      {
+        "order": 3,
+        "action": "render",
+        "label": "re-render",
+        "nodeId": null,
+        "lineRange": null,
+        "assumed": true
+      }
+    ],
+    "assumed": true,
+    "confidence": 0.5
+  },
+  {
+    "id": "flow:ExcelImportDialog:inline_onClick_L183",
+    "title": "inline_onClick_L183",
+    "trigger": "inline_onClick_L183",
+    "steps": [
+      {
+        "order": 1,
+        "action": "event",
+        "label": "inline_onClick_L183",
+        "nodeId": null,
+        "lineRange": [
+          183,
+          183
+        ],
+        "assumed": true
+      },
+      {
+        "order": 2,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          36,
+          36
+        ],
+        "assumed": true
+      },
+      {
+        "order": 3,
+        "action": "render",
+        "label": "re-render",
+        "nodeId": null,
+        "lineRange": null,
+        "assumed": true
+      }
+    ],
+    "assumed": true,
+    "confidence": 0.5
+  },
+  {
+    "id": "flow:ExcelImportDialog:inline_onClose_L95",
+    "title": "inline_onClose_L95",
+    "trigger": "inline_onClose_L95",
+    "steps": [
+      {
+        "order": 1,
+        "action": "event",
+        "label": "inline_onClose_L95",
+        "nodeId": null,
+        "lineRange": [
+          95,
+          95
+        ],
+        "assumed": true
+      },
+      {
+        "order": 2,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          36,
+          36
+        ],
+        "assumed": true
+      },
+      {
+        "order": 3,
+        "action": "render",
+        "label": "re-render",
+        "nodeId": null,
+        "lineRange": null,
+        "assumed": true
+      }
+    ],
+    "assumed": true,
+    "confidence": 0.5
+  }
+]

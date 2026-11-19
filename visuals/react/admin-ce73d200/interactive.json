@@ -1,0 +1,4282 @@
+{
+  "chunkId": "admin-ce73d200",
+  "filePath": "src/features/admin/AlumniAdminGrid.tsx",
+  "stack": "react",
+  "visualAvailability": {
+    "componentTree": "partial",
+    "lifecycleFlow": "partial",
+    "interactiveBreakdown": "partial",
+    "reasons": {
+      "componentTree": "No XProps interface found; prop layer incomplete.",
+      "lifecycleFlow": "Hook/render steps hedged under regex fidelity."
+    }
+  },
+  "fidelity": "regex",
+  "visualGraph": {
+    "schemaVersion": 1,
+    "kind": "component_tree",
+    "rootId": "component:AlumniAdminGrid",
+    "nodes": [
+      {
+        "id": "component:AlumniAdminGrid",
+        "kind": "component",
+        "label": "AlumniAdminGrid",
+        "filePath": "src/features/admin/AlumniAdminGrid.tsx",
+        "line": 1,
+        "assumed": false,
+        "meta": {
+          "role": "root"
+        }
+      },
+      {
+        "id": "component:AlumniFormDialog",
+        "kind": "component",
+        "label": "AlumniFormDialog",
+        "filePath": "src/features/admin/AlumniAdminGrid.tsx",
+        "line": 244,
+        "assumed": false,
+        "meta": {
+          "props": [
+            {
+              "name": "open",
+              "valueKind": "expression",
+              "valuePreview": "formOpen",
+              "assumed": false
+            },
+            {
+              "name": "editing",
+              "valueKind": "expression",
+              "valuePreview": "editing",
+              "assumed": false
+            },
+            {
+              "name": "saving",
+              "valueKind": "expression",
+              "valuePreview": "save.isPending",
+              "assumed": false
+            }
+          ]
+        }
+      },
+      {
+        "id": "component:AlumniRow",
+        "kind": "component",
+        "label": "AlumniRow",
+        "filePath": "src/features/admin/AlumniAdminGrid.tsx",
+        "line": 48,
+        "assumed": false,
+        "meta": {
+          "props": []
+        }
+      },
+      {
+        "id": "component:Box",
+        "kind": "component",
+        "label": "Box",
+        "filePath": "src/features/admin/AlumniAdminGrid.tsx",
+        "line": 175,
+        "assumed": false,
+        "meta": {
+          "props": []
+        }
+      },
+      {
+        "id": "component:Button",
+        "kind": "component",
+        "label": "Button",
+        "filePath": "src/features/admin/AlumniAdminGrid.tsx",
+        "line": 177,
+        "assumed": false,
+        "meta": {
+          "props": []
+        }
+      },
+      {
+        "id": "component:Chip",
+        "kind": "component",
+        "label": "Chip",
+        "filePath": "src/features/admin/AlumniAdminGrid.tsx",
+        "line": 124,
+        "assumed": false,
+        "meta": {
+          "props": [
+            {
+              "name": "size",
+              "valueKind": "literal",
+              "valuePreview": "small",
+              "assumed": false
+            },
+            {
+              "name": "variant",
+              "valueKind": "literal",
+              "valuePreview": "outlined",
+              "assumed": false
+            }
+          ]
+        }
+      },
+      {
+        "id": "component:Dialog",
+        "kind": "component",
+        "label": "Dialog",
+        "filePath": "src/features/admin/AlumniAdminGrid.tsx",
+        "line": 259,
+        "assumed": false,
+        "meta": {
+          "props": [
+            {
+              "name": "open",
+              "valueKind": "expression",
+              "valuePreview": "confirmDelete",
+              "assumed": false
+            }
+          ]
+        }
+      },
+      {
+        "id": "component:DialogActions",
+        "kind": "component",
+        "label": "DialogActions",
+        "filePath": "src/features/admin/AlumniAdminGrid.tsx",
+        "line": 268,
+        "assumed": false,
+        "meta": {
+          "props": []
+        }
+      },
+      {
+        "id": "component:DialogContent",
+        "kind": "component",
+        "label": "DialogContent",
+        "filePath": "src/features/admin/AlumniAdminGrid.tsx",
+        "line": 261,
+        "assumed": false,
+        "meta": {
+          "props": []
+        }
+      },
+      {
+        "id": "component:DialogContentText",
+        "kind": "component",
+        "label": "DialogContentText",
+        "filePath": "src/features/admin/AlumniAdminGrid.tsx",
+        "line": 262,
+        "assumed": false,
+        "meta": {
+          "props": []
+        }
+      },
+      {
+        "id": "component:DialogTitle",
+        "kind": "component",
+        "label": "DialogTitle",
+        "filePath": "src/features/admin/AlumniAdminGrid.tsx",
+        "line": 260,
+        "assumed": false,
+        "meta": {
+          "props": []
+        }
+      },
+      {
+        "id": "component:ExcelImportDialog",
+        "kind": "component",
+        "label": "ExcelImportDialog",
+        "filePath": "src/features/admin/AlumniAdminGrid.tsx",
+        "line": 252,
+        "assumed": false,
+        "meta": {
+          "props": [
+            {
+              "name": "open",
+              "valueKind": "expression",
+              "valuePreview": "importOpen",
+              "assumed": false
+            },
+            {
+              "name": "importing",
+              "valueKind": "expression",
+              "valuePreview": "bulkImport.isPending",
+              "assumed": false
+            }
+          ]
+        }
+      },
+      {
+        "id": "component:LinearProgress",
+        "kind": "component",
+        "label": "LinearProgress",
+        "filePath": "src/features/admin/AlumniAdminGrid.tsx",
+        "line": 209,
+        "assumed": false,
+        "meta": {
+          "props": []
+        }
+      },
+      {
+        "id": "component:MenuItem",
+        "kind": "component",
+        "label": "MenuItem",
+        "filePath": "src/features/admin/AlumniAdminGrid.tsx",
+        "line": 171,
+        "assumed": false,
+        "meta": {
+          "props": [
+            {
+              "name": "value",
+              "valueKind": "literal",
+              "valuePreview": "",
+              "assumed": false
+            }
+          ]
+        }
+      },
+      {
+        "id": "component:Snackbar",
+        "kind": "component",
+        "label": "Snackbar",
+        "filePath": "src/features/admin/AlumniAdminGrid.tsx",
+        "line": 281,
+        "assumed": false,
+        "meta": {
+          "props": [
+            {
+              "name": "open",
+              "valueKind": "expression",
+              "valuePreview": "Boolean(toast)",
+              "assumed": false
+            },
+            {
+              "name": "autoHideDuration",
+              "valueKind": "expression",
+              "valuePreview": "4000",
+              "assumed": false
+            }
+          ]
+        }
+      },
+      {
+        "id": "component:Stack",
+        "kind": "component",
+        "label": "Stack",
+        "filePath": "src/features/admin/AlumniAdminGrid.tsx",
+        "line": 154,
+        "assumed": false,
+        "meta": {
+          "props": [
+            {
+              "name": "spacing",
+              "valueKind": "expression",
+              "valuePreview": "2",
+              "assumed": false
+            }
+          ]
+        }
+      },
+      {
+        "id": "component:TextField",
+        "kind": "component",
+        "label": "TextField",
+        "filePath": "src/features/admin/AlumniAdminGrid.tsx",
+        "line": 156,
+        "assumed": false,
+        "meta": {
+          "props": [
+            {
+              "name": "size",
+              "valueKind": "literal",
+              "valuePreview": "small",
+              "assumed": false
+            },
+            {
+              "name": "label",
+              "valueKind": "literal",
+              "valuePreview": "Search name, email or course",
+              "assumed": false
+            },
+            {
+              "name": "value",
+              "valueKind": "expression",
+              "valuePreview": "search",
+              "assumed": false
+            }
+          ]
+        }
+      },
+      {
+        "id": "component:Tooltip",
+        "kind": "component",
+        "label": "Tooltip",
+        "filePath": "src/features/admin/AlumniAdminGrid.tsx",
+        "line": 184,
+        "assumed": false,
+        "meta": {
+          "props": [
+            {
+              "name": "title",
+              "valueKind": "expression",
+              "valuePreview": "selected.length === 0 ? 'Select rows to delete' : ''",
+              "assumed": false
+            }
+          ]
+        }
+      },
+      {
+        "id": "component:Typography",
+        "kind": "component",
+        "label": "Typography",
+        "filePath": "src/features/admin/AlumniAdminGrid.tsx",
+        "line": 232,
+        "assumed": false,
+        "meta": {
+          "props": [
+            {
+              "name": "variant",
+              "valueKind": "literal",
+              "valuePreview": "body2",
+              "assumed": false
+            },
+            {
+              "name": "color",
+              "valueKind": "literal",
+              "valuePreview": "text.secondary",
+              "assumed": false
+            }
+          ]
+        }
+      }
+    ],
+    "edges": [
+      {
+        "id": "mounts:component:AlumniAdminGrid->component:AlumniFormDialog:23",
+        "kind": "mounts",
+        "from": "component:AlumniAdminGrid",
+        "to": "component:AlumniFormDialog",
+        "assumed": false,
+        "label": null,
+        "meta": {
+          "props": [
+            {
+              "name": "open",
+              "valueKind": "expression",
+              "valuePreview": "formOpen",
+              "assumed": false
+            },
+            {
+              "name": "editing",
+              "valueKind": "expression",
+              "valuePreview": "editing",
+              "assumed": false
+            },
+            {
+              "name": "saving",
+              "valueKind": "expression",
+              "valuePreview": "save.isPending",
+              "assumed": false
+            }
+          ]
+        }
+      },
+      {
+        "id": "mounts:component:AlumniAdminGrid->component:AlumniRow:0",
+        "kind": "mounts",
+        "from": "component:AlumniAdminGrid",
+        "to": "component:AlumniRow",
+        "assumed": false,
+        "label": null,
+        "meta": {
+          "props": []
+        }
+      },
+      {
+        "id": "mounts:component:AlumniAdminGrid->component:AlumniRow:1",
+        "kind": "mounts",
+        "from": "component:AlumniAdminGrid",
+        "to": "component:AlumniRow",
+        "assumed": false,
+        "label": null,
+        "meta": {
+          "props": []
+        }
+      },
+      {
+        "id": "mounts:component:AlumniAdminGrid->component:AlumniRow:18",
+        "kind": "mounts",
+        "from": "component:AlumniAdminGrid",
+        "to": "component:AlumniRow",
+        "assumed": false,
+        "label": null,
+        "meta": {
+          "props": []
+        }
+      },
+      {
+        "id": "mounts:component:AlumniAdminGrid->component:AlumniRow:2",
+        "kind": "mounts",
+        "from": "component:AlumniAdminGrid",
+        "to": "component:AlumniRow",
+        "assumed": false,
+        "label": null,
+        "meta": {
+          "props": []
+        }
+      },
+      {
+        "id": "mounts:component:AlumniAdminGrid->component:Box:10",
+        "kind": "mounts",
+        "from": "component:AlumniAdminGrid",
+        "to": "component:Box",
+        "assumed": false,
+        "label": null,
+        "meta": {
+          "props": []
+        }
+      },
+      {
+        "id": "mounts:component:AlumniAdminGrid->component:Box:17",
+        "kind": "mounts",
+        "from": "component:AlumniAdminGrid",
+        "to": "component:Box",
+        "assumed": false,
+        "label": null,
+        "meta": {
+          "props": []
+        }
+      },
+      {
+        "id": "mounts:component:AlumniAdminGrid->component:Button:11",
+        "kind": "mounts",
+        "from": "component:AlumniAdminGrid",
+        "to": "component:Button",
+        "assumed": false,
+        "label": null,
+        "meta": {
+          "props": []
+        }
+      },
+      {
+        "id": "mounts:component:AlumniAdminGrid->component:Button:13",
+        "kind": "mounts",
+        "from": "component:AlumniAdminGrid",
+        "to": "component:Button",
+        "assumed": false,
+        "label": null,
+        "meta": {
+          "props": [
+            {
+              "name": "color",
+              "valueKind": "literal",
+              "valuePreview": "error",
+              "assumed": false
+            }
+          ]
+        }
+      },
+      {
+        "id": "mounts:component:AlumniAdminGrid->component:Button:14",
+        "kind": "mounts",
+        "from": "component:AlumniAdminGrid",
+        "to": "component:Button",
+        "assumed": false,
+        "label": null,
+        "meta": {
+          "props": []
+        }
+      },
+      {
+        "id": "mounts:component:AlumniAdminGrid->component:Button:15",
+        "kind": "mounts",
+        "from": "component:AlumniAdminGrid",
+        "to": "component:Button",
+        "assumed": false,
+        "label": null,
+        "meta": {
+          "props": [
+            {
+              "name": "variant",
+              "valueKind": "literal",
+              "valuePreview": "contained",
+              "assumed": false
+            }
+          ]
+        }
+      },
+      {
+        "id": "mounts:component:AlumniAdminGrid->component:Button:20",
+        "kind": "mounts",
+        "from": "component:AlumniAdminGrid",
+        "to": "component:Button",
+        "assumed": false,
+        "label": null,
+        "meta": {
+          "props": [
+            {
+              "name": "size",
+              "valueKind": "literal",
+              "valuePreview": "small",
+              "assumed": false
+            },
+            {
+              "name": "disabled",
+              "valueKind": "expression",
+              "valuePreview": "page === 0 || isFetching",
+              "assumed": false
+            }
+          ]
+        }
+      },
+      {
+        "id": "mounts:component:AlumniAdminGrid->component:Button:22",
+        "kind": "mounts",
+        "from": "component:AlumniAdminGrid",
+        "to": "component:Button",
+        "assumed": false,
+        "label": null,
+        "meta": {
+          "props": [
+            {
+              "name": "size",
+              "valueKind": "literal",
+              "valuePreview": "small",
+              "assumed": false
+            }
+          ]
+        }
+      },
+      {
+        "id": "mounts:component:AlumniAdminGrid->component:Button:30",
+        "kind": "mounts",
+        "from": "component:AlumniAdminGrid",
+        "to": "component:Button",
+        "assumed": false,
+        "label": null,
+        "meta": {
+          "props": []
+        }
+      },
+      {
+        "id": "mounts:component:AlumniAdminGrid->component:Button:31",
+        "kind": "mounts",
+        "from": "component:AlumniAdminGrid",
+        "to": "component:Button",
+        "assumed": false,
+        "label": null,
+        "meta": {
+          "props": [
+            {
+              "name": "color",
+              "valueKind": "literal",
+              "valuePreview": "error",
+              "assumed": false
+            },
+            {
+              "name": "variant",
+              "valueKind": "literal",
+              "valuePreview": "contained",
+              "assumed": false
+            },
+            {
+              "name": "disabled",
+              "valueKind": "expression",
+              "valuePreview": "remove.isPending",
+              "assumed": false
+            }
+          ]
+        }
+      },
+      {
+        "id": "mounts:component:AlumniAdminGrid->component:Chip:3",
+        "kind": "mounts",
+        "from": "component:AlumniAdminGrid",
+        "to": "component:Chip",
+        "assumed": false,
+        "label": null,
+        "meta": {
+          "props": [
+            {
+              "name": "size",
+              "valueKind": "literal",
+              "valuePreview": "small",
+              "assumed": false
+            },
+            {
+              "name": "variant",
+              "valueKind": "literal",
+              "valuePreview": "outlined",
+              "assumed": false
+            }
+          ]
+        }
+      },
+      {
+        "id": "mounts:component:AlumniAdminGrid->component:Dialog:25",
+        "kind": "mounts",
+        "from": "component:AlumniAdminGrid",
+        "to": "component:Dialog",
+        "assumed": false,
+        "label": null,
+        "meta": {
+          "props": [
+            {
+              "name": "open",
+              "valueKind": "expression",
+              "valuePreview": "confirmDelete",
+              "assumed": false
+            }
+          ]
+        }
+      },
+      {
+        "id": "mounts:component:AlumniAdminGrid->component:DialogActions:29",
+        "kind": "mounts",
+        "from": "component:AlumniAdminGrid",
+        "to": "component:DialogActions",
+        "assumed": false,
+        "label": null,
+        "meta": {
+          "props": []
+        }
+      },
+      {
+        "id": "mounts:component:AlumniAdminGrid->component:DialogContent:27",
+        "kind": "mounts",
+        "from": "component:AlumniAdminGrid",
+        "to": "component:DialogContent",
+        "assumed": false,
+        "label": null,
+        "meta": {
+          "props": []
+        }
+      },
+      {
+        "id": "mounts:component:AlumniAdminGrid->component:DialogContentText:28",
+        "kind": "mounts",
+        "from": "component:AlumniAdminGrid",
+        "to": "component:DialogContentText",
+        "assumed": false,
+        "label": null,
+        "meta": {
+          "props": []
+        }
+      },
+      {
+        "id": "mounts:component:AlumniAdminGrid->component:DialogTitle:26",
+        "kind": "mounts",
+        "from": "component:AlumniAdminGrid",
+        "to": "component:DialogTitle",
+        "assumed": false,
+        "label": null,
+        "meta": {
+          "props": []
+        }
+      },
+      {
+        "id": "mounts:component:AlumniAdminGrid->component:ExcelImportDialog:24",
+        "kind": "mounts",
+        "from": "component:AlumniAdminGrid",
+        "to": "component:ExcelImportDialog",
+        "assumed": false,
+        "label": null,
+        "meta": {
+          "props": [
+            {
+              "name": "open",
+              "valueKind": "expression",
+              "valuePreview": "importOpen",
+              "assumed": false
+            },
+            {
+              "name": "importing",
+              "valueKind": "expression",
+              "valuePreview": "bulkImport.isPending",
+              "assumed": false
+            }
+          ]
+        }
+      },
+      {
+        "id": "mounts:component:AlumniAdminGrid->component:LinearProgress:16",
+        "kind": "mounts",
+        "from": "component:AlumniAdminGrid",
+        "to": "component:LinearProgress",
+        "assumed": false,
+        "label": null,
+        "meta": {
+          "props": []
+        }
+      },
+      {
+        "id": "mounts:component:AlumniAdminGrid->component:MenuItem:8",
+        "kind": "mounts",
+        "from": "component:AlumniAdminGrid",
+        "to": "component:MenuItem",
+        "assumed": false,
+        "label": null,
+        "meta": {
+          "props": [
+            {
+              "name": "value",
+              "valueKind": "literal",
+              "valuePreview": "",
+              "assumed": false
+            }
+          ]
+        }
+      },
+      {
+        "id": "mounts:component:AlumniAdminGrid->component:MenuItem:9",
+        "kind": "mounts",
+        "from": "component:AlumniAdminGrid",
+        "to": "component:MenuItem",
+        "assumed": true,
+        "label": null,
+        "meta": {
+          "props": [
+            {
+              "name": "key",
+              "valueKind": "expression",
+              "valuePreview": "s",
+              "assumed": false
+            },
+            {
+              "name": "value",
+              "valueKind": "expression",
+              "valuePreview": "s",
+              "assumed": false
+            }
+          ]
+        }
+      },
+      {
+        "id": "mounts:component:AlumniAdminGrid->component:Snackbar:32",
+        "kind": "mounts",
+        "from": "component:AlumniAdminGrid",
+        "to": "component:Snackbar",
+        "assumed": false,
+        "label": null,
+        "meta": {
+          "props": [
+            {
+              "name": "open",
+              "valueKind": "expression",
+              "valuePreview": "Boolean(toast)",
+              "assumed": false
+            },
+            {
+              "name": "autoHideDuration",
+              "valueKind": "expression",
+              "valuePreview": "4000",
+              "assumed": false
+            }
+          ]
+        }
+      },
+      {
+        "id": "mounts:component:AlumniAdminGrid->component:Stack:19",
+        "kind": "mounts",
+        "from": "component:AlumniAdminGrid",
+        "to": "component:Stack",
+        "assumed": false,
+        "label": null,
+        "meta": {
+          "props": [
+            {
+              "name": "direction",
+              "valueKind": "literal",
+              "valuePreview": "row",
+              "assumed": false
+            },
+            {
+              "name": "spacing",
+              "valueKind": "expression",
+              "valuePreview": "2",
+              "assumed": false
+            }
+          ]
+        }
+      },
+      {
+        "id": "mounts:component:AlumniAdminGrid->component:Stack:4",
+        "kind": "mounts",
+        "from": "component:AlumniAdminGrid",
+        "to": "component:Stack",
+        "assumed": false,
+        "label": null,
+        "meta": {
+          "props": [
+            {
+              "name": "spacing",
+              "valueKind": "expression",
+              "valuePreview": "2",
+              "assumed": false
+            }
+          ]
+        }
+      },
+      {
+        "id": "mounts:component:AlumniAdminGrid->component:Stack:5",
+        "kind": "mounts",
+        "from": "component:AlumniAdminGrid",
+        "to": "component:Stack",
+        "assumed": false,
+        "label": null,
+        "meta": {
+          "props": [
+            {
+              "name": "direction",
+              "valueKind": "literal",
+              "valuePreview": "row",
+              "assumed": false
+            },
+            {
+              "name": "spacing",
+              "valueKind": "expression",
+              "valuePreview": "2",
+              "assumed": false
+            }
+          ]
+        }
+      },
+      {
+        "id": "mounts:component:AlumniAdminGrid->component:TextField:6",
+        "kind": "mounts",
+        "from": "component:AlumniAdminGrid",
+        "to": "component:TextField",
+        "assumed": false,
+        "label": null,
+        "meta": {
+          "props": [
+            {
+              "name": "size",
+              "valueKind": "literal",
+              "valuePreview": "small",
+              "assumed": false
+            },
+            {
+              "name": "label",
+              "valueKind": "literal",
+              "valuePreview": "Search name, email or course",
+              "assumed": false
+            },
+            {
+              "name": "value",
+              "valueKind": "expression",
+              "valuePreview": "search",
+              "assumed": false
+            }
+          ]
+        }
+      },
+      {
+        "id": "mounts:component:AlumniAdminGrid->component:TextField:7",
+        "kind": "mounts",
+        "from": "component:AlumniAdminGrid",
+        "to": "component:TextField",
+        "assumed": false,
+        "label": null,
+        "meta": {
+          "props": [
+            {
+              "name": "size",
+              "valueKind": "literal",
+              "valuePreview": "small",
+              "assumed": false
+            },
+            {
+              "name": "label",
+              "valueKind": "literal",
+              "valuePreview": "Status",
+              "assumed": false
+            },
+            {
+              "name": "value",
+              "valueKind": "expression",
+              "valuePreview": "status",
+              "assumed": false
+            }
+          ]
+        }
+      },
+      {
+        "id": "mounts:component:AlumniAdminGrid->component:Tooltip:12",
+        "kind": "mounts",
+        "from": "component:AlumniAdminGrid",
+        "to": "component:Tooltip",
+        "assumed": false,
+        "label": null,
+        "meta": {
+          "props": [
+            {
+              "name": "title",
+              "valueKind": "expression",
+              "valuePreview": "selected.length === 0 ? 'Select rows to delete' : ''",
+              "assumed": false
+            }
+          ]
+        }
+      },
+      {
+        "id": "mounts:component:AlumniAdminGrid->component:Typography:21",
+        "kind": "mounts",
+        "from": "component:AlumniAdminGrid",
+        "to": "component:Typography",
+        "assumed": false,
+        "label": null,
+        "meta": {
+          "props": [
+            {
+              "name": "variant",
+              "valueKind": "literal",
+              "valuePreview": "body2",
+              "assumed": false
+            },
+            {
+              "name": "color",
+              "valueKind": "literal",
+              "valuePreview": "text.secondary",
+              "assumed": false
+            }
+          ]
+        }
+      },
+      {
+        "id": "prop:component:AlumniAdminGrid->component:AlumniFormDialog:editing:23",
+        "kind": "passes_prop",
+        "from": "component:AlumniAdminGrid",
+        "to": "component:AlumniFormDialog",
+        "assumed": false,
+        "label": "editing",
+        "meta": {
+          "valueKind": "expression",
+          "valuePreview": "editing"
+        }
+      },
+      {
+        "id": "prop:component:AlumniAdminGrid->component:AlumniFormDialog:open:23",
+        "kind": "passes_prop",
+        "from": "component:AlumniAdminGrid",
+        "to": "component:AlumniFormDialog",
+        "assumed": false,
+        "label": "open",
+        "meta": {
+          "valueKind": "expression",
+          "valuePreview": "formOpen"
+        }
+      },
+      {
+        "id": "prop:component:AlumniAdminGrid->component:AlumniFormDialog:saving:23",
+        "kind": "passes_prop",
+        "from": "component:AlumniAdminGrid",
+        "to": "component:AlumniFormDialog",
+        "assumed": false,
+        "label": "saving",
+        "meta": {
+          "valueKind": "expression",
+          "valuePreview": "save.isPending"
+        }
+      },
+      {
+        "id": "prop:component:AlumniAdminGrid->component:Button:color:13",
+        "kind": "passes_prop",
+        "from": "component:AlumniAdminGrid",
+        "to": "component:Button",
+        "assumed": false,
+        "label": "color",
+        "meta": {
+          "valueKind": "literal",
+          "valuePreview": "error"
+        }
+      },
+      {
+        "id": "prop:component:AlumniAdminGrid->component:Button:color:31",
+        "kind": "passes_prop",
+        "from": "component:AlumniAdminGrid",
+        "to": "component:Button",
+        "assumed": false,
+        "label": "color",
+        "meta": {
+          "valueKind": "literal",
+          "valuePreview": "error"
+        }
+      },
+      {
+        "id": "prop:component:AlumniAdminGrid->component:Button:disabled:20",
+        "kind": "passes_prop",
+        "from": "component:AlumniAdminGrid",
+        "to": "component:Button",
+        "assumed": false,
+        "label": "disabled",
+        "meta": {
+          "valueKind": "expression",
+          "valuePreview": "page === 0 || isFetching"
+        }
+      },
+      {
+        "id": "prop:component:AlumniAdminGrid->component:Button:disabled:31",
+        "kind": "passes_prop",
+        "from": "component:AlumniAdminGrid",
+        "to": "component:Button",
+        "assumed": false,
+        "label": "disabled",
+        "meta": {
+          "valueKind": "expression",
+          "valuePreview": "remove.isPending"
+        }
+      },
+      {
+        "id": "prop:component:AlumniAdminGrid->component:Button:size:20",
+        "kind": "passes_prop",
+        "from": "component:AlumniAdminGrid",
+        "to": "component:Button",
+        "assumed": false,
+        "label": "size",
+        "meta": {
+          "valueKind": "literal",
+          "valuePreview": "small"
+        }
+      },
+      {
+        "id": "prop:component:AlumniAdminGrid->component:Button:size:22",
+        "kind": "passes_prop",
+        "from": "component:AlumniAdminGrid",
+        "to": "component:Button",
+        "assumed": false,
+        "label": "size",
+        "meta": {
+          "valueKind": "literal",
+          "valuePreview": "small"
+        }
+      },
+      {
+        "id": "prop:component:AlumniAdminGrid->component:Button:variant:15",
+        "kind": "passes_prop",
+        "from": "component:AlumniAdminGrid",
+        "to": "component:Button",
+        "assumed": false,
+        "label": "variant",
+        "meta": {
+          "valueKind": "literal",
+          "valuePreview": "contained"
+        }
+      },
+      {
+        "id": "prop:component:AlumniAdminGrid->component:Button:variant:31",
+        "kind": "passes_prop",
+        "from": "component:AlumniAdminGrid",
+        "to": "component:Button",
+        "assumed": false,
+        "label": "variant",
+        "meta": {
+          "valueKind": "literal",
+          "valuePreview": "contained"
+        }
+      },
+      {
+        "id": "prop:component:AlumniAdminGrid->component:Chip:size:3",
+        "kind": "passes_prop",
+        "from": "component:AlumniAdminGrid",
+        "to": "component:Chip",
+        "assumed": false,
+        "label": "size",
+        "meta": {
+          "valueKind": "literal",
+          "valuePreview": "small"
+        }
+      },
+      {
+        "id": "prop:component:AlumniAdminGrid->component:Chip:variant:3",
+        "kind": "passes_prop",
+        "from": "component:AlumniAdminGrid",
+        "to": "component:Chip",
+        "assumed": false,
+        "label": "variant",
+        "meta": {
+          "valueKind": "literal",
+          "valuePreview": "outlined"
+        }
+      },
+      {
+        "id": "prop:component:AlumniAdminGrid->component:Dialog:open:25",
+        "kind": "passes_prop",
+        "from": "component:AlumniAdminGrid",
+        "to": "component:Dialog",
+        "assumed": false,
+        "label": "open",
+        "meta": {
+          "valueKind": "expression",
+          "valuePreview": "confirmDelete"
+        }
+      },
+      {
+        "id": "prop:component:AlumniAdminGrid->component:ExcelImportDialog:importing:24",
+        "kind": "passes_prop",
+        "from": "component:AlumniAdminGrid",
+        "to": "component:ExcelImportDialog",
+        "assumed": false,
+        "label": "importing",
+        "meta": {
+          "valueKind": "expression",
+          "valuePreview": "bulkImport.isPending"
+        }
+      },
+      {
+        "id": "prop:component:AlumniAdminGrid->component:ExcelImportDialog:open:24",
+        "kind": "passes_prop",
+        "from": "component:AlumniAdminGrid",
+        "to": "component:ExcelImportDialog",
+        "assumed": false,
+        "label": "open",
+        "meta": {
+          "valueKind": "expression",
+          "valuePreview": "importOpen"
+        }
+      },
+      {
+        "id": "prop:component:AlumniAdminGrid->component:MenuItem:key:9",
+        "kind": "passes_prop",
+        "from": "component:AlumniAdminGrid",
+        "to": "component:MenuItem",
+        "assumed": false,
+        "label": "key",
+        "meta": {
+          "valueKind": "expression",
+          "valuePreview": "s"
+        }
+      },
+      {
+        "id": "prop:component:AlumniAdminGrid->component:MenuItem:value:8",
+        "kind": "passes_prop",
+        "from": "component:AlumniAdminGrid",
+        "to": "component:MenuItem",
+        "assumed": false,
+        "label": "value",
+        "meta": {
+          "valueKind": "literal",
+          "valuePreview": ""
+        }
+      },
+      {
+        "id": "prop:component:AlumniAdminGrid->component:MenuItem:value:9",
+        "kind": "passes_prop",
+        "from": "component:AlumniAdminGrid",
+        "to": "component:MenuItem",
+        "assumed": false,
+        "label": "value",
+        "meta": {
+          "valueKind": "expression",
+          "valuePreview": "s"
+        }
+      },
+      {
+        "id": "prop:component:AlumniAdminGrid->component:Snackbar:autoHideDuration:32",
+        "kind": "passes_prop",
+        "from": "component:AlumniAdminGrid",
+        "to": "component:Snackbar",
+        "assumed": false,
+        "label": "autoHideDuration",
+        "meta": {
+          "valueKind": "expression",
+          "valuePreview": "4000"
+        }
+      },
+      {
+        "id": "prop:component:AlumniAdminGrid->component:Snackbar:open:32",
+        "kind": "passes_prop",
+        "from": "component:AlumniAdminGrid",
+        "to": "component:Snackbar",
+        "assumed": false,
+        "label": "open",
+        "meta": {
+          "valueKind": "expression",
+          "valuePreview": "Boolean(toast)"
+        }
+      },
+      {
+        "id": "prop:component:AlumniAdminGrid->component:Stack:direction:19",
+        "kind": "passes_prop",
+        "from": "component:AlumniAdminGrid",
+        "to": "component:Stack",
+        "assumed": false,
+        "label": "direction",
+        "meta": {
+          "valueKind": "literal",
+          "valuePreview": "row"
+        }
+      },
+      {
+        "id": "prop:component:AlumniAdminGrid->component:Stack:direction:5",
+        "kind": "passes_prop",
+        "from": "component:AlumniAdminGrid",
+        "to": "component:Stack",
+        "assumed": false,
+        "label": "direction",
+        "meta": {
+          "valueKind": "literal",
+          "valuePreview": "row"
+        }
+      },
+      {
+        "id": "prop:component:AlumniAdminGrid->component:Stack:spacing:19",
+        "kind": "passes_prop",
+        "from": "component:AlumniAdminGrid",
+        "to": "component:Stack",
+        "assumed": false,
+        "label": "spacing",
+        "meta": {
+          "valueKind": "expression",
+          "valuePreview": "2"
+        }
+      },
+      {
+        "id": "prop:component:AlumniAdminGrid->component:Stack:spacing:4",
+        "kind": "passes_prop",
+        "from": "component:AlumniAdminGrid",
+        "to": "component:Stack",
+        "assumed": false,
+        "label": "spacing",
+        "meta": {
+          "valueKind": "expression",
+          "valuePreview": "2"
+        }
+      },
+      {
+        "id": "prop:component:AlumniAdminGrid->component:Stack:spacing:5",
+        "kind": "passes_prop",
+        "from": "component:AlumniAdminGrid",
+        "to": "component:Stack",
+        "assumed": false,
+        "label": "spacing",
+        "meta": {
+          "valueKind": "expression",
+          "valuePreview": "2"
+        }
+      },
+      {
+        "id": "prop:component:AlumniAdminGrid->component:TextField:label:6",
+        "kind": "passes_prop",
+        "from": "component:AlumniAdminGrid",
+        "to": "component:TextField",
+        "assumed": false,
+        "label": "label",
+        "meta": {
+          "valueKind": "literal",
+          "valuePreview": "Search name, email or course"
+        }
+      },
+      {
+        "id": "prop:component:AlumniAdminGrid->component:TextField:label:7",
+        "kind": "passes_prop",
+        "from": "component:AlumniAdminGrid",
+        "to": "component:TextField",
+        "assumed": false,
+        "label": "label",
+        "meta": {
+          "valueKind": "literal",
+          "valuePreview": "Status"
+        }
+      },
+      {
+        "id": "prop:component:AlumniAdminGrid->component:TextField:size:6",
+        "kind": "passes_prop",
+        "from": "component:AlumniAdminGrid",
+        "to": "component:TextField",
+        "assumed": false,
+        "label": "size",
+        "meta": {
+          "valueKind": "literal",
+          "valuePreview": "small"
+        }
+      },
+      {
+        "id": "prop:component:AlumniAdminGrid->component:TextField:size:7",
+        "kind": "passes_prop",
+        "from": "component:AlumniAdminGrid",
+        "to": "component:TextField",
+        "assumed": false,
+        "label": "size",
+        "meta": {
+          "valueKind": "literal",
+          "valuePreview": "small"
+        }
+      },
+      {
+        "id": "prop:component:AlumniAdminGrid->component:TextField:value:6",
+        "kind": "passes_prop",
+        "from": "component:AlumniAdminGrid",
+        "to": "component:TextField",
+        "assumed": false,
+        "label": "value",
+        "meta": {
+          "valueKind": "expression",
+          "valuePreview": "search"
+        }
+      },
+      {
+        "id": "prop:component:AlumniAdminGrid->component:TextField:value:7",
+        "kind": "passes_prop",
+        "from": "component:AlumniAdminGrid",
+        "to": "component:TextField",
+        "assumed": false,
+        "label": "value",
+        "meta": {
+          "valueKind": "expression",
+          "valuePreview": "status"
+        }
+      },
+      {
+        "id": "prop:component:AlumniAdminGrid->component:Tooltip:title:12",
+        "kind": "passes_prop",
+        "from": "component:AlumniAdminGrid",
+        "to": "component:Tooltip",
+        "assumed": false,
+        "label": "title",
+        "meta": {
+          "valueKind": "expression",
+          "valuePreview": "selected.length === 0 ? 'Select rows to delete' : ''"
+        }
+      },
+      {
+        "id": "prop:component:AlumniAdminGrid->component:Typography:color:21",
+        "kind": "passes_prop",
+        "from": "component:AlumniAdminGrid",
+        "to": "component:Typography",
+        "assumed": false,
+        "label": "color",
+        "meta": {
+          "valueKind": "literal",
+          "valuePreview": "text.secondary"
+        }
+      },
+      {
+        "id": "prop:component:AlumniAdminGrid->component:Typography:variant:21",
+        "kind": "passes_prop",
+        "from": "component:AlumniAdminGrid",
+        "to": "component:Typography",
+        "assumed": false,
+        "label": "variant",
+        "meta": {
+          "valueKind": "literal",
+          "valuePreview": "body2"
+        }
+      }
+    ]
+  },
+  "lifecycleFlows": [
+    {
+      "id": "flow:AlumniAdminGrid:inline_onChange_L160",
+      "title": "inline_onChange_L160",
+      "trigger": "inline_onChange_L160",
+      "steps": [
+        {
+          "order": 1,
+          "action": "event",
+          "label": "inline_onChange_L160",
+          "nodeId": null,
+          "lineRange": [
+            160,
+            160
+          ],
+          "assumed": true
+        },
+        {
+          "order": 2,
+          "action": "other",
+          "label": "useQueryClient",
+          "nodeId": null,
+          "lineRange": [
+            40,
+            40
+          ],
+          "assumed": true
+        },
+        {
+          "order": 3,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            42,
+            42
+          ],
+          "assumed": true
+        },
+        {
+          "order": 4,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            43,
+            43
+          ],
+          "assumed": true
+        },
+        {
+          "order": 5,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            44,
+            44
+          ],
+          "assumed": true
+        },
+        {
+          "order": 6,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            47,
+            47
+          ],
+          "assumed": true
+        },
+        {
+          "order": 7,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            49,
+            49
+          ],
+          "assumed": true
+        },
+        {
+          "order": 8,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            50,
+            50
+          ],
+          "assumed": true
+        },
+        {
+          "order": 9,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            51,
+            51
+          ],
+          "assumed": true
+        },
+        {
+          "order": 10,
+          "action": "other",
+          "label": "useDeferredValue",
+          "nodeId": null,
+          "lineRange": [
+            55,
+            55
+          ],
+          "assumed": true
+        },
+        {
+          "order": 11,
+          "action": "other",
+          "label": "useQuery",
+          "nodeId": null,
+          "lineRange": [
+            57,
+            57
+          ],
+          "assumed": true
+        },
+        {
+          "order": 12,
+          "action": "other",
+          "label": "useMutation",
+          "nodeId": null,
+          "lineRange": [
+            74,
+            74
+          ],
+          "assumed": true
+        },
+        {
+          "order": 13,
+          "action": "other",
+          "label": "useMutation",
+          "nodeId": null,
+          "lineRange": [
+            83,
+            83
+          ],
+          "assumed": true
+        },
+        {
+          "order": 14,
+          "action": "other",
+          "label": "useMutation",
+          "nodeId": null,
+          "lineRange": [
+            91,
+            91
+          ],
+          "assumed": true
+        },
+        {
+          "order": 15,
+          "action": "render",
+          "label": "re-render",
+          "nodeId": null,
+          "lineRange": null,
+          "assumed": true
+        }
+      ],
+      "assumed": true,
+      "confidence": 0.5
+    },
+    {
+      "id": "flow:AlumniAdminGrid:inline_onChange_L168",
+      "title": "inline_onChange_L168",
+      "trigger": "inline_onChange_L168",
+      "steps": [
+        {
+          "order": 1,
+          "action": "event",
+          "label": "inline_onChange_L168",
+          "nodeId": null,
+          "lineRange": [
+            168,
+            168
+          ],
+          "assumed": true
+        },
+        {
+          "order": 2,
+          "action": "other",
+          "label": "useQueryClient",
+          "nodeId": null,
+          "lineRange": [
+            40,
+            40
+          ],
+          "assumed": true
+        },
+        {
+          "order": 3,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            42,
+            42
+          ],
+          "assumed": true
+        },
+        {
+          "order": 4,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            43,
+            43
+          ],
+          "assumed": true
+        },
+        {
+          "order": 5,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            44,
+            44
+          ],
+          "assumed": true
+        },
+        {
+          "order": 6,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            47,
+            47
+          ],
+          "assumed": true
+        },
+        {
+          "order": 7,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            49,
+            49
+          ],
+          "assumed": true
+        },
+        {
+          "order": 8,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            50,
+            50
+          ],
+          "assumed": true
+        },
+        {
+          "order": 9,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            51,
+            51
+          ],
+          "assumed": true
+        },
+        {
+          "order": 10,
+          "action": "other",
+          "label": "useDeferredValue",
+          "nodeId": null,
+          "lineRange": [
+            55,
+            55
+          ],
+          "assumed": true
+        },
+        {
+          "order": 11,
+          "action": "other",
+          "label": "useQuery",
+          "nodeId": null,
+          "lineRange": [
+            57,
+            57
+          ],
+          "assumed": true
+        },
+        {
+          "order": 12,
+          "action": "other",
+          "label": "useMutation",
+          "nodeId": null,
+          "lineRange": [
+            74,
+            74
+          ],
+          "assumed": true
+        },
+        {
+          "order": 13,
+          "action": "other",
+          "label": "useMutation",
+          "nodeId": null,
+          "lineRange": [
+            83,
+            83
+          ],
+          "assumed": true
+        },
+        {
+          "order": 14,
+          "action": "other",
+          "label": "useMutation",
+          "nodeId": null,
+          "lineRange": [
+            91,
+            91
+          ],
+          "assumed": true
+        },
+        {
+          "order": 15,
+          "action": "render",
+          "label": "re-render",
+          "nodeId": null,
+          "lineRange": null,
+          "assumed": true
+        }
+      ],
+      "assumed": true,
+      "confidence": 0.5
+    },
+    {
+      "id": "flow:AlumniAdminGrid:inline_onClick_L180",
+      "title": "inline_onClick_L180",
+      "trigger": "inline_onClick_L180",
+      "steps": [
+        {
+          "order": 1,
+          "action": "event",
+          "label": "inline_onClick_L180",
+          "nodeId": null,
+          "lineRange": [
+            180,
+            180
+          ],
+          "assumed": true
+        },
+        {
+          "order": 2,
+          "action": "other",
+          "label": "useQueryClient",
+          "nodeId": null,
+          "lineRange": [
+            40,
+            40
+          ],
+          "assumed": true
+        },
+        {
+          "order": 3,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            42,
+            42
+          ],
+          "assumed": true
+        },
+        {
+          "order": 4,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            43,
+            43
+          ],
+          "assumed": true
+        },
+        {
+          "order": 5,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            44,
+            44
+          ],
+          "assumed": true
+        },
+        {
+          "order": 6,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            47,
+            47
+          ],
+          "assumed": true
+        },
+        {
+          "order": 7,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            49,
+            49
+          ],
+          "assumed": true
+        },
+        {
+          "order": 8,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            50,
+            50
+          ],
+          "assumed": true
+        },
+        {
+          "order": 9,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            51,
+            51
+          ],
+          "assumed": true
+        },
+        {
+          "order": 10,
+          "action": "other",
+          "label": "useDeferredValue",
+          "nodeId": null,
+          "lineRange": [
+            55,
+            55
+          ],
+          "assumed": true
+        },
+        {
+          "order": 11,
+          "action": "other",
+          "label": "useQuery",
+          "nodeId": null,
+          "lineRange": [
+            57,
+            57
+          ],
+          "assumed": true
+        },
+        {
+          "order": 12,
+          "action": "other",
+          "label": "useMutation",
+          "nodeId": null,
+          "lineRange": [
+            74,
+            74
+          ],
+          "assumed": true
+        },
+        {
+          "order": 13,
+          "action": "other",
+          "label": "useMutation",
+          "nodeId": null,
+          "lineRange": [
+            83,
+            83
+          ],
+          "assumed": true
+        },
+        {
+          "order": 14,
+          "action": "other",
+          "label": "useMutation",
+          "nodeId": null,
+          "lineRange": [
+            91,
+            91
+          ],
+          "assumed": true
+        },
+        {
+          "order": 15,
+          "action": "render",
+          "label": "re-render",
+          "nodeId": null,
+          "lineRange": null,
+          "assumed": true
+        }
+      ],
+      "assumed": true,
+      "confidence": 0.5
+    },
+    {
+      "id": "flow:AlumniAdminGrid:inline_onClick_L190",
+      "title": "inline_onClick_L190",
+      "trigger": "inline_onClick_L190",
+      "steps": [
+        {
+          "order": 1,
+          "action": "event",
+          "label": "inline_onClick_L190",
+          "nodeId": null,
+          "lineRange": [
+            190,
+            190
+          ],
+          "assumed": true
+        },
+        {
+          "order": 2,
+          "action": "other",
+          "label": "useQueryClient",
+          "nodeId": null,
+          "lineRange": [
+            40,
+            40
+          ],
+          "assumed": true
+        },
+        {
+          "order": 3,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            42,
+            42
+          ],
+          "assumed": true
+        },
+        {
+          "order": 4,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            43,
+            43
+          ],
+          "assumed": true
+        },
+        {
+          "order": 5,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            44,
+            44
+          ],
+          "assumed": true
+        },
+        {
+          "order": 6,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            47,
+            47
+          ],
+          "assumed": true
+        },
+        {
+          "order": 7,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            49,
+            49
+          ],
+          "assumed": true
+        },
+        {
+          "order": 8,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            50,
+            50
+          ],
+          "assumed": true
+        },
+        {
+          "order": 9,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            51,
+            51
+          ],
+          "assumed": true
+        },
+        {
+          "order": 10,
+          "action": "other",
+          "label": "useDeferredValue",
+          "nodeId": null,
+          "lineRange": [
+            55,
+            55
+          ],
+          "assumed": true
+        },
+        {
+          "order": 11,
+          "action": "other",
+          "label": "useQuery",
+          "nodeId": null,
+          "lineRange": [
+            57,
+            57
+          ],
+          "assumed": true
+        },
+        {
+          "order": 12,
+          "action": "other",
+          "label": "useMutation",
+          "nodeId": null,
+          "lineRange": [
+            74,
+            74
+          ],
+          "assumed": true
+        },
+        {
+          "order": 13,
+          "action": "other",
+          "label": "useMutation",
+          "nodeId": null,
+          "lineRange": [
+            83,
+            83
+          ],
+          "assumed": true
+        },
+        {
+          "order": 14,
+          "action": "other",
+          "label": "useMutation",
+          "nodeId": null,
+          "lineRange": [
+            91,
+            91
+          ],
+          "assumed": true
+        },
+        {
+          "order": 15,
+          "action": "render",
+          "label": "re-render",
+          "nodeId": null,
+          "lineRange": null,
+          "assumed": true
+        }
+      ],
+      "assumed": true,
+      "confidence": 0.5
+    },
+    {
+      "id": "flow:AlumniAdminGrid:inline_onClick_L196",
+      "title": "inline_onClick_L196",
+      "trigger": "inline_onClick_L196",
+      "steps": [
+        {
+          "order": 1,
+          "action": "event",
+          "label": "inline_onClick_L196",
+          "nodeId": null,
+          "lineRange": [
+            196,
+            196
+          ],
+          "assumed": true
+        },
+        {
+          "order": 2,
+          "action": "other",
+          "label": "useQueryClient",
+          "nodeId": null,
+          "lineRange": [
+            40,
+            40
+          ],
+          "assumed": true
+        },
+        {
+          "order": 3,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            42,
+            42
+          ],
+          "assumed": true
+        },
+        {
+          "order": 4,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            43,
+            43
+          ],
+          "assumed": true
+        },
+        {
+          "order": 5,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            44,
+            44
+          ],
+          "assumed": true
+        },
+        {
+          "order": 6,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            47,
+            47
+          ],
+          "assumed": true
+        },
+        {
+          "order": 7,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            49,
+            49
+          ],
+          "assumed": true
+        },
+        {
+          "order": 8,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            50,
+            50
+          ],
+          "assumed": true
+        },
+        {
+          "order": 9,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            51,
+            51
+          ],
+          "assumed": true
+        },
+        {
+          "order": 10,
+          "action": "other",
+          "label": "useDeferredValue",
+          "nodeId": null,
+          "lineRange": [
+            55,
+            55
+          ],
+          "assumed": true
+        },
+        {
+          "order": 11,
+          "action": "other",
+          "label": "useQuery",
+          "nodeId": null,
+          "lineRange": [
+            57,
+            57
+          ],
+          "assumed": true
+        },
+        {
+          "order": 12,
+          "action": "other",
+          "label": "useMutation",
+          "nodeId": null,
+          "lineRange": [
+            74,
+            74
+          ],
+          "assumed": true
+        },
+        {
+          "order": 13,
+          "action": "other",
+          "label": "useMutation",
+          "nodeId": null,
+          "lineRange": [
+            83,
+            83
+          ],
+          "assumed": true
+        },
+        {
+          "order": 14,
+          "action": "other",
+          "label": "useMutation",
+          "nodeId": null,
+          "lineRange": [
+            91,
+            91
+          ],
+          "assumed": true
+        },
+        {
+          "order": 15,
+          "action": "render",
+          "label": "re-render",
+          "nodeId": null,
+          "lineRange": null,
+          "assumed": true
+        }
+      ],
+      "assumed": true,
+      "confidence": 0.5
+    },
+    {
+      "id": "flow:AlumniAdminGrid:inline_onClick_L203",
+      "title": "inline_onClick_L203",
+      "trigger": "inline_onClick_L203",
+      "steps": [
+        {
+          "order": 1,
+          "action": "event",
+          "label": "inline_onClick_L203",
+          "nodeId": null,
+          "lineRange": [
+            203,
+            203
+          ],
+          "assumed": true
+        },
+        {
+          "order": 2,
+          "action": "other",
+          "label": "useQueryClient",
+          "nodeId": null,
+          "lineRange": [
+            40,
+            40
+          ],
+          "assumed": true
+        },
+        {
+          "order": 3,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            42,
+            42
+          ],
+          "assumed": true
+        },
+        {
+          "order": 4,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            43,
+            43
+          ],
+          "assumed": true
+        },
+        {
+          "order": 5,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            44,
+            44
+          ],
+          "assumed": true
+        },
+        {
+          "order": 6,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            47,
+            47
+          ],
+          "assumed": true
+        },
+        {
+          "order": 7,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            49,
+            49
+          ],
+          "assumed": true
+        },
+        {
+          "order": 8,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            50,
+            50
+          ],
+          "assumed": true
+        },
+        {
+          "order": 9,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            51,
+            51
+          ],
+          "assumed": true
+        },
+        {
+          "order": 10,
+          "action": "other",
+          "label": "useDeferredValue",
+          "nodeId": null,
+          "lineRange": [
+            55,
+            55
+          ],
+          "assumed": true
+        },
+        {
+          "order": 11,
+          "action": "other",
+          "label": "useQuery",
+          "nodeId": null,
+          "lineRange": [
+            57,
+            57
+          ],
+          "assumed": true
+        },
+        {
+          "order": 12,
+          "action": "other",
+          "label": "useMutation",
+          "nodeId": null,
+          "lineRange": [
+            74,
+            74
+          ],
+          "assumed": true
+        },
+        {
+          "order": 13,
+          "action": "other",
+          "label": "useMutation",
+          "nodeId": null,
+          "lineRange": [
+            83,
+            83
+          ],
+          "assumed": true
+        },
+        {
+          "order": 14,
+          "action": "other",
+          "label": "useMutation",
+          "nodeId": null,
+          "lineRange": [
+            91,
+            91
+          ],
+          "assumed": true
+        },
+        {
+          "order": 15,
+          "action": "render",
+          "label": "re-render",
+          "nodeId": null,
+          "lineRange": null,
+          "assumed": true
+        }
+      ],
+      "assumed": true,
+      "confidence": 0.5
+    },
+    {
+      "id": "flow:AlumniAdminGrid:inline_onClick_L229",
+      "title": "inline_onClick_L229",
+      "trigger": "inline_onClick_L229",
+      "steps": [
+        {
+          "order": 1,
+          "action": "event",
+          "label": "inline_onClick_L229",
+          "nodeId": null,
+          "lineRange": [
+            229,
+            229
+          ],
+          "assumed": true
+        },
+        {
+          "order": 2,
+          "action": "other",
+          "label": "useQueryClient",
+          "nodeId": null,
+          "lineRange": [
+            40,
+            40
+          ],
+          "assumed": true
+        },
+        {
+          "order": 3,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            42,
+            42
+          ],
+          "assumed": true
+        },
+        {
+          "order": 4,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            43,
+            43
+          ],
+          "assumed": true
+        },
+        {
+          "order": 5,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            44,
+            44
+          ],
+          "assumed": true
+        },
+        {
+          "order": 6,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            47,
+            47
+          ],
+          "assumed": true
+        },
+        {
+          "order": 7,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            49,
+            49
+          ],
+          "assumed": true
+        },
+        {
+          "order": 8,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            50,
+            50
+          ],
+          "assumed": true
+        },
+        {
+          "order": 9,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            51,
+            51
+          ],
+          "assumed": true
+        },
+        {
+          "order": 10,
+          "action": "other",
+          "label": "useDeferredValue",
+          "nodeId": null,
+          "lineRange": [
+            55,
+            55
+          ],
+          "assumed": true
+        },
+        {
+          "order": 11,
+          "action": "other",
+          "label": "useQuery",
+          "nodeId": null,
+          "lineRange": [
+            57,
+            57
+          ],
+          "assumed": true
+        },
+        {
+          "order": 12,
+          "action": "other",
+          "label": "useMutation",
+          "nodeId": null,
+          "lineRange": [
+            74,
+            74
+          ],
+          "assumed": true
+        },
+        {
+          "order": 13,
+          "action": "other",
+          "label": "useMutation",
+          "nodeId": null,
+          "lineRange": [
+            83,
+            83
+          ],
+          "assumed": true
+        },
+        {
+          "order": 14,
+          "action": "other",
+          "label": "useMutation",
+          "nodeId": null,
+          "lineRange": [
+            91,
+            91
+          ],
+          "assumed": true
+        },
+        {
+          "order": 15,
+          "action": "render",
+          "label": "re-render",
+          "nodeId": null,
+          "lineRange": null,
+          "assumed": true
+        }
+      ],
+      "assumed": true,
+      "confidence": 0.5
+    },
+    {
+      "id": "flow:AlumniAdminGrid:inline_onClick_L238",
+      "title": "inline_onClick_L238",
+      "trigger": "inline_onClick_L238",
+      "steps": [
+        {
+          "order": 1,
+          "action": "event",
+          "label": "inline_onClick_L238",
+          "nodeId": null,
+          "lineRange": [
+            238,
+            238
+          ],
+          "assumed": true
+        },
+        {
+          "order": 2,
+          "action": "other",
+          "label": "useQueryClient",
+          "nodeId": null,
+          "lineRange": [
+            40,
+            40
+          ],
+          "assumed": true
+        },
+        {
+          "order": 3,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            42,
+            42
+          ],
+          "assumed": true
+        },
+        {
+          "order": 4,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            43,
+            43
+          ],
+          "assumed": true
+        },
+        {
+          "order": 5,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            44,
+            44
+          ],
+          "assumed": true
+        },
+        {
+          "order": 6,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            47,
+            47
+          ],
+          "assumed": true
+        },
+        {
+          "order": 7,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            49,
+            49
+          ],
+          "assumed": true
+        },
+        {
+          "order": 8,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            50,
+            50
+          ],
+          "assumed": true
+        },
+        {
+          "order": 9,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            51,
+            51
+          ],
+          "assumed": true
+        },
+        {
+          "order": 10,
+          "action": "other",
+          "label": "useDeferredValue",
+          "nodeId": null,
+          "lineRange": [
+            55,
+            55
+          ],
+          "assumed": true
+        },
+        {
+          "order": 11,
+          "action": "other",
+          "label": "useQuery",
+          "nodeId": null,
+          "lineRange": [
+            57,
+            57
+          ],
+          "assumed": true
+        },
+        {
+          "order": 12,
+          "action": "other",
+          "label": "useMutation",
+          "nodeId": null,
+          "lineRange": [
+            74,
+            74
+          ],
+          "assumed": true
+        },
+        {
+          "order": 13,
+          "action": "other",
+          "label": "useMutation",
+          "nodeId": null,
+          "lineRange": [
+            83,
+            83
+          ],
+          "assumed": true
+        },
+        {
+          "order": 14,
+          "action": "other",
+          "label": "useMutation",
+          "nodeId": null,
+          "lineRange": [
+            91,
+            91
+          ],
+          "assumed": true
+        },
+        {
+          "order": 15,
+          "action": "render",
+          "label": "re-render",
+          "nodeId": null,
+          "lineRange": null,
+          "assumed": true
+        }
+      ],
+      "assumed": true,
+      "confidence": 0.5
+    },
+    {
+      "id": "flow:AlumniAdminGrid:inline_onClick_L269",
+      "title": "inline_onClick_L269",
+      "trigger": "inline_onClick_L269",
+      "steps": [
+        {
+          "order": 1,
+          "action": "event",
+          "label": "inline_onClick_L269",
+          "nodeId": null,
+          "lineRange": [
+            269,
+            269
+          ],
+          "assumed": true
+        },
+        {
+          "order": 2,
+          "action": "other",
+          "label": "useQueryClient",
+          "nodeId": null,
+          "lineRange": [
+            40,
+            40
+          ],
+          "assumed": true
+        },
+        {
+          "order": 3,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            42,
+            42
+          ],
+          "assumed": true
+        },
+        {
+          "order": 4,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            43,
+            43
+          ],
+          "assumed": true
+        },
+        {
+          "order": 5,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            44,
+            44
+          ],
+          "assumed": true
+        },
+        {
+          "order": 6,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            47,
+            47
+          ],
+          "assumed": true
+        },
+        {
+          "order": 7,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            49,
+            49
+          ],
+          "assumed": true
+        },
+        {
+          "order": 8,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            50,
+            50
+          ],
+          "assumed": true
+        },
+        {
+          "order": 9,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            51,
+            51
+          ],
+          "assumed": true
+        },
+        {
+          "order": 10,
+          "action": "other",
+          "label": "useDeferredValue",
+          "nodeId": null,
+          "lineRange": [
+            55,
+            55
+          ],
+          "assumed": true
+        },
+        {
+          "order": 11,
+          "action": "other",
+          "label": "useQuery",
+          "nodeId": null,
+          "lineRange": [
+            57,
+            57
+          ],
+          "assumed": true
+        },
+        {
+          "order": 12,
+          "action": "other",
+          "label": "useMutation",
+          "nodeId": null,
+          "lineRange": [
+            74,
+            74
+          ],
+          "assumed": true
+        },
+        {
+          "order": 13,
+          "action": "other",
+          "label": "useMutation",
+          "nodeId": null,
+          "lineRange": [
+            83,
+            83
+          ],
+          "assumed": true
+        },
+        {
+          "order": 14,
+          "action": "other",
+          "label": "useMutation",
+          "nodeId": null,
+          "lineRange": [
+            91,
+            91
+          ],
+          "assumed": true
+        },
+        {
+          "order": 15,
+          "action": "render",
+          "label": "re-render",
+          "nodeId": null,
+          "lineRange": null,
+          "assumed": true
+        }
+      ],
+      "assumed": true,
+      "confidence": 0.5
+    },
+    {
+      "id": "flow:AlumniAdminGrid:inline_onClick_L274",
+      "title": "inline_onClick_L274",
+      "trigger": "inline_onClick_L274",
+      "steps": [
+        {
+          "order": 1,
+          "action": "event",
+          "label": "inline_onClick_L274",
+          "nodeId": null,
+          "lineRange": [
+            274,
+            274
+          ],
+          "assumed": true
+        },
+        {
+          "order": 2,
+          "action": "other",
+          "label": "useQueryClient",
+          "nodeId": null,
+          "lineRange": [
+            40,
+            40
+          ],
+          "assumed": true
+        },
+        {
+          "order": 3,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            42,
+            42
+          ],
+          "assumed": true
+        },
+        {
+          "order": 4,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            43,
+            43
+          ],
+          "assumed": true
+        },
+        {
+          "order": 5,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            44,
+            44
+          ],
+          "assumed": true
+        },
+        {
+          "order": 6,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            47,
+            47
+          ],
+          "assumed": true
+        },
+        {
+          "order": 7,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            49,
+            49
+          ],
+          "assumed": true
+        },
+        {
+          "order": 8,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            50,
+            50
+          ],
+          "assumed": true
+        },
+        {
+          "order": 9,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            51,
+            51
+          ],
+          "assumed": true
+        },
+        {
+          "order": 10,
+          "action": "other",
+          "label": "useDeferredValue",
+          "nodeId": null,
+          "lineRange": [
+            55,
+            55
+          ],
+          "assumed": true
+        },
+        {
+          "order": 11,
+          "action": "other",
+          "label": "useQuery",
+          "nodeId": null,
+          "lineRange": [
+            57,
+            57
+          ],
+          "assumed": true
+        },
+        {
+          "order": 12,
+          "action": "other",
+          "label": "useMutation",
+          "nodeId": null,
+          "lineRange": [
+            74,
+            74
+          ],
+          "assumed": true
+        },
+        {
+          "order": 13,
+          "action": "other",
+          "label": "useMutation",
+          "nodeId": null,
+          "lineRange": [
+            83,
+            83
+          ],
+          "assumed": true
+        },
+        {
+          "order": 14,
+          "action": "other",
+          "label": "useMutation",
+          "nodeId": null,
+          "lineRange": [
+            91,
+            91
+          ],
+          "assumed": true
+        },
+        {
+          "order": 15,
+          "action": "render",
+          "label": "re-render",
+          "nodeId": null,
+          "lineRange": null,
+          "assumed": true
+        }
+      ],
+      "assumed": true,
+      "confidence": 0.5
+    },
+    {
+      "id": "flow:AlumniAdminGrid:inline_onClose_L248",
+      "title": "inline_onClose_L248",
+      "trigger": "inline_onClose_L248",
+      "steps": [
+        {
+          "order": 1,
+          "action": "event",
+          "label": "inline_onClose_L248",
+          "nodeId": null,
+          "lineRange": [
+            248,
+            248
+          ],
+          "assumed": true
+        },
+        {
+          "order": 2,
+          "action": "other",
+          "label": "useQueryClient",
+          "nodeId": null,
+          "lineRange": [
+            40,
+            40
+          ],
+          "assumed": true
+        },
+        {
+          "order": 3,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            42,
+            42
+          ],
+          "assumed": true
+        },
+        {
+          "order": 4,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            43,
+            43
+          ],
+          "assumed": true
+        },
+        {
+          "order": 5,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            44,
+            44
+          ],
+          "assumed": true
+        },
+        {
+          "order": 6,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            47,
+            47
+          ],
+          "assumed": true
+        },
+        {
+          "order": 7,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            49,
+            49
+          ],
+          "assumed": true
+        },
+        {
+          "order": 8,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            50,
+            50
+          ],
+          "assumed": true
+        },
+        {
+          "order": 9,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            51,
+            51
+          ],
+          "assumed": true
+        },
+        {
+          "order": 10,
+          "action": "other",
+          "label": "useDeferredValue",
+          "nodeId": null,
+          "lineRange": [
+            55,
+            55
+          ],
+          "assumed": true
+        },
+        {
+          "order": 11,
+          "action": "other",
+          "label": "useQuery",
+          "nodeId": null,
+          "lineRange": [
+            57,
+            57
+          ],
+          "assumed": true
+        },
+        {
+          "order": 12,
+          "action": "other",
+          "label": "useMutation",
+          "nodeId": null,
+          "lineRange": [
+            74,
+            74
+          ],
+          "assumed": true
+        },
+        {
+          "order": 13,
+          "action": "other",
+          "label": "useMutation",
+          "nodeId": null,
+          "lineRange": [
+            83,
+            83
+          ],
+          "assumed": true
+        },
+        {
+          "order": 14,
+          "action": "other",
+          "label": "useMutation",
+          "nodeId": null,
+          "lineRange": [
+            91,
+            91
+          ],
+          "assumed": true
+        },
+        {
+          "order": 15,
+          "action": "render",
+          "label": "re-render",
+          "nodeId": null,
+          "lineRange": null,
+          "assumed": true
+        }
+      ],
+      "assumed": true,
+      "confidence": 0.5
+    },
+    {
+      "id": "flow:AlumniAdminGrid:inline_onClose_L255",
+      "title": "inline_onClose_L255",
+      "trigger": "inline_onClose_L255",
+      "steps": [
+        {
+          "order": 1,
+          "action": "event",
+          "label": "inline_onClose_L255",
+          "nodeId": null,
+          "lineRange": [
+            255,
+            255
+          ],
+          "assumed": true
+        },
+        {
+          "order": 2,
+          "action": "other",
+          "label": "useQueryClient",
+          "nodeId": null,
+          "lineRange": [
+            40,
+            40
+          ],
+          "assumed": true
+        },
+        {
+          "order": 3,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            42,
+            42
+          ],
+          "assumed": true
+        },
+        {
+          "order": 4,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            43,
+            43
+          ],
+          "assumed": true
+        },
+        {
+          "order": 5,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            44,
+            44
+          ],
+          "assumed": true
+        },
+        {
+          "order": 6,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            47,
+            47
+          ],
+          "assumed": true
+        },
+        {
+          "order": 7,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            49,
+            49
+          ],
+          "assumed": true
+        },
+        {
+          "order": 8,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            50,
+            50
+          ],
+          "assumed": true
+        },
+        {
+          "order": 9,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            51,
+            51
+          ],
+          "assumed": true
+        },
+        {
+          "order": 10,
+          "action": "other",
+          "label": "useDeferredValue",
+          "nodeId": null,
+          "lineRange": [
+            55,
+            55
+          ],
+          "assumed": true
+        },
+        {
+          "order": 11,
+          "action": "other",
+          "label": "useQuery",
+          "nodeId": null,
+          "lineRange": [
+            57,
+            57
+          ],
+          "assumed": true
+        },
+        {
+          "order": 12,
+          "action": "other",
+          "label": "useMutation",
+          "nodeId": null,
+          "lineRange": [
+            74,
+            74
+          ],
+          "assumed": true
+        },
+        {
+          "order": 13,
+          "action": "other",
+          "label": "useMutation",
+          "nodeId": null,
+          "lineRange": [
+            83,
+            83
+          ],
+          "assumed": true
+        },
+        {
+          "order": 14,
+          "action": "other",
+          "label": "useMutation",
+          "nodeId": null,
+          "lineRange": [
+            91,
+            91
+          ],
+          "assumed": true
+        },
+        {
+          "order": 15,
+          "action": "render",
+          "label": "re-render",
+          "nodeId": null,
+          "lineRange": null,
+          "assumed": true
+        }
+      ],
+      "assumed": true,
+      "confidence": 0.5
+    },
+    {
+      "id": "flow:AlumniAdminGrid:inline_onClose_L259",
+      "title": "inline_onClose_L259",
+      "trigger": "inline_onClose_L259",
+      "steps": [
+        {
+          "order": 1,
+          "action": "event",
+          "label": "inline_onClose_L259",
+          "nodeId": null,
+          "lineRange": [
+            259,
+            259
+          ],
+          "assumed": true
+        },
+        {
+          "order": 2,
+          "action": "other",
+          "label": "useQueryClient",
+          "nodeId": null,
+          "lineRange": [
+            40,
+            40
+          ],
+          "assumed": true
+        },
+        {
+          "order": 3,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            42,
+            42
+          ],
+          "assumed": true
+        },
+        {
+          "order": 4,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            43,
+            43
+          ],
+          "assumed": true
+        },
+        {
+          "order": 5,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            44,
+            44
+          ],
+          "assumed": true
+        },
+        {
+          "order": 6,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            47,
+            47
+          ],
+          "assumed": true
+        },
+        {
+          "order": 7,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            49,
+            49
+          ],
+          "assumed": true
+        },
+        {
+          "order": 8,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            50,
+            50
+          ],
+          "assumed": true
+        },
+        {
+          "order": 9,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            51,
+            51
+          ],
+          "assumed": true
+        },
+        {
+          "order": 10,
+          "action": "other",
+          "label": "useDeferredValue",
+          "nodeId": null,
+          "lineRange": [
+            55,
+            55
+          ],
+          "assumed": true
+        },
+        {
+          "order": 11,
+          "action": "other",
+          "label": "useQuery",
+          "nodeId": null,
+          "lineRange": [
+            57,
+            57
+          ],
+          "assumed": true
+        },
+        {
+          "order": 12,
+          "action": "other",
+          "label": "useMutation",
+          "nodeId": null,
+          "lineRange": [
+            74,
+            74
+          ],
+          "assumed": true
+        },
+        {
+          "order": 13,
+          "action": "other",
+          "label": "useMutation",
+          "nodeId": null,
+          "lineRange": [
+            83,
+            83
+          ],
+          "assumed": true
+        },
+        {
+          "order": 14,
+          "action": "other",
+          "label": "useMutation",
+          "nodeId": null,
+          "lineRange": [
+            91,
+            91
+          ],
+          "assumed": true
+        },
+        {
+          "order": 15,
+          "action": "render",
+          "label": "re-render",
+          "nodeId": null,
+          "lineRange": null,
+          "assumed": true
+        }
+      ],
+      "assumed": true,
+      "confidence": 0.5
+    },
+    {
+      "id": "flow:AlumniAdminGrid:inline_onClose_L281",
+      "title": "inline_onClose_L281",
+      "trigger": "inline_onClose_L281",
+      "steps": [
+        {
+          "order": 1,
+          "action": "event",
+          "label": "inline_onClose_L281",
+          "nodeId": null,
+          "lineRange": [
+            281,
+            281
+          ],
+          "assumed": true
+        },
+        {
+          "order": 2,
+          "action": "other",
+          "label": "useQueryClient",
+          "nodeId": null,
+          "lineRange": [
+            40,
+            40
+          ],
+          "assumed": true
+        },
+        {
+          "order": 3,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            42,
+            42
+          ],
+          "assumed": true
+        },
+        {
+          "order": 4,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            43,
+            43
+          ],
+          "assumed": true
+        },
+        {
+          "order": 5,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            44,
+            44
+          ],
+          "assumed": true
+        },
+        {
+          "order": 6,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            47,
+            47
+          ],
+          "assumed": true
+        },
+        {
+          "order": 7,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            49,
+            49
+          ],
+          "assumed": true
+        },
+        {
+          "order": 8,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            50,
+            50
+          ],
+          "assumed": true
+        },
+        {
+          "order": 9,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            51,
+            51
+          ],
+          "assumed": true
+        },
+        {
+          "order": 10,
+          "action": "other",
+          "label": "useDeferredValue",
+          "nodeId": null,
+          "lineRange": [
+            55,
+            55
+          ],
+          "assumed": true
+        },
+        {
+          "order": 11,
+          "action": "other",
+          "label": "useQuery",
+          "nodeId": null,
+          "lineRange": [
+            57,
+            57
+          ],
+          "assumed": true
+        },
+        {
+          "order": 12,
+          "action": "other",
+          "label": "useMutation",
+          "nodeId": null,
+          "lineRange": [
+            74,
+            74
+          ],
+          "assumed": true
+        },
+        {
+          "order": 13,
+          "action": "other",
+          "label": "useMutation",
+          "nodeId": null,
+          "lineRange": [
+            83,
+            83
+          ],
+          "assumed": true
+        },
+        {
+          "order": 14,
+          "action": "other",
+          "label": "useMutation",
+          "nodeId": null,
+          "lineRange": [
+            91,
+            91
+          ],
+          "assumed": true
+        },
+        {
+          "order": 15,
+          "action": "render",
+          "label": "re-render",
+          "nodeId": null,
+          "lineRange": null,
+          "assumed": true
+        }
+      ],
+      "assumed": true,
+      "confidence": 0.5
+    },
+    {
+      "id": "flow:AlumniAdminGrid:inline_onImport_L256",
+      "title": "inline_onImport_L256",
+      "trigger": "inline_onImport_L256",
+      "steps": [
+        {
+          "order": 1,
+          "action": "event",
+          "label": "inline_onImport_L256",
+          "nodeId": null,
+          "lineRange": [
+            256,
+            256
+          ],
+          "assumed": true
+        },
+        {
+          "order": 2,
+          "action": "other",
+          "label": "useQueryClient",
+          "nodeId": null,
+          "lineRange": [
+            40,
+            40
+          ],
+          "assumed": true
+        },
+        {
+          "order": 3,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            42,
+            42
+          ],
+          "assumed": true
+        },
+        {
+          "order": 4,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            43,
+            43
+          ],
+          "assumed": true
+        },
+        {
+          "order": 5,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            44,
+            44
+          ],
+          "assumed": true
+        },
+        {
+          "order": 6,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            47,
+            47
+          ],
+          "assumed": true
+        },
+        {
+          "order": 7,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            49,
+            49
+          ],
+          "assumed": true
+        },
+        {
+          "order": 8,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            50,
+            50
+          ],
+          "assumed": true
+        },
+        {
+          "order": 9,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            51,
+            51
+          ],
+          "assumed": true
+        },
+        {
+          "order": 10,
+          "action": "other",
+          "label": "useDeferredValue",
+          "nodeId": null,
+          "lineRange": [
+            55,
+            55
+          ],
+          "assumed": true
+        },
+        {
+          "order": 11,
+          "action": "other",
+          "label": "useQuery",
+          "nodeId": null,
+          "lineRange": [
+            57,
+            57
+          ],
+          "assumed": true
+        },
+        {
+          "order": 12,
+          "action": "other",
+          "label": "useMutation",
+          "nodeId": null,
+          "lineRange": [
+            74,
+            74
+          ],
+          "assumed": true
+        },
+        {
+          "order": 13,
+          "action": "other",
+          "label": "useMutation",
+          "nodeId": null,
+          "lineRange": [
+            83,
+            83
+          ],
+          "assumed": true
+        },
+        {
+          "order": 14,
+          "action": "other",
+          "label": "useMutation",
+          "nodeId": null,
+          "lineRange": [
+            91,
+            91
+          ],
+          "assumed": true
+        },
+        {
+          "order": 15,
+          "action": "render",
+          "label": "re-render",
+          "nodeId": null,
+          "lineRange": null,
+          "assumed": true
+        }
+      ],
+      "assumed": true,
+      "confidence": 0.5
+    },
+    {
+      "id": "flow:AlumniAdminGrid:inline_onSave_L249",
+      "title": "inline_onSave_L249",
+      "trigger": "inline_onSave_L249",
+      "steps": [
+        {
+          "order": 1,
+          "action": "event",
+          "label": "inline_onSave_L249",
+          "nodeId": null,
+          "lineRange": [
+            249,
+            249
+          ],
+          "assumed": true
+        },
+        {
+          "order": 2,
+          "action": "other",
+          "label": "useQueryClient",
+          "nodeId": null,
+          "lineRange": [
+            40,
+            40
+          ],
+          "assumed": true
+        },
+        {
+          "order": 3,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            42,
+            42
+          ],
+          "assumed": true
+        },
+        {
+          "order": 4,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            43,
+            43
+          ],
+          "assumed": true
+        },
+        {
+          "order": 5,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            44,
+            44
+          ],
+          "assumed": true
+        },
+        {
+          "order": 6,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            47,
+            47
+          ],
+          "assumed": true
+        },
+        {
+          "order": 7,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            49,
+            49
+          ],
+          "assumed": true
+        },
+        {
+          "order": 8,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            50,
+            50
+          ],
+          "assumed": true
+        },
+        {
+          "order": 9,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            51,
+            51
+          ],
+          "assumed": true
+        },
+        {
+          "order": 10,
+          "action": "other",
+          "label": "useDeferredValue",
+          "nodeId": null,
+          "lineRange": [
+            55,
+            55
+          ],
+          "assumed": true
+        },
+        {
+          "order": 11,
+          "action": "other",
+          "label": "useQuery",
+          "nodeId": null,
+          "lineRange": [
+            57,
+            57
+          ],
+          "assumed": true
+        },
+        {
+          "order": 12,
+          "action": "other",
+          "label": "useMutation",
+          "nodeId": null,
+          "lineRange": [
+            74,
+            74
+          ],
+          "assumed": true
+        },
+        {
+          "order": 13,
+          "action": "other",
+          "label": "useMutation",
+          "nodeId": null,
+          "lineRange": [
+            83,
+            83
+          ],
+          "assumed": true
+        },
+        {
+          "order": 14,
+          "action": "other",
+          "label": "useMutation",
+          "nodeId": null,
+          "lineRange": [
+            91,
+            91
+          ],
+          "assumed": true
+        },
+        {
+          "order": 15,
+          "action": "render",
+          "label": "re-render",
+          "nodeId": null,
+          "lineRange": null,
+          "assumed": true
+        }
+      ],
+      "assumed": true,
+      "confidence": 0.5
+    },
+    {
+      "id": "flow:AlumniAdminGrid:inline_onSelectionChanged_L222",
+      "title": "inline_onSelectionChanged_L222",
+      "trigger": "inline_onSelectionChanged_L222",
+      "steps": [
+        {
+          "order": 1,
+          "action": "event",
+          "label": "inline_onSelectionChanged_L222",
+          "nodeId": null,
+          "lineRange": [
+            222,
+            222
+          ],
+          "assumed": true
+        },
+        {
+          "order": 2,
+          "action": "other",
+          "label": "useQueryClient",
+          "nodeId": null,
+          "lineRange": [
+            40,
+            40
+          ],
+          "assumed": true
+        },
+        {
+          "order": 3,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            42,
+            42
+          ],
+          "assumed": true
+        },
+        {
+          "order": 4,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            43,
+            43
+          ],
+          "assumed": true
+        },
+        {
+          "order": 5,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            44,
+            44
+          ],
+          "assumed": true
+        },
+        {
+          "order": 6,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            47,
+            47
+          ],
+          "assumed": true
+        },
+        {
+          "order": 7,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            49,
+            49
+          ],
+          "assumed": true
+        },
+        {
+          "order": 8,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            50,
+            50
+          ],
+          "assumed": true
+        },
+        {
+          "order": 9,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            51,
+            51
+          ],
+          "assumed": true
+        },
+        {
+          "order": 10,
+          "action": "other",
+          "label": "useDeferredValue",
+          "nodeId": null,
+          "lineRange": [
+            55,
+            55
+          ],
+          "assumed": true
+        },
+        {
+          "order": 11,
+          "action": "other",
+          "label": "useQuery",
+          "nodeId": null,
+          "lineRange": [
+            57,
+            57
+          ],
+          "assumed": true
+        },
+        {
+          "order": 12,
+          "action": "other",
+          "label": "useMutation",
+          "nodeId": null,
+          "lineRange": [
+            74,
+            74
+          ],
+          "assumed": true
+        },
+        {
+          "order": 13,
+          "action": "other",
+          "label": "useMutation",
+          "nodeId": null,
+          "lineRange": [
+            83,
+            83
+          ],
+          "assumed": true
+        },
+        {
+          "order": 14,
+          "action": "other",
+          "label": "useMutation",
+          "nodeId": null,
+          "lineRange": [
+            91,
+            91
+          ],
+          "assumed": true
+        },
+        {
+          "order": 15,
+          "action": "render",
+          "label": "re-render",
+          "nodeId": null,
+          "lineRange": null,
+          "assumed": true
+        }
+      ],
+      "assumed": true,
+      "confidence": 0.5
+    }
+  ],
+  "securityFlags": [],
+  "visualTheme": {
+    "stack": "react",
+    "primary": "#61DAFB",
+    "secondary": "#087EA4",
+    "onDark": "#61DAFB",
+    "logoAssetId": "react-logo-ondark",
+    "logoPath": "visuals/logos/react.svg"
+  },
+  "mermaid": "flowchart TD\n  component_AlumniAdminGrid[\"AlumniAdminGrid\"]\n  component_AlumniFormDialog[\"AlumniFormDialog\"]\n  component_AlumniRow[\"AlumniRow\"]\n  component_Box[\"Box\"]\n  component_Button[\"Button\"]\n  component_Chip[\"Chip\"]\n  component_Dialog[\"Dialog\"]\n  component_DialogActions[\"DialogActions\"]\n  component_DialogContent[\"DialogContent\"]\n  component_DialogContentText[\"DialogContentText\"]\n  component_DialogTitle[\"DialogTitle\"]\n  component_ExcelImportDialog[\"ExcelImportDialog\"]\n  component_LinearProgress[\"LinearProgress\"]\n  component_MenuItem[\"MenuItem\"]\n  component_Snackbar[\"Snackbar\"]\n  component_Stack[\"Stack\"]\n  component_TextField[\"TextField\"]\n  component_Tooltip[\"Tooltip\"]\n  component_Typography[\"Typography\"]\n  component_AlumniAdminGrid --> component_AlumniFormDialog\n  component_AlumniAdminGrid --> component_AlumniRow\n  component_AlumniAdminGrid --> component_AlumniRow\n  component_AlumniAdminGrid --> component_AlumniRow\n  component_AlumniAdminGrid --> component_AlumniRow\n  component_AlumniAdminGrid --> component_Box\n  component_AlumniAdminGrid --> component_Box\n  component_AlumniAdminGrid --> component_Button\n  component_AlumniAdminGrid --> component_Button\n  component_AlumniAdminGrid --> component_Button\n  component_AlumniAdminGrid --> component_Button\n  component_AlumniAdminGrid --> component_Button\n  component_AlumniAdminGrid --> component_Button\n  component_AlumniAdminGrid --> component_Button\n  component_AlumniAdminGrid --> component_Button\n  component_AlumniAdminGrid --> component_Chip\n  component_AlumniAdminGrid --> component_Dialog\n  component_AlumniAdminGrid --> component_DialogActions\n  component_AlumniAdminGrid --> component_DialogContent\n  component_AlumniAdminGrid --> component_DialogContentText\n  component_AlumniAdminGrid --> component_DialogTitle\n  component_AlumniAdminGrid --> component_ExcelImportDialog\n  component_AlumniAdminGrid --> component_LinearProgress\n  component_AlumniAdminGrid --> component_MenuItem\n  component_AlumniAdminGrid -.-> component_MenuItem\n  component_AlumniAdminGrid --> component_Snackbar\n  component_AlumniAdminGrid --> component_Stack\n  component_AlumniAdminGrid --> component_Stack\n  component_AlumniAdminGrid --> component_Stack\n  component_AlumniAdminGrid --> component_TextField\n  component_AlumniAdminGrid --> component_TextField\n  component_AlumniAdminGrid --> component_Tooltip\n  component_AlumniAdminGrid --> component_Typography"
+}

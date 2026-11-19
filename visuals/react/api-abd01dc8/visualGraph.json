@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 1,
+  "kind": "component_tree",
+  "rootId": "component:media",
+  "nodes": [
+    {
+      "id": "component:UploadGrant",
+      "kind": "component",
+      "label": "UploadGrant",
+      "filePath": "src/api/media.ts",
+      "line": 50,
+      "assumed": false,
+      "meta": {
+        "props": []
+      }
+    },
+    {
+      "id": "component:media",
+      "kind": "component",
+      "label": "media",
+      "filePath": "src/api/media.ts",
+      "line": 1,
+      "assumed": false,
+      "meta": {
+        "role": "root"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "mounts:component:media->component:UploadGrant:0",
+      "kind": "mounts",
+      "from": "component:media",
+      "to": "component:UploadGrant",
+      "assumed": false,
+      "label": null,
+      "meta": {
+        "props": []
+      }
+    },
+    {
+      "id": "mounts:component:media->component:UploadGrant:1",
+      "kind": "mounts",
+      "from": "component:media",
+      "to": "component:UploadGrant",
+      "assumed": false,
+      "label": null,
+      "meta": {
+        "props": []
+      }
+    }
+  ]
+}

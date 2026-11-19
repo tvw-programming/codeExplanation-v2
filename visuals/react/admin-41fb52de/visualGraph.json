@@ -1,0 +1,64 @@
+{
+  "schemaVersion": 1,
+  "kind": "component_tree",
+  "rootId": "component:profileRules",
+  "nodes": [
+    {
+      "id": "component:AlumniDraft",
+      "kind": "component",
+      "label": "AlumniDraft",
+      "filePath": "src/features/admin/profileRules.ts",
+      "line": 86,
+      "assumed": false,
+      "meta": {
+        "props": []
+      }
+    },
+    {
+      "id": "component:profileRules",
+      "kind": "component",
+      "label": "profileRules",
+      "filePath": "src/features/admin/profileRules.ts",
+      "line": 1,
+      "assumed": false,
+      "meta": {
+        "role": "root"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "mounts:component:profileRules->component:AlumniDraft:0",
+      "kind": "mounts",
+      "from": "component:profileRules",
+      "to": "component:AlumniDraft",
+      "assumed": false,
+      "label": null,
+      "meta": {
+        "props": []
+      }
+    },
+    {
+      "id": "mounts:component:profileRules->component:AlumniDraft:1",
+      "kind": "mounts",
+      "from": "component:profileRules",
+      "to": "component:AlumniDraft",
+      "assumed": false,
+      "label": null,
+      "meta": {
+        "props": []
+      }
+    },
+    {
+      "id": "mounts:component:profileRules->component:AlumniDraft:2",
+      "kind": "mounts",
+      "from": "component:profileRules",
+      "to": "component:AlumniDraft",
+      "assumed": false,
+      "label": null,
+      "meta": {
+        "props": []
+      }
+    }
+  ]
+}

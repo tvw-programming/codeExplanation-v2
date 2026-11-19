@@ -1,0 +1,236 @@
+{
+  "schemaVersion": 1,
+  "kind": "component_tree",
+  "rootId": "component:GalleryPage",
+  "nodes": [
+    {
+      "id": "component:GalleryPage",
+      "kind": "component",
+      "label": "GalleryPage",
+      "filePath": "src/features/media/GalleryPage.tsx",
+      "line": 1,
+      "assumed": false,
+      "meta": {
+        "role": "root"
+      }
+    },
+    {
+      "id": "component:MediaGallery",
+      "kind": "component",
+      "label": "MediaGallery",
+      "filePath": "src/features/media/GalleryPage.tsx",
+      "line": 23,
+      "assumed": false,
+      "meta": {
+        "props": [
+          {
+            "name": "alumniId",
+            "valueKind": "expression",
+            "valuePreview": "DEMO_ALUMNI_ID",
+            "assumed": false
+          },
+          {
+            "name": "items",
+            "valueKind": "expression",
+            "valuePreview": "data ?? []",
+            "assumed": false
+          }
+        ]
+      }
+    },
+    {
+      "id": "component:Stack",
+      "kind": "component",
+      "label": "Stack",
+      "filePath": "src/features/media/GalleryPage.tsx",
+      "line": 16,
+      "assumed": false,
+      "meta": {
+        "props": [
+          {
+            "name": "spacing",
+            "valueKind": "expression",
+            "valuePreview": "2",
+            "assumed": false
+          }
+        ]
+      }
+    },
+    {
+      "id": "component:Typography",
+      "kind": "component",
+      "label": "Typography",
+      "filePath": "src/features/media/GalleryPage.tsx",
+      "line": 18,
+      "assumed": false,
+      "meta": {
+        "props": [
+          {
+            "name": "variant",
+            "valueKind": "literal",
+            "valuePreview": "h6",
+            "assumed": false
+          }
+        ]
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "mounts:component:GalleryPage->component:MediaGallery:3",
+      "kind": "mounts",
+      "from": "component:GalleryPage",
+      "to": "component:MediaGallery",
+      "assumed": false,
+      "label": null,
+      "meta": {
+        "props": [
+          {
+            "name": "alumniId",
+            "valueKind": "expression",
+            "valuePreview": "DEMO_ALUMNI_ID",
+            "assumed": false
+          },
+          {
+            "name": "items",
+            "valueKind": "expression",
+            "valuePreview": "data ?? []",
+            "assumed": false
+          }
+        ]
+      }
+    },
+    {
+      "id": "mounts:component:GalleryPage->component:Stack:0",
+      "kind": "mounts",
+      "from": "component:GalleryPage",
+      "to": "component:Stack",
+      "assumed": false,
+      "label": null,
+      "meta": {
+        "props": [
+          {
+            "name": "spacing",
+            "valueKind": "expression",
+            "valuePreview": "2",
+            "assumed": false
+          }
+        ]
+      }
+    },
+    {
+      "id": "mounts:component:GalleryPage->component:Typography:1",
+      "kind": "mounts",
+      "from": "component:GalleryPage",
+      "to": "component:Typography",
+      "assumed": false,
+      "label": null,
+      "meta": {
+        "props": [
+          {
+            "name": "variant",
+            "valueKind": "literal",
+            "valuePreview": "h6",
+            "assumed": false
+          }
+        ]
+      }
+    },
+    {
+      "id": "mounts:component:GalleryPage->component:Typography:2",
+      "kind": "mounts",
+      "from": "component:GalleryPage",
+      "to": "component:Typography",
+      "assumed": false,
+      "label": null,
+      "meta": {
+        "props": [
+          {
+            "name": "variant",
+            "valueKind": "literal",
+            "valuePreview": "body2",
+            "assumed": false
+          },
+          {
+            "name": "color",
+            "valueKind": "literal",
+            "valuePreview": "text.secondary",
+            "assumed": false
+          }
+        ]
+      }
+    },
+    {
+      "id": "prop:component:GalleryPage->component:MediaGallery:alumniId:3",
+      "kind": "passes_prop",
+      "from": "component:GalleryPage",
+      "to": "component:MediaGallery",
+      "assumed": false,
+      "label": "alumniId",
+      "meta": {
+        "valueKind": "expression",
+        "valuePreview": "DEMO_ALUMNI_ID"
+      }
+    },
+    {
+      "id": "prop:component:GalleryPage->component:MediaGallery:items:3",
+      "kind": "passes_prop",
+      "from": "component:GalleryPage",
+      "to": "component:MediaGallery",
+      "assumed": false,
+      "label": "items",
+      "meta": {
+        "valueKind": "expression",
+        "valuePreview": "data ?? []"
+      }
+    },
+    {
+      "id": "prop:component:GalleryPage->component:Stack:spacing:0",
+      "kind": "passes_prop",
+      "from": "component:GalleryPage",
+      "to": "component:Stack",
+      "assumed": false,
+      "label": "spacing",
+      "meta": {
+        "valueKind": "expression",
+        "valuePreview": "2"
+      }
+    },
+    {
+      "id": "prop:component:GalleryPage->component:Typography:color:2",
+      "kind": "passes_prop",
+      "from": "component:GalleryPage",
+      "to": "component:Typography",
+      "assumed": false,
+      "label": "color",
+      "meta": {
+        "valueKind": "literal",
+        "valuePreview": "text.secondary"
+      }
+    },
+    {
+      "id": "prop:component:GalleryPage->component:Typography:variant:1",
+      "kind": "passes_prop",
+      "from": "component:GalleryPage",
+      "to": "component:Typography",
+      "assumed": false,
+      "label": "variant",
+      "meta": {
+        "valueKind": "literal",
+        "valuePreview": "h6"
+      }
+    },
+    {
+      "id": "prop:component:GalleryPage->component:Typography:variant:2",
+      "kind": "passes_prop",
+      "from": "component:GalleryPage",
+      "to": "component:Typography",
+      "assumed": false,
+      "label": "variant",
+      "meta": {
+        "valueKind": "literal",
+        "valuePreview": "body2"
+      }
+    }
+  ]
+}

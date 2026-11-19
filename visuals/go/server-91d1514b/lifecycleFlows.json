@@ -1,0 +1,312 @@
+[
+  {
+    "id": "flow:main:GET:/api/v1/alumni",
+    "title": "GET /api/v1/alumni",
+    "trigger": "GET /api/v1/alumni",
+    "steps": [
+      {
+        "order": 1,
+        "action": "middleware",
+        "label": "recover.New",
+        "nodeId": null,
+        "lineRange": [
+          77,
+          77
+        ],
+        "assumed": true,
+        "meta": {
+          "isAuth": false,
+          "isCors": false
+        }
+      },
+      {
+        "order": 2,
+        "action": "middleware",
+        "label": "cors.New",
+        "nodeId": null,
+        "lineRange": [
+          80,
+          80
+        ],
+        "assumed": true,
+        "meta": {
+          "isAuth": false,
+          "isCors": true
+        }
+      },
+      {
+        "order": 3,
+        "action": "handler",
+        "label": "List",
+        "nodeId": null,
+        "lineRange": [
+          90,
+          90
+        ],
+        "assumed": false
+      },
+      {
+        "order": 4,
+        "action": "response",
+        "label": "response write",
+        "nodeId": null,
+        "lineRange": null,
+        "assumed": true
+      }
+    ],
+    "assumed": true,
+    "confidence": 0.45,
+    "meta": {
+      "protected": false,
+      "hasMiddleware": true
+    }
+  },
+  {
+    "id": "flow:main:POST:/api/v1/alumni",
+    "title": "POST /api/v1/alumni",
+    "trigger": "POST /api/v1/alumni",
+    "steps": [
+      {
+        "order": 1,
+        "action": "middleware",
+        "label": "recover.New",
+        "nodeId": null,
+        "lineRange": [
+          77,
+          77
+        ],
+        "assumed": true,
+        "meta": {
+          "isAuth": false,
+          "isCors": false
+        }
+      },
+      {
+        "order": 2,
+        "action": "middleware",
+        "label": "cors.New",
+        "nodeId": null,
+        "lineRange": [
+          80,
+          80
+        ],
+        "assumed": true,
+        "meta": {
+          "isAuth": false,
+          "isCors": true
+        }
+      },
+      {
+        "order": 3,
+        "action": "handler",
+        "label": "Create",
+        "nodeId": null,
+        "lineRange": [
+          91,
+          91
+        ],
+        "assumed": false
+      },
+      {
+        "order": 4,
+        "action": "response",
+        "label": "response write",
+        "nodeId": null,
+        "lineRange": null,
+        "assumed": true
+      }
+    ],
+    "assumed": true,
+    "confidence": 0.45,
+    "meta": {
+      "protected": false,
+      "hasMiddleware": true
+    }
+  },
+  {
+    "id": "flow:main:POST:/api/v1/alumni/bulk-delete",
+    "title": "POST /api/v1/alumni/bulk-delete",
+    "trigger": "POST /api/v1/alumni/bulk-delete",
+    "steps": [
+      {
+        "order": 1,
+        "action": "middleware",
+        "label": "recover.New",
+        "nodeId": null,
+        "lineRange": [
+          77,
+          77
+        ],
+        "assumed": true,
+        "meta": {
+          "isAuth": false,
+          "isCors": false
+        }
+      },
+      {
+        "order": 2,
+        "action": "middleware",
+        "label": "cors.New",
+        "nodeId": null,
+        "lineRange": [
+          80,
+          80
+        ],
+        "assumed": true,
+        "meta": {
+          "isAuth": false,
+          "isCors": true
+        }
+      },
+      {
+        "order": 3,
+        "action": "handler",
+        "label": "BulkDelete",
+        "nodeId": null,
+        "lineRange": [
+          93,
+          93
+        ],
+        "assumed": false
+      },
+      {
+        "order": 4,
+        "action": "response",
+        "label": "response write",
+        "nodeId": null,
+        "lineRange": null,
+        "assumed": true
+      }
+    ],
+    "assumed": true,
+    "confidence": 0.45,
+    "meta": {
+      "protected": false,
+      "hasMiddleware": true
+    }
+  },
+  {
+    "id": "flow:main:POST:/api/v1/alumni/import",
+    "title": "POST /api/v1/alumni/import",
+    "trigger": "POST /api/v1/alumni/import",
+    "steps": [
+      {
+        "order": 1,
+        "action": "middleware",
+        "label": "recover.New",
+        "nodeId": null,
+        "lineRange": [
+          77,
+          77
+        ],
+        "assumed": true,
+        "meta": {
+          "isAuth": false,
+          "isCors": false
+        }
+      },
+      {
+        "order": 2,
+        "action": "middleware",
+        "label": "cors.New",
+        "nodeId": null,
+        "lineRange": [
+          80,
+          80
+        ],
+        "assumed": true,
+        "meta": {
+          "isAuth": false,
+          "isCors": true
+        }
+      },
+      {
+        "order": 3,
+        "action": "handler",
+        "label": "Import",
+        "nodeId": null,
+        "lineRange": [
+          94,
+          94
+        ],
+        "assumed": false
+      },
+      {
+        "order": 4,
+        "action": "response",
+        "label": "response write",
+        "nodeId": null,
+        "lineRange": null,
+        "assumed": true
+      }
+    ],
+    "assumed": true,
+    "confidence": 0.45,
+    "meta": {
+      "protected": false,
+      "hasMiddleware": true
+    }
+  },
+  {
+    "id": "flow:main:PUT:/api/v1/alumni/:id",
+    "title": "PUT /api/v1/alumni/:id",
+    "trigger": "PUT /api/v1/alumni/:id",
+    "steps": [
+      {
+        "order": 1,
+        "action": "middleware",
+        "label": "recover.New",
+        "nodeId": null,
+        "lineRange": [
+          77,
+          77
+        ],
+        "assumed": true,
+        "meta": {
+          "isAuth": false,
+          "isCors": false
+        }
+      },
+      {
+        "order": 2,
+        "action": "middleware",
+        "label": "cors.New",
+        "nodeId": null,
+        "lineRange": [
+          80,
+          80
+        ],
+        "assumed": true,
+        "meta": {
+          "isAuth": false,
+          "isCors": true
+        }
+      },
+      {
+        "order": 3,
+        "action": "handler",
+        "label": "Update",
+        "nodeId": null,
+        "lineRange": [
+          92,
+          92
+        ],
+        "assumed": false
+      },
+      {
+        "order": 4,
+        "action": "response",
+        "label": "response write",
+        "nodeId": null,
+        "lineRange": null,
+        "assumed": true
+      }
+    ],
+    "assumed": true,
+    "confidence": 0.45,
+    "meta": {
+      "protected": false,
+      "hasMiddleware": true
+    }
+  }
+]

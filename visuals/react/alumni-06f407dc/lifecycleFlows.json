@@ -1,0 +1,30 @@
+[
+  {
+    "id": "flow:ProfilePage:handleSubmit",
+    "title": "handleSubmit",
+    "trigger": "handleSubmit",
+    "steps": [
+      {
+        "order": 1,
+        "action": "event",
+        "label": "handleSubmit",
+        "nodeId": null,
+        "lineRange": [
+          21,
+          31
+        ],
+        "assumed": false
+      },
+      {
+        "order": 2,
+        "action": "render",
+        "label": "re-render",
+        "nodeId": null,
+        "lineRange": null,
+        "assumed": true
+      }
+    ],
+    "assumed": true,
+    "confidence": 0.5
+  }
+]

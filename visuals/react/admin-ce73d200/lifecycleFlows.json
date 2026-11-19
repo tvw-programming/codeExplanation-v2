@@ -1,0 +1,2909 @@
+[
+  {
+    "id": "flow:AlumniAdminGrid:inline_onChange_L160",
+    "title": "inline_onChange_L160",
+    "trigger": "inline_onChange_L160",
+    "steps": [
+      {
+        "order": 1,
+        "action": "event",
+        "label": "inline_onChange_L160",
+        "nodeId": null,
+        "lineRange": [
+          160,
+          160
+        ],
+        "assumed": true
+      },
+      {
+        "order": 2,
+        "action": "other",
+        "label": "useQueryClient",
+        "nodeId": null,
+        "lineRange": [
+          40,
+          40
+        ],
+        "assumed": true
+      },
+      {
+        "order": 3,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          42,
+          42
+        ],
+        "assumed": true
+      },
+      {
+        "order": 4,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          43,
+          43
+        ],
+        "assumed": true
+      },
+      {
+        "order": 5,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          44,
+          44
+        ],
+        "assumed": true
+      },
+      {
+        "order": 6,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          47,
+          47
+        ],
+        "assumed": true
+      },
+      {
+        "order": 7,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          49,
+          49
+        ],
+        "assumed": true
+      },
+      {
+        "order": 8,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          50,
+          50
+        ],
+        "assumed": true
+      },
+      {
+        "order": 9,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          51,
+          51
+        ],
+        "assumed": true
+      },
+      {
+        "order": 10,
+        "action": "other",
+        "label": "useDeferredValue",
+        "nodeId": null,
+        "lineRange": [
+          55,
+          55
+        ],
+        "assumed": true
+      },
+      {
+        "order": 11,
+        "action": "other",
+        "label": "useQuery",
+        "nodeId": null,
+        "lineRange": [
+          57,
+          57
+        ],
+        "assumed": true
+      },
+      {
+        "order": 12,
+        "action": "other",
+        "label": "useMutation",
+        "nodeId": null,
+        "lineRange": [
+          74,
+          74
+        ],
+        "assumed": true
+      },
+      {
+        "order": 13,
+        "action": "other",
+        "label": "useMutation",
+        "nodeId": null,
+        "lineRange": [
+          83,
+          83
+        ],
+        "assumed": true
+      },
+      {
+        "order": 14,
+        "action": "other",
+        "label": "useMutation",
+        "nodeId": null,
+        "lineRange": [
+          91,
+          91
+        ],
+        "assumed": true
+      },
+      {
+        "order": 15,
+        "action": "render",
+        "label": "re-render",
+        "nodeId": null,
+        "lineRange": null,
+        "assumed": true
+      }
+    ],
+    "assumed": true,
+    "confidence": 0.5
+  },
+  {
+    "id": "flow:AlumniAdminGrid:inline_onChange_L168",
+    "title": "inline_onChange_L168",
+    "trigger": "inline_onChange_L168",
+    "steps": [
+      {
+        "order": 1,
+        "action": "event",
+        "label": "inline_onChange_L168",
+        "nodeId": null,
+        "lineRange": [
+          168,
+          168
+        ],
+        "assumed": true
+      },
+      {
+        "order": 2,
+        "action": "other",
+        "label": "useQueryClient",
+        "nodeId": null,
+        "lineRange": [
+          40,
+          40
+        ],
+        "assumed": true
+      },
+      {
+        "order": 3,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          42,
+          42
+        ],
+        "assumed": true
+      },
+      {
+        "order": 4,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          43,
+          43
+        ],
+        "assumed": true
+      },
+      {
+        "order": 5,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          44,
+          44
+        ],
+        "assumed": true
+      },
+      {
+        "order": 6,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          47,
+          47
+        ],
+        "assumed": true
+      },
+      {
+        "order": 7,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          49,
+          49
+        ],
+        "assumed": true
+      },
+      {
+        "order": 8,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          50,
+          50
+        ],
+        "assumed": true
+      },
+      {
+        "order": 9,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          51,
+          51
+        ],
+        "assumed": true
+      },
+      {
+        "order": 10,
+        "action": "other",
+        "label": "useDeferredValue",
+        "nodeId": null,
+        "lineRange": [
+          55,
+          55
+        ],
+        "assumed": true
+      },
+      {
+        "order": 11,
+        "action": "other",
+        "label": "useQuery",
+        "nodeId": null,
+        "lineRange": [
+          57,
+          57
+        ],
+        "assumed": true
+      },
+      {
+        "order": 12,
+        "action": "other",
+        "label": "useMutation",
+        "nodeId": null,
+        "lineRange": [
+          74,
+          74
+        ],
+        "assumed": true
+      },
+      {
+        "order": 13,
+        "action": "other",
+        "label": "useMutation",
+        "nodeId": null,
+        "lineRange": [
+          83,
+          83
+        ],
+        "assumed": true
+      },
+      {
+        "order": 14,
+        "action": "other",
+        "label": "useMutation",
+        "nodeId": null,
+        "lineRange": [
+          91,
+          91
+        ],
+        "assumed": true
+      },
+      {
+        "order": 15,
+        "action": "render",
+        "label": "re-render",
+        "nodeId": null,
+        "lineRange": null,
+        "assumed": true
+      }
+    ],
+    "assumed": true,
+    "confidence": 0.5
+  },
+  {
+    "id": "flow:AlumniAdminGrid:inline_onClick_L180",
+    "title": "inline_onClick_L180",
+    "trigger": "inline_onClick_L180",
+    "steps": [
+      {
+        "order": 1,
+        "action": "event",
+        "label": "inline_onClick_L180",
+        "nodeId": null,
+        "lineRange": [
+          180,
+          180
+        ],
+        "assumed": true
+      },
+      {
+        "order": 2,
+        "action": "other",
+        "label": "useQueryClient",
+        "nodeId": null,
+        "lineRange": [
+          40,
+          40
+        ],
+        "assumed": true
+      },
+      {
+        "order": 3,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          42,
+          42
+        ],
+        "assumed": true
+      },
+      {
+        "order": 4,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          43,
+          43
+        ],
+        "assumed": true
+      },
+      {
+        "order": 5,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          44,
+          44
+        ],
+        "assumed": true
+      },
+      {
+        "order": 6,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          47,
+          47
+        ],
+        "assumed": true
+      },
+      {
+        "order": 7,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          49,
+          49
+        ],
+        "assumed": true
+      },
+      {
+        "order": 8,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          50,
+          50
+        ],
+        "assumed": true
+      },
+      {
+        "order": 9,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          51,
+          51
+        ],
+        "assumed": true
+      },
+      {
+        "order": 10,
+        "action": "other",
+        "label": "useDeferredValue",
+        "nodeId": null,
+        "lineRange": [
+          55,
+          55
+        ],
+        "assumed": true
+      },
+      {
+        "order": 11,
+        "action": "other",
+        "label": "useQuery",
+        "nodeId": null,
+        "lineRange": [
+          57,
+          57
+        ],
+        "assumed": true
+      },
+      {
+        "order": 12,
+        "action": "other",
+        "label": "useMutation",
+        "nodeId": null,
+        "lineRange": [
+          74,
+          74
+        ],
+        "assumed": true
+      },
+      {
+        "order": 13,
+        "action": "other",
+        "label": "useMutation",
+        "nodeId": null,
+        "lineRange": [
+          83,
+          83
+        ],
+        "assumed": true
+      },
+      {
+        "order": 14,
+        "action": "other",
+        "label": "useMutation",
+        "nodeId": null,
+        "lineRange": [
+          91,
+          91
+        ],
+        "assumed": true
+      },
+      {
+        "order": 15,
+        "action": "render",
+        "label": "re-render",
+        "nodeId": null,
+        "lineRange": null,
+        "assumed": true
+      }
+    ],
+    "assumed": true,
+    "confidence": 0.5
+  },
+  {
+    "id": "flow:AlumniAdminGrid:inline_onClick_L190",
+    "title": "inline_onClick_L190",
+    "trigger": "inline_onClick_L190",
+    "steps": [
+      {
+        "order": 1,
+        "action": "event",
+        "label": "inline_onClick_L190",
+        "nodeId": null,
+        "lineRange": [
+          190,
+          190
+        ],
+        "assumed": true
+      },
+      {
+        "order": 2,
+        "action": "other",
+        "label": "useQueryClient",
+        "nodeId": null,
+        "lineRange": [
+          40,
+          40
+        ],
+        "assumed": true
+      },
+      {
+        "order": 3,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          42,
+          42
+        ],
+        "assumed": true
+      },
+      {
+        "order": 4,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          43,
+          43
+        ],
+        "assumed": true
+      },
+      {
+        "order": 5,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          44,
+          44
+        ],
+        "assumed": true
+      },
+      {
+        "order": 6,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          47,
+          47
+        ],
+        "assumed": true
+      },
+      {
+        "order": 7,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          49,
+          49
+        ],
+        "assumed": true
+      },
+      {
+        "order": 8,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          50,
+          50
+        ],
+        "assumed": true
+      },
+      {
+        "order": 9,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          51,
+          51
+        ],
+        "assumed": true
+      },
+      {
+        "order": 10,
+        "action": "other",
+        "label": "useDeferredValue",
+        "nodeId": null,
+        "lineRange": [
+          55,
+          55
+        ],
+        "assumed": true
+      },
+      {
+        "order": 11,
+        "action": "other",
+        "label": "useQuery",
+        "nodeId": null,
+        "lineRange": [
+          57,
+          57
+        ],
+        "assumed": true
+      },
+      {
+        "order": 12,
+        "action": "other",
+        "label": "useMutation",
+        "nodeId": null,
+        "lineRange": [
+          74,
+          74
+        ],
+        "assumed": true
+      },
+      {
+        "order": 13,
+        "action": "other",
+        "label": "useMutation",
+        "nodeId": null,
+        "lineRange": [
+          83,
+          83
+        ],
+        "assumed": true
+      },
+      {
+        "order": 14,
+        "action": "other",
+        "label": "useMutation",
+        "nodeId": null,
+        "lineRange": [
+          91,
+          91
+        ],
+        "assumed": true
+      },
+      {
+        "order": 15,
+        "action": "render",
+        "label": "re-render",
+        "nodeId": null,
+        "lineRange": null,
+        "assumed": true
+      }
+    ],
+    "assumed": true,
+    "confidence": 0.5
+  },
+  {
+    "id": "flow:AlumniAdminGrid:inline_onClick_L196",
+    "title": "inline_onClick_L196",
+    "trigger": "inline_onClick_L196",
+    "steps": [
+      {
+        "order": 1,
+        "action": "event",
+        "label": "inline_onClick_L196",
+        "nodeId": null,
+        "lineRange": [
+          196,
+          196
+        ],
+        "assumed": true
+      },
+      {
+        "order": 2,
+        "action": "other",
+        "label": "useQueryClient",
+        "nodeId": null,
+        "lineRange": [
+          40,
+          40
+        ],
+        "assumed": true
+      },
+      {
+        "order": 3,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          42,
+          42
+        ],
+        "assumed": true
+      },
+      {
+        "order": 4,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          43,
+          43
+        ],
+        "assumed": true
+      },
+      {
+        "order": 5,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          44,
+          44
+        ],
+        "assumed": true
+      },
+      {
+        "order": 6,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          47,
+          47
+        ],
+        "assumed": true
+      },
+      {
+        "order": 7,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          49,
+          49
+        ],
+        "assumed": true
+      },
+      {
+        "order": 8,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          50,
+          50
+        ],
+        "assumed": true
+      },
+      {
+        "order": 9,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          51,
+          51
+        ],
+        "assumed": true
+      },
+      {
+        "order": 10,
+        "action": "other",
+        "label": "useDeferredValue",
+        "nodeId": null,
+        "lineRange": [
+          55,
+          55
+        ],
+        "assumed": true
+      },
+      {
+        "order": 11,
+        "action": "other",
+        "label": "useQuery",
+        "nodeId": null,
+        "lineRange": [
+          57,
+          57
+        ],
+        "assumed": true
+      },
+      {
+        "order": 12,
+        "action": "other",
+        "label": "useMutation",
+        "nodeId": null,
+        "lineRange": [
+          74,
+          74
+        ],
+        "assumed": true
+      },
+      {
+        "order": 13,
+        "action": "other",
+        "label": "useMutation",
+        "nodeId": null,
+        "lineRange": [
+          83,
+          83
+        ],
+        "assumed": true
+      },
+      {
+        "order": 14,
+        "action": "other",
+        "label": "useMutation",
+        "nodeId": null,
+        "lineRange": [
+          91,
+          91
+        ],
+        "assumed": true
+      },
+      {
+        "order": 15,
+        "action": "render",
+        "label": "re-render",
+        "nodeId": null,
+        "lineRange": null,
+        "assumed": true
+      }
+    ],
+    "assumed": true,
+    "confidence": 0.5
+  },
+  {
+    "id": "flow:AlumniAdminGrid:inline_onClick_L203",
+    "title": "inline_onClick_L203",
+    "trigger": "inline_onClick_L203",
+    "steps": [
+      {
+        "order": 1,
+        "action": "event",
+        "label": "inline_onClick_L203",
+        "nodeId": null,
+        "lineRange": [
+          203,
+          203
+        ],
+        "assumed": true
+      },
+      {
+        "order": 2,
+        "action": "other",
+        "label": "useQueryClient",
+        "nodeId": null,
+        "lineRange": [
+          40,
+          40
+        ],
+        "assumed": true
+      },
+      {
+        "order": 3,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          42,
+          42
+        ],
+        "assumed": true
+      },
+      {
+        "order": 4,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          43,
+          43
+        ],
+        "assumed": true
+      },
+      {
+        "order": 5,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          44,
+          44
+        ],
+        "assumed": true
+      },
+      {
+        "order": 6,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          47,
+          47
+        ],
+        "assumed": true
+      },
+      {
+        "order": 7,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          49,
+          49
+        ],
+        "assumed": true
+      },
+      {
+        "order": 8,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          50,
+          50
+        ],
+        "assumed": true
+      },
+      {
+        "order": 9,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          51,
+          51
+        ],
+        "assumed": true
+      },
+      {
+        "order": 10,
+        "action": "other",
+        "label": "useDeferredValue",
+        "nodeId": null,
+        "lineRange": [
+          55,
+          55
+        ],
+        "assumed": true
+      },
+      {
+        "order": 11,
+        "action": "other",
+        "label": "useQuery",
+        "nodeId": null,
+        "lineRange": [
+          57,
+          57
+        ],
+        "assumed": true
+      },
+      {
+        "order": 12,
+        "action": "other",
+        "label": "useMutation",
+        "nodeId": null,
+        "lineRange": [
+          74,
+          74
+        ],
+        "assumed": true
+      },
+      {
+        "order": 13,
+        "action": "other",
+        "label": "useMutation",
+        "nodeId": null,
+        "lineRange": [
+          83,
+          83
+        ],
+        "assumed": true
+      },
+      {
+        "order": 14,
+        "action": "other",
+        "label": "useMutation",
+        "nodeId": null,
+        "lineRange": [
+          91,
+          91
+        ],
+        "assumed": true
+      },
+      {
+        "order": 15,
+        "action": "render",
+        "label": "re-render",
+        "nodeId": null,
+        "lineRange": null,
+        "assumed": true
+      }
+    ],
+    "assumed": true,
+    "confidence": 0.5
+  },
+  {
+    "id": "flow:AlumniAdminGrid:inline_onClick_L229",
+    "title": "inline_onClick_L229",
+    "trigger": "inline_onClick_L229",
+    "steps": [
+      {
+        "order": 1,
+        "action": "event",
+        "label": "inline_onClick_L229",
+        "nodeId": null,
+        "lineRange": [
+          229,
+          229
+        ],
+        "assumed": true
+      },
+      {
+        "order": 2,
+        "action": "other",
+        "label": "useQueryClient",
+        "nodeId": null,
+        "lineRange": [
+          40,
+          40
+        ],
+        "assumed": true
+      },
+      {
+        "order": 3,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          42,
+          42
+        ],
+        "assumed": true
+      },
+      {
+        "order": 4,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          43,
+          43
+        ],
+        "assumed": true
+      },
+      {
+        "order": 5,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          44,
+          44
+        ],
+        "assumed": true
+      },
+      {
+        "order": 6,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          47,
+          47
+        ],
+        "assumed": true
+      },
+      {
+        "order": 7,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          49,
+          49
+        ],
+        "assumed": true
+      },
+      {
+        "order": 8,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          50,
+          50
+        ],
+        "assumed": true
+      },
+      {
+        "order": 9,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          51,
+          51
+        ],
+        "assumed": true
+      },
+      {
+        "order": 10,
+        "action": "other",
+        "label": "useDeferredValue",
+        "nodeId": null,
+        "lineRange": [
+          55,
+          55
+        ],
+        "assumed": true
+      },
+      {
+        "order": 11,
+        "action": "other",
+        "label": "useQuery",
+        "nodeId": null,
+        "lineRange": [
+          57,
+          57
+        ],
+        "assumed": true
+      },
+      {
+        "order": 12,
+        "action": "other",
+        "label": "useMutation",
+        "nodeId": null,
+        "lineRange": [
+          74,
+          74
+        ],
+        "assumed": true
+      },
+      {
+        "order": 13,
+        "action": "other",
+        "label": "useMutation",
+        "nodeId": null,
+        "lineRange": [
+          83,
+          83
+        ],
+        "assumed": true
+      },
+      {
+        "order": 14,
+        "action": "other",
+        "label": "useMutation",
+        "nodeId": null,
+        "lineRange": [
+          91,
+          91
+        ],
+        "assumed": true
+      },
+      {
+        "order": 15,
+        "action": "render",
+        "label": "re-render",
+        "nodeId": null,
+        "lineRange": null,
+        "assumed": true
+      }
+    ],
+    "assumed": true,
+    "confidence": 0.5
+  },
+  {
+    "id": "flow:AlumniAdminGrid:inline_onClick_L238",
+    "title": "inline_onClick_L238",
+    "trigger": "inline_onClick_L238",
+    "steps": [
+      {
+        "order": 1,
+        "action": "event",
+        "label": "inline_onClick_L238",
+        "nodeId": null,
+        "lineRange": [
+          238,
+          238
+        ],
+        "assumed": true
+      },
+      {
+        "order": 2,
+        "action": "other",
+        "label": "useQueryClient",
+        "nodeId": null,
+        "lineRange": [
+          40,
+          40
+        ],
+        "assumed": true
+      },
+      {
+        "order": 3,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          42,
+          42
+        ],
+        "assumed": true
+      },
+      {
+        "order": 4,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          43,
+          43
+        ],
+        "assumed": true
+      },
+      {
+        "order": 5,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          44,
+          44
+        ],
+        "assumed": true
+      },
+      {
+        "order": 6,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          47,
+          47
+        ],
+        "assumed": true
+      },
+      {
+        "order": 7,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          49,
+          49
+        ],
+        "assumed": true
+      },
+      {
+        "order": 8,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          50,
+          50
+        ],
+        "assumed": true
+      },
+      {
+        "order": 9,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          51,
+          51
+        ],
+        "assumed": true
+      },
+      {
+        "order": 10,
+        "action": "other",
+        "label": "useDeferredValue",
+        "nodeId": null,
+        "lineRange": [
+          55,
+          55
+        ],
+        "assumed": true
+      },
+      {
+        "order": 11,
+        "action": "other",
+        "label": "useQuery",
+        "nodeId": null,
+        "lineRange": [
+          57,
+          57
+        ],
+        "assumed": true
+      },
+      {
+        "order": 12,
+        "action": "other",
+        "label": "useMutation",
+        "nodeId": null,
+        "lineRange": [
+          74,
+          74
+        ],
+        "assumed": true
+      },
+      {
+        "order": 13,
+        "action": "other",
+        "label": "useMutation",
+        "nodeId": null,
+        "lineRange": [
+          83,
+          83
+        ],
+        "assumed": true
+      },
+      {
+        "order": 14,
+        "action": "other",
+        "label": "useMutation",
+        "nodeId": null,
+        "lineRange": [
+          91,
+          91
+        ],
+        "assumed": true
+      },
+      {
+        "order": 15,
+        "action": "render",
+        "label": "re-render",
+        "nodeId": null,
+        "lineRange": null,
+        "assumed": true
+      }
+    ],
+    "assumed": true,
+    "confidence": 0.5
+  },
+  {
+    "id": "flow:AlumniAdminGrid:inline_onClick_L269",
+    "title": "inline_onClick_L269",
+    "trigger": "inline_onClick_L269",
+    "steps": [
+      {
+        "order": 1,
+        "action": "event",
+        "label": "inline_onClick_L269",
+        "nodeId": null,
+        "lineRange": [
+          269,
+          269
+        ],
+        "assumed": true
+      },
+      {
+        "order": 2,
+        "action": "other",
+        "label": "useQueryClient",
+        "nodeId": null,
+        "lineRange": [
+          40,
+          40
+        ],
+        "assumed": true
+      },
+      {
+        "order": 3,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          42,
+          42
+        ],
+        "assumed": true
+      },
+      {
+        "order": 4,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          43,
+          43
+        ],
+        "assumed": true
+      },
+      {
+        "order": 5,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          44,
+          44
+        ],
+        "assumed": true
+      },
+      {
+        "order": 6,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          47,
+          47
+        ],
+        "assumed": true
+      },
+      {
+        "order": 7,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          49,
+          49
+        ],
+        "assumed": true
+      },
+      {
+        "order": 8,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          50,
+          50
+        ],
+        "assumed": true
+      },
+      {
+        "order": 9,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          51,
+          51
+        ],
+        "assumed": true
+      },
+      {
+        "order": 10,
+        "action": "other",
+        "label": "useDeferredValue",
+        "nodeId": null,
+        "lineRange": [
+          55,
+          55
+        ],
+        "assumed": true
+      },
+      {
+        "order": 11,
+        "action": "other",
+        "label": "useQuery",
+        "nodeId": null,
+        "lineRange": [
+          57,
+          57
+        ],
+        "assumed": true
+      },
+      {
+        "order": 12,
+        "action": "other",
+        "label": "useMutation",
+        "nodeId": null,
+        "lineRange": [
+          74,
+          74
+        ],
+        "assumed": true
+      },
+      {
+        "order": 13,
+        "action": "other",
+        "label": "useMutation",
+        "nodeId": null,
+        "lineRange": [
+          83,
+          83
+        ],
+        "assumed": true
+      },
+      {
+        "order": 14,
+        "action": "other",
+        "label": "useMutation",
+        "nodeId": null,
+        "lineRange": [
+          91,
+          91
+        ],
+        "assumed": true
+      },
+      {
+        "order": 15,
+        "action": "render",
+        "label": "re-render",
+        "nodeId": null,
+        "lineRange": null,
+        "assumed": true
+      }
+    ],
+    "assumed": true,
+    "confidence": 0.5
+  },
+  {
+    "id": "flow:AlumniAdminGrid:inline_onClick_L274",
+    "title": "inline_onClick_L274",
+    "trigger": "inline_onClick_L274",
+    "steps": [
+      {
+        "order": 1,
+        "action": "event",
+        "label": "inline_onClick_L274",
+        "nodeId": null,
+        "lineRange": [
+          274,
+          274
+        ],
+        "assumed": true
+      },
+      {
+        "order": 2,
+        "action": "other",
+        "label": "useQueryClient",
+        "nodeId": null,
+        "lineRange": [
+          40,
+          40
+        ],
+        "assumed": true
+      },
+      {
+        "order": 3,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          42,
+          42
+        ],
+        "assumed": true
+      },
+      {
+        "order": 4,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          43,
+          43
+        ],
+        "assumed": true
+      },
+      {
+        "order": 5,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          44,
+          44
+        ],
+        "assumed": true
+      },
+      {
+        "order": 6,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          47,
+          47
+        ],
+        "assumed": true
+      },
+      {
+        "order": 7,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          49,
+          49
+        ],
+        "assumed": true
+      },
+      {
+        "order": 8,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          50,
+          50
+        ],
+        "assumed": true
+      },
+      {
+        "order": 9,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          51,
+          51
+        ],
+        "assumed": true
+      },
+      {
+        "order": 10,
+        "action": "other",
+        "label": "useDeferredValue",
+        "nodeId": null,
+        "lineRange": [
+          55,
+          55
+        ],
+        "assumed": true
+      },
+      {
+        "order": 11,
+        "action": "other",
+        "label": "useQuery",
+        "nodeId": null,
+        "lineRange": [
+          57,
+          57
+        ],
+        "assumed": true
+      },
+      {
+        "order": 12,
+        "action": "other",
+        "label": "useMutation",
+        "nodeId": null,
+        "lineRange": [
+          74,
+          74
+        ],
+        "assumed": true
+      },
+      {
+        "order": 13,
+        "action": "other",
+        "label": "useMutation",
+        "nodeId": null,
+        "lineRange": [
+          83,
+          83
+        ],
+        "assumed": true
+      },
+      {
+        "order": 14,
+        "action": "other",
+        "label": "useMutation",
+        "nodeId": null,
+        "lineRange": [
+          91,
+          91
+        ],
+        "assumed": true
+      },
+      {
+        "order": 15,
+        "action": "render",
+        "label": "re-render",
+        "nodeId": null,
+        "lineRange": null,
+        "assumed": true
+      }
+    ],
+    "assumed": true,
+    "confidence": 0.5
+  },
+  {
+    "id": "flow:AlumniAdminGrid:inline_onClose_L248",
+    "title": "inline_onClose_L248",
+    "trigger": "inline_onClose_L248",
+    "steps": [
+      {
+        "order": 1,
+        "action": "event",
+        "label": "inline_onClose_L248",
+        "nodeId": null,
+        "lineRange": [
+          248,
+          248
+        ],
+        "assumed": true
+      },
+      {
+        "order": 2,
+        "action": "other",
+        "label": "useQueryClient",
+        "nodeId": null,
+        "lineRange": [
+          40,
+          40
+        ],
+        "assumed": true
+      },
+      {
+        "order": 3,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          42,
+          42
+        ],
+        "assumed": true
+      },
+      {
+        "order": 4,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          43,
+          43
+        ],
+        "assumed": true
+      },
+      {
+        "order": 5,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          44,
+          44
+        ],
+        "assumed": true
+      },
+      {
+        "order": 6,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          47,
+          47
+        ],
+        "assumed": true
+      },
+      {
+        "order": 7,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          49,
+          49
+        ],
+        "assumed": true
+      },
+      {
+        "order": 8,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          50,
+          50
+        ],
+        "assumed": true
+      },
+      {
+        "order": 9,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          51,
+          51
+        ],
+        "assumed": true
+      },
+      {
+        "order": 10,
+        "action": "other",
+        "label": "useDeferredValue",
+        "nodeId": null,
+        "lineRange": [
+          55,
+          55
+        ],
+        "assumed": true
+      },
+      {
+        "order": 11,
+        "action": "other",
+        "label": "useQuery",
+        "nodeId": null,
+        "lineRange": [
+          57,
+          57
+        ],
+        "assumed": true
+      },
+      {
+        "order": 12,
+        "action": "other",
+        "label": "useMutation",
+        "nodeId": null,
+        "lineRange": [
+          74,
+          74
+        ],
+        "assumed": true
+      },
+      {
+        "order": 13,
+        "action": "other",
+        "label": "useMutation",
+        "nodeId": null,
+        "lineRange": [
+          83,
+          83
+        ],
+        "assumed": true
+      },
+      {
+        "order": 14,
+        "action": "other",
+        "label": "useMutation",
+        "nodeId": null,
+        "lineRange": [
+          91,
+          91
+        ],
+        "assumed": true
+      },
+      {
+        "order": 15,
+        "action": "render",
+        "label": "re-render",
+        "nodeId": null,
+        "lineRange": null,
+        "assumed": true
+      }
+    ],
+    "assumed": true,
+    "confidence": 0.5
+  },
+  {
+    "id": "flow:AlumniAdminGrid:inline_onClose_L255",
+    "title": "inline_onClose_L255",
+    "trigger": "inline_onClose_L255",
+    "steps": [
+      {
+        "order": 1,
+        "action": "event",
+        "label": "inline_onClose_L255",
+        "nodeId": null,
+        "lineRange": [
+          255,
+          255
+        ],
+        "assumed": true
+      },
+      {
+        "order": 2,
+        "action": "other",
+        "label": "useQueryClient",
+        "nodeId": null,
+        "lineRange": [
+          40,
+          40
+        ],
+        "assumed": true
+      },
+      {
+        "order": 3,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          42,
+          42
+        ],
+        "assumed": true
+      },
+      {
+        "order": 4,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          43,
+          43
+        ],
+        "assumed": true
+      },
+      {
+        "order": 5,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          44,
+          44
+        ],
+        "assumed": true
+      },
+      {
+        "order": 6,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          47,
+          47
+        ],
+        "assumed": true
+      },
+      {
+        "order": 7,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          49,
+          49
+        ],
+        "assumed": true
+      },
+      {
+        "order": 8,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          50,
+          50
+        ],
+        "assumed": true
+      },
+      {
+        "order": 9,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          51,
+          51
+        ],
+        "assumed": true
+      },
+      {
+        "order": 10,
+        "action": "other",
+        "label": "useDeferredValue",
+        "nodeId": null,
+        "lineRange": [
+          55,
+          55
+        ],
+        "assumed": true
+      },
+      {
+        "order": 11,
+        "action": "other",
+        "label": "useQuery",
+        "nodeId": null,
+        "lineRange": [
+          57,
+          57
+        ],
+        "assumed": true
+      },
+      {
+        "order": 12,
+        "action": "other",
+        "label": "useMutation",
+        "nodeId": null,
+        "lineRange": [
+          74,
+          74
+        ],
+        "assumed": true
+      },
+      {
+        "order": 13,
+        "action": "other",
+        "label": "useMutation",
+        "nodeId": null,
+        "lineRange": [
+          83,
+          83
+        ],
+        "assumed": true
+      },
+      {
+        "order": 14,
+        "action": "other",
+        "label": "useMutation",
+        "nodeId": null,
+        "lineRange": [
+          91,
+          91
+        ],
+        "assumed": true
+      },
+      {
+        "order": 15,
+        "action": "render",
+        "label": "re-render",
+        "nodeId": null,
+        "lineRange": null,
+        "assumed": true
+      }
+    ],
+    "assumed": true,
+    "confidence": 0.5
+  },
+  {
+    "id": "flow:AlumniAdminGrid:inline_onClose_L259",
+    "title": "inline_onClose_L259",
+    "trigger": "inline_onClose_L259",
+    "steps": [
+      {
+        "order": 1,
+        "action": "event",
+        "label": "inline_onClose_L259",
+        "nodeId": null,
+        "lineRange": [
+          259,
+          259
+        ],
+        "assumed": true
+      },
+      {
+        "order": 2,
+        "action": "other",
+        "label": "useQueryClient",
+        "nodeId": null,
+        "lineRange": [
+          40,
+          40
+        ],
+        "assumed": true
+      },
+      {
+        "order": 3,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          42,
+          42
+        ],
+        "assumed": true
+      },
+      {
+        "order": 4,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          43,
+          43
+        ],
+        "assumed": true
+      },
+      {
+        "order": 5,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          44,
+          44
+        ],
+        "assumed": true
+      },
+      {
+        "order": 6,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          47,
+          47
+        ],
+        "assumed": true
+      },
+      {
+        "order": 7,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          49,
+          49
+        ],
+        "assumed": true
+      },
+      {
+        "order": 8,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          50,
+          50
+        ],
+        "assumed": true
+      },
+      {
+        "order": 9,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          51,
+          51
+        ],
+        "assumed": true
+      },
+      {
+        "order": 10,
+        "action": "other",
+        "label": "useDeferredValue",
+        "nodeId": null,
+        "lineRange": [
+          55,
+          55
+        ],
+        "assumed": true
+      },
+      {
+        "order": 11,
+        "action": "other",
+        "label": "useQuery",
+        "nodeId": null,
+        "lineRange": [
+          57,
+          57
+        ],
+        "assumed": true
+      },
+      {
+        "order": 12,
+        "action": "other",
+        "label": "useMutation",
+        "nodeId": null,
+        "lineRange": [
+          74,
+          74
+        ],
+        "assumed": true
+      },
+      {
+        "order": 13,
+        "action": "other",
+        "label": "useMutation",
+        "nodeId": null,
+        "lineRange": [
+          83,
+          83
+        ],
+        "assumed": true
+      },
+      {
+        "order": 14,
+        "action": "other",
+        "label": "useMutation",
+        "nodeId": null,
+        "lineRange": [
+          91,
+          91
+        ],
+        "assumed": true
+      },
+      {
+        "order": 15,
+        "action": "render",
+        "label": "re-render",
+        "nodeId": null,
+        "lineRange": null,
+        "assumed": true
+      }
+    ],
+    "assumed": true,
+    "confidence": 0.5
+  },
+  {
+    "id": "flow:AlumniAdminGrid:inline_onClose_L281",
+    "title": "inline_onClose_L281",
+    "trigger": "inline_onClose_L281",
+    "steps": [
+      {
+        "order": 1,
+        "action": "event",
+        "label": "inline_onClose_L281",
+        "nodeId": null,
+        "lineRange": [
+          281,
+          281
+        ],
+        "assumed": true
+      },
+      {
+        "order": 2,
+        "action": "other",
+        "label": "useQueryClient",
+        "nodeId": null,
+        "lineRange": [
+          40,
+          40
+        ],
+        "assumed": true
+      },
+      {
+        "order": 3,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          42,
+          42
+        ],
+        "assumed": true
+      },
+      {
+        "order": 4,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          43,
+          43
+        ],
+        "assumed": true
+      },
+      {
+        "order": 5,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          44,
+          44
+        ],
+        "assumed": true
+      },
+      {
+        "order": 6,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          47,
+          47
+        ],
+        "assumed": true
+      },
+      {
+        "order": 7,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          49,
+          49
+        ],
+        "assumed": true
+      },
+      {
+        "order": 8,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          50,
+          50
+        ],
+        "assumed": true
+      },
+      {
+        "order": 9,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          51,
+          51
+        ],
+        "assumed": true
+      },
+      {
+        "order": 10,
+        "action": "other",
+        "label": "useDeferredValue",
+        "nodeId": null,
+        "lineRange": [
+          55,
+          55
+        ],
+        "assumed": true
+      },
+      {
+        "order": 11,
+        "action": "other",
+        "label": "useQuery",
+        "nodeId": null,
+        "lineRange": [
+          57,
+          57
+        ],
+        "assumed": true
+      },
+      {
+        "order": 12,
+        "action": "other",
+        "label": "useMutation",
+        "nodeId": null,
+        "lineRange": [
+          74,
+          74
+        ],
+        "assumed": true
+      },
+      {
+        "order": 13,
+        "action": "other",
+        "label": "useMutation",
+        "nodeId": null,
+        "lineRange": [
+          83,
+          83
+        ],
+        "assumed": true
+      },
+      {
+        "order": 14,
+        "action": "other",
+        "label": "useMutation",
+        "nodeId": null,
+        "lineRange": [
+          91,
+          91
+        ],
+        "assumed": true
+      },
+      {
+        "order": 15,
+        "action": "render",
+        "label": "re-render",
+        "nodeId": null,
+        "lineRange": null,
+        "assumed": true
+      }
+    ],
+    "assumed": true,
+    "confidence": 0.5
+  },
+  {
+    "id": "flow:AlumniAdminGrid:inline_onImport_L256",
+    "title": "inline_onImport_L256",
+    "trigger": "inline_onImport_L256",
+    "steps": [
+      {
+        "order": 1,
+        "action": "event",
+        "label": "inline_onImport_L256",
+        "nodeId": null,
+        "lineRange": [
+          256,
+          256
+        ],
+        "assumed": true
+      },
+      {
+        "order": 2,
+        "action": "other",
+        "label": "useQueryClient",
+        "nodeId": null,
+        "lineRange": [
+          40,
+          40
+        ],
+        "assumed": true
+      },
+      {
+        "order": 3,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          42,
+          42
+        ],
+        "assumed": true
+      },
+      {
+        "order": 4,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          43,
+          43
+        ],
+        "assumed": true
+      },
+      {
+        "order": 5,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          44,
+          44
+        ],
+        "assumed": true
+      },
+      {
+        "order": 6,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          47,
+          47
+        ],
+        "assumed": true
+      },
+      {
+        "order": 7,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          49,
+          49
+        ],
+        "assumed": true
+      },
+      {
+        "order": 8,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          50,
+          50
+        ],
+        "assumed": true
+      },
+      {
+        "order": 9,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          51,
+          51
+        ],
+        "assumed": true
+      },
+      {
+        "order": 10,
+        "action": "other",
+        "label": "useDeferredValue",
+        "nodeId": null,
+        "lineRange": [
+          55,
+          55
+        ],
+        "assumed": true
+      },
+      {
+        "order": 11,
+        "action": "other",
+        "label": "useQuery",
+        "nodeId": null,
+        "lineRange": [
+          57,
+          57
+        ],
+        "assumed": true
+      },
+      {
+        "order": 12,
+        "action": "other",
+        "label": "useMutation",
+        "nodeId": null,
+        "lineRange": [
+          74,
+          74
+        ],
+        "assumed": true
+      },
+      {
+        "order": 13,
+        "action": "other",
+        "label": "useMutation",
+        "nodeId": null,
+        "lineRange": [
+          83,
+          83
+        ],
+        "assumed": true
+      },
+      {
+        "order": 14,
+        "action": "other",
+        "label": "useMutation",
+        "nodeId": null,
+        "lineRange": [
+          91,
+          91
+        ],
+        "assumed": true
+      },
+      {
+        "order": 15,
+        "action": "render",
+        "label": "re-render",
+        "nodeId": null,
+        "lineRange": null,
+        "assumed": true
+      }
+    ],
+    "assumed": true,
+    "confidence": 0.5
+  },
+  {
+    "id": "flow:AlumniAdminGrid:inline_onSave_L249",
+    "title": "inline_onSave_L249",
+    "trigger": "inline_onSave_L249",
+    "steps": [
+      {
+        "order": 1,
+        "action": "event",
+        "label": "inline_onSave_L249",
+        "nodeId": null,
+        "lineRange": [
+          249,
+          249
+        ],
+        "assumed": true
+      },
+      {
+        "order": 2,
+        "action": "other",
+        "label": "useQueryClient",
+        "nodeId": null,
+        "lineRange": [
+          40,
+          40
+        ],
+        "assumed": true
+      },
+      {
+        "order": 3,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          42,
+          42
+        ],
+        "assumed": true
+      },
+      {
+        "order": 4,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          43,
+          43
+        ],
+        "assumed": true
+      },
+      {
+        "order": 5,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          44,
+          44
+        ],
+        "assumed": true
+      },
+      {
+        "order": 6,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          47,
+          47
+        ],
+        "assumed": true
+      },
+      {
+        "order": 7,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          49,
+          49
+        ],
+        "assumed": true
+      },
+      {
+        "order": 8,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          50,
+          50
+        ],
+        "assumed": true
+      },
+      {
+        "order": 9,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          51,
+          51
+        ],
+        "assumed": true
+      },
+      {
+        "order": 10,
+        "action": "other",
+        "label": "useDeferredValue",
+        "nodeId": null,
+        "lineRange": [
+          55,
+          55
+        ],
+        "assumed": true
+      },
+      {
+        "order": 11,
+        "action": "other",
+        "label": "useQuery",
+        "nodeId": null,
+        "lineRange": [
+          57,
+          57
+        ],
+        "assumed": true
+      },
+      {
+        "order": 12,
+        "action": "other",
+        "label": "useMutation",
+        "nodeId": null,
+        "lineRange": [
+          74,
+          74
+        ],
+        "assumed": true
+      },
+      {
+        "order": 13,
+        "action": "other",
+        "label": "useMutation",
+        "nodeId": null,
+        "lineRange": [
+          83,
+          83
+        ],
+        "assumed": true
+      },
+      {
+        "order": 14,
+        "action": "other",
+        "label": "useMutation",
+        "nodeId": null,
+        "lineRange": [
+          91,
+          91
+        ],
+        "assumed": true
+      },
+      {
+        "order": 15,
+        "action": "render",
+        "label": "re-render",
+        "nodeId": null,
+        "lineRange": null,
+        "assumed": true
+      }
+    ],
+    "assumed": true,
+    "confidence": 0.5
+  },
+  {
+    "id": "flow:AlumniAdminGrid:inline_onSelectionChanged_L222",
+    "title": "inline_onSelectionChanged_L222",
+    "trigger": "inline_onSelectionChanged_L222",
+    "steps": [
+      {
+        "order": 1,
+        "action": "event",
+        "label": "inline_onSelectionChanged_L222",
+        "nodeId": null,
+        "lineRange": [
+          222,
+          222
+        ],
+        "assumed": true
+      },
+      {
+        "order": 2,
+        "action": "other",
+        "label": "useQueryClient",
+        "nodeId": null,
+        "lineRange": [
+          40,
+          40
+        ],
+        "assumed": true
+      },
+      {
+        "order": 3,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          42,
+          42
+        ],
+        "assumed": true
+      },
+      {
+        "order": 4,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          43,
+          43
+        ],
+        "assumed": true
+      },
+      {
+        "order": 5,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          44,
+          44
+        ],
+        "assumed": true
+      },
+      {
+        "order": 6,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          47,
+          47
+        ],
+        "assumed": true
+      },
+      {
+        "order": 7,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          49,
+          49
+        ],
+        "assumed": true
+      },
+      {
+        "order": 8,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          50,
+          50
+        ],
+        "assumed": true
+      },
+      {
+        "order": 9,
+        "action": "state_update",
+        "label": "useState",
+        "nodeId": null,
+        "lineRange": [
+          51,
+          51
+        ],
+        "assumed": true
+      },
+      {
+        "order": 10,
+        "action": "other",
+        "label": "useDeferredValue",
+        "nodeId": null,
+        "lineRange": [
+          55,
+          55
+        ],
+        "assumed": true
+      },
+      {
+        "order": 11,
+        "action": "other",
+        "label": "useQuery",
+        "nodeId": null,
+        "lineRange": [
+          57,
+          57
+        ],
+        "assumed": true
+      },
+      {
+        "order": 12,
+        "action": "other",
+        "label": "useMutation",
+        "nodeId": null,
+        "lineRange": [
+          74,
+          74
+        ],
+        "assumed": true
+      },
+      {
+        "order": 13,
+        "action": "other",
+        "label": "useMutation",
+        "nodeId": null,
+        "lineRange": [
+          83,
+          83
+        ],
+        "assumed": true
+      },
+      {
+        "order": 14,
+        "action": "other",
+        "label": "useMutation",
+        "nodeId": null,
+        "lineRange": [
+          91,
+          91
+        ],
+        "assumed": true
+      },
+      {
+        "order": 15,
+        "action": "render",
+        "label": "re-render",
+        "nodeId": null,
+        "lineRange": null,
+        "assumed": true
+      }
+    ],
+    "assumed": true,
+    "confidence": 0.5
+  }
+]

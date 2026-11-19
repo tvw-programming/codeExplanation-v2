@@ -1,0 +1,167 @@
+{
+  "chunkId": "api-7c64050d",
+  "filePath": "src/api/alumni.ts",
+  "stack": "react",
+  "visualAvailability": {
+    "componentTree": "partial",
+    "lifecycleFlow": "unavailable",
+    "interactiveBreakdown": "partial",
+    "reasons": {
+      "componentTree": "No XProps interface found; prop layer incomplete.",
+      "lifecycleFlow": "no_lifecycle_triggers_extracted"
+    }
+  },
+  "fidelity": "regex",
+  "visualGraph": {
+    "schemaVersion": 1,
+    "kind": "component_tree",
+    "rootId": "component:alumni",
+    "nodes": [
+      {
+        "id": "component:AlumniPage",
+        "kind": "component",
+        "label": "AlumniPage",
+        "filePath": "src/api/alumni.ts",
+        "line": 61,
+        "assumed": false,
+        "meta": {
+          "props": []
+        }
+      },
+      {
+        "id": "component:AlumniRow",
+        "kind": "component",
+        "label": "AlumniRow",
+        "filePath": "src/api/alumni.ts",
+        "line": 74,
+        "assumed": false,
+        "meta": {
+          "props": []
+        }
+      },
+      {
+        "id": "component:ImportOutcome",
+        "kind": "component",
+        "label": "ImportOutcome",
+        "filePath": "src/api/alumni.ts",
+        "line": 127,
+        "assumed": false,
+        "meta": {
+          "props": []
+        }
+      },
+      {
+        "id": "component:alumni",
+        "kind": "component",
+        "label": "alumni",
+        "filePath": "src/api/alumni.ts",
+        "line": 1,
+        "assumed": false,
+        "meta": {
+          "role": "root"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "id": "mounts:component:alumni->component:AlumniPage:0",
+        "kind": "mounts",
+        "from": "component:alumni",
+        "to": "component:AlumniPage",
+        "assumed": false,
+        "label": null,
+        "meta": {
+          "props": []
+        }
+      },
+      {
+        "id": "mounts:component:alumni->component:AlumniPage:1",
+        "kind": "mounts",
+        "from": "component:alumni",
+        "to": "component:AlumniPage",
+        "assumed": false,
+        "label": null,
+        "meta": {
+          "props": []
+        }
+      },
+      {
+        "id": "mounts:component:alumni->component:AlumniRow:2",
+        "kind": "mounts",
+        "from": "component:alumni",
+        "to": "component:AlumniRow",
+        "assumed": false,
+        "label": null,
+        "meta": {
+          "props": []
+        }
+      },
+      {
+        "id": "mounts:component:alumni->component:AlumniRow:3",
+        "kind": "mounts",
+        "from": "component:alumni",
+        "to": "component:AlumniRow",
+        "assumed": false,
+        "label": null,
+        "meta": {
+          "props": []
+        }
+      },
+      {
+        "id": "mounts:component:alumni->component:AlumniRow:4",
+        "kind": "mounts",
+        "from": "component:alumni",
+        "to": "component:AlumniRow",
+        "assumed": false,
+        "label": null,
+        "meta": {
+          "props": []
+        }
+      },
+      {
+        "id": "mounts:component:alumni->component:AlumniRow:5",
+        "kind": "mounts",
+        "from": "component:alumni",
+        "to": "component:AlumniRow",
+        "assumed": false,
+        "label": null,
+        "meta": {
+          "props": []
+        }
+      },
+      {
+        "id": "mounts:component:alumni->component:ImportOutcome:6",
+        "kind": "mounts",
+        "from": "component:alumni",
+        "to": "component:ImportOutcome",
+        "assumed": false,
+        "label": null,
+        "meta": {
+          "props": []
+        }
+      },
+      {
+        "id": "mounts:component:alumni->component:ImportOutcome:7",
+        "kind": "mounts",
+        "from": "component:alumni",
+        "to": "component:ImportOutcome",
+        "assumed": false,
+        "label": null,
+        "meta": {
+          "props": []
+        }
+      }
+    ]
+  },
+  "lifecycleFlows": [],
+  "securityFlags": [],
+  "visualTheme": {
+    "stack": "react",
+    "primary": "#61DAFB",
+    "secondary": "#087EA4",
+    "onDark": "#61DAFB",
+    "logoAssetId": "react-logo-ondark",
+    "logoPath": "visuals/logos/react.svg"
+  },
+  "mermaid": "flowchart TD\n  component_AlumniPage[\"AlumniPage\"]\n  component_AlumniRow[\"AlumniRow\"]\n  component_ImportOutcome[\"ImportOutcome\"]\n  component_alumni[\"alumni\"]\n  component_alumni --> component_AlumniPage\n  component_alumni --> component_AlumniPage\n  component_alumni --> component_AlumniRow\n  component_alumni --> component_AlumniRow\n  component_alumni --> component_AlumniRow\n  component_alumni --> component_AlumniRow\n  component_alumni --> component_ImportOutcome\n  component_alumni --> component_ImportOutcome"
+}

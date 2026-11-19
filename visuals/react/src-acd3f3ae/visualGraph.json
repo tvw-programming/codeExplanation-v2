@@ -1,0 +1,222 @@
+{
+  "schemaVersion": 1,
+  "kind": "component_tree",
+  "rootId": "component:main",
+  "nodes": [
+    {
+      "id": "component:App",
+      "kind": "component",
+      "label": "App",
+      "filePath": "src/main.tsx",
+      "line": 36,
+      "assumed": false,
+      "meta": {
+        "props": []
+      }
+    },
+    {
+      "id": "component:CssBaseline",
+      "kind": "component",
+      "label": "CssBaseline",
+      "filePath": "src/main.tsx",
+      "line": 35,
+      "assumed": false,
+      "meta": {
+        "props": []
+      }
+    },
+    {
+      "id": "component:QueryClientProvider",
+      "kind": "component",
+      "label": "QueryClientProvider",
+      "filePath": "src/main.tsx",
+      "line": 33,
+      "assumed": false,
+      "meta": {
+        "props": [
+          {
+            "name": "client",
+            "valueKind": "expression",
+            "valuePreview": "queryClient",
+            "assumed": false
+          }
+        ]
+      }
+    },
+    {
+      "id": "component:StrictMode",
+      "kind": "component",
+      "label": "StrictMode",
+      "filePath": "src/main.tsx",
+      "line": 32,
+      "assumed": false,
+      "meta": {
+        "props": []
+      }
+    },
+    {
+      "id": "component:ThemeProvider",
+      "kind": "component",
+      "label": "ThemeProvider",
+      "filePath": "src/main.tsx",
+      "line": 34,
+      "assumed": false,
+      "meta": {
+        "props": [
+          {
+            "name": "theme",
+            "valueKind": "expression",
+            "valuePreview": "theme",
+            "assumed": false
+          }
+        ]
+      }
+    },
+    {
+      "id": "component:main",
+      "kind": "component",
+      "label": "main",
+      "filePath": "src/main.tsx",
+      "line": 1,
+      "assumed": false,
+      "meta": {
+        "role": "root"
+      }
+    },
+    {
+      "id": "provider:QueryClientProvider",
+      "kind": "provider",
+      "label": "QueryClientProvider",
+      "filePath": "src/main.tsx",
+      "line": 33,
+      "assumed": true,
+      "meta": {
+        "container": true
+      }
+    },
+    {
+      "id": "provider:ThemeProvider",
+      "kind": "provider",
+      "label": "ThemeProvider",
+      "filePath": "src/main.tsx",
+      "line": 34,
+      "assumed": true,
+      "meta": {
+        "container": true
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "mounts:component:main->component:App:4",
+      "kind": "mounts",
+      "from": "component:main",
+      "to": "component:App",
+      "assumed": false,
+      "label": null,
+      "meta": {
+        "props": []
+      }
+    },
+    {
+      "id": "mounts:component:main->component:CssBaseline:3",
+      "kind": "mounts",
+      "from": "component:main",
+      "to": "component:CssBaseline",
+      "assumed": false,
+      "label": null,
+      "meta": {
+        "props": []
+      }
+    },
+    {
+      "id": "mounts:component:main->component:QueryClientProvider:1",
+      "kind": "mounts",
+      "from": "component:main",
+      "to": "component:QueryClientProvider",
+      "assumed": false,
+      "label": null,
+      "meta": {
+        "props": [
+          {
+            "name": "client",
+            "valueKind": "expression",
+            "valuePreview": "queryClient",
+            "assumed": false
+          }
+        ]
+      }
+    },
+    {
+      "id": "mounts:component:main->component:StrictMode:0",
+      "kind": "mounts",
+      "from": "component:main",
+      "to": "component:StrictMode",
+      "assumed": false,
+      "label": null,
+      "meta": {
+        "props": []
+      }
+    },
+    {
+      "id": "mounts:component:main->component:ThemeProvider:2",
+      "kind": "mounts",
+      "from": "component:main",
+      "to": "component:ThemeProvider",
+      "assumed": false,
+      "label": null,
+      "meta": {
+        "props": [
+          {
+            "name": "theme",
+            "valueKind": "expression",
+            "valuePreview": "theme",
+            "assumed": false
+          }
+        ]
+      }
+    },
+    {
+      "id": "prop:component:main->component:QueryClientProvider:client:1",
+      "kind": "passes_prop",
+      "from": "component:main",
+      "to": "component:QueryClientProvider",
+      "assumed": false,
+      "label": "client",
+      "meta": {
+        "valueKind": "expression",
+        "valuePreview": "queryClient"
+      }
+    },
+    {
+      "id": "prop:component:main->component:ThemeProvider:theme:2",
+      "kind": "passes_prop",
+      "from": "component:main",
+      "to": "component:ThemeProvider",
+      "assumed": false,
+      "label": "theme",
+      "meta": {
+        "valueKind": "expression",
+        "valuePreview": "theme"
+      }
+    },
+    {
+      "id": "provides:provider:QueryClientProvider->component:main:0",
+      "kind": "provides",
+      "from": "provider:QueryClientProvider",
+      "to": "component:main",
+      "assumed": true,
+      "label": null,
+      "meta": {}
+    },
+    {
+      "id": "provides:provider:ThemeProvider->component:main:1",
+      "kind": "provides",
+      "from": "provider:ThemeProvider",
+      "to": "component:main",
+      "assumed": true,
+      "label": null,
+      "meta": {}
+    }
+  ]
+}

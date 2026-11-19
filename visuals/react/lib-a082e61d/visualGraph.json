@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "kind": "component_tree",
+  "rootId": "component:firebase",
+  "nodes": [
+    {
+      "id": "component:User",
+      "kind": "component",
+      "label": "User",
+      "filePath": "src/lib/firebase.ts",
+      "line": 65,
+      "assumed": false,
+      "meta": {
+        "props": []
+      }
+    },
+    {
+      "id": "component:firebase",
+      "kind": "component",
+      "label": "firebase",
+      "filePath": "src/lib/firebase.ts",
+      "line": 1,
+      "assumed": false,
+      "meta": {
+        "role": "root"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "mounts:component:firebase->component:User:0",
+      "kind": "mounts",
+      "from": "component:firebase",
+      "to": "component:User",
+      "assumed": false,
+      "label": null,
+      "meta": {
+        "props": []
+      }
+    }
+  ]
+}

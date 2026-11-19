@@ -1,0 +1,68 @@
+{
+  "chunkId": "lib-a082e61d",
+  "filePath": "src/lib/firebase.ts",
+  "stack": "react",
+  "visualAvailability": {
+    "componentTree": "partial",
+    "lifecycleFlow": "unavailable",
+    "interactiveBreakdown": "partial",
+    "reasons": {
+      "componentTree": "No XProps interface found; prop layer incomplete.",
+      "lifecycleFlow": "no_lifecycle_triggers_extracted"
+    }
+  },
+  "fidelity": "regex",
+  "visualGraph": {
+    "schemaVersion": 1,
+    "kind": "component_tree",
+    "rootId": "component:firebase",
+    "nodes": [
+      {
+        "id": "component:User",
+        "kind": "component",
+        "label": "User",
+        "filePath": "src/lib/firebase.ts",
+        "line": 65,
+        "assumed": false,
+        "meta": {
+          "props": []
+        }
+      },
+      {
+        "id": "component:firebase",
+        "kind": "component",
+        "label": "firebase",
+        "filePath": "src/lib/firebase.ts",
+        "line": 1,
+        "assumed": false,
+        "meta": {
+          "role": "root"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "id": "mounts:component:firebase->component:User:0",
+        "kind": "mounts",
+        "from": "component:firebase",
+        "to": "component:User",
+        "assumed": false,
+        "label": null,
+        "meta": {
+          "props": []
+        }
+      }
+    ]
+  },
+  "lifecycleFlows": [],
+  "securityFlags": [],
+  "visualTheme": {
+    "stack": "react",
+    "primary": "#61DAFB",
+    "secondary": "#087EA4",
+    "onDark": "#61DAFB",
+    "logoAssetId": "react-logo-ondark",
+    "logoPath": "visuals/logos/react.svg"
+  },
+  "mermaid": "flowchart TD\n  component_User[\"User\"]\n  component_firebase[\"firebase\"]\n  component_firebase --> component_User"
+}

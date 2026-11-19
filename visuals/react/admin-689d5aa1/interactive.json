@@ -1,0 +1,1416 @@
+{
+  "chunkId": "admin-689d5aa1",
+  "filePath": "src/features/admin/ExcelImportDialog.tsx",
+  "stack": "react",
+  "visualAvailability": {
+    "componentTree": "partial",
+    "lifecycleFlow": "partial",
+    "interactiveBreakdown": "partial",
+    "reasons": {
+      "componentTree": "No XProps interface found; prop layer incomplete.",
+      "lifecycleFlow": "Hook/render steps hedged under regex fidelity."
+    }
+  },
+  "fidelity": "regex",
+  "visualGraph": {
+    "schemaVersion": 1,
+    "kind": "component_tree",
+    "rootId": "component:ExcelImportDialog",
+    "nodes": [
+      {
+        "id": "component:Alert",
+        "kind": "component",
+        "label": "Alert",
+        "filePath": "src/features/admin/ExcelImportDialog.tsx",
+        "line": 100,
+        "assumed": false,
+        "meta": {
+          "props": [
+            {
+              "name": "severity",
+              "valueKind": "literal",
+              "valuePreview": "info",
+              "assumed": false
+            }
+          ]
+        }
+      },
+      {
+        "id": "component:Box",
+        "kind": "component",
+        "label": "Box",
+        "filePath": "src/features/admin/ExcelImportDialog.tsx",
+        "line": 110,
+        "assumed": false,
+        "meta": {
+          "props": []
+        }
+      },
+      {
+        "id": "component:Button",
+        "kind": "component",
+        "label": "Button",
+        "filePath": "src/features/admin/ExcelImportDialog.tsx",
+        "line": 121,
+        "assumed": false,
+        "meta": {
+          "props": [
+            {
+              "name": "variant",
+              "valueKind": "literal",
+              "valuePreview": "outlined",
+              "assumed": false
+            }
+          ]
+        }
+      },
+      {
+        "id": "component:Chip",
+        "kind": "component",
+        "label": "Chip",
+        "filePath": "src/features/admin/ExcelImportDialog.tsx",
+        "line": 140,
+        "assumed": false,
+        "meta": {
+          "props": [
+            {
+              "name": "color",
+              "valueKind": "literal",
+              "valuePreview": "success",
+              "assumed": false
+            },
+            {
+              "name": "variant",
+              "valueKind": "literal",
+              "valuePreview": "outlined",
+              "assumed": false
+            }
+          ]
+        }
+      },
+      {
+        "id": "component:Dialog",
+        "kind": "component",
+        "label": "Dialog",
+        "filePath": "src/features/admin/ExcelImportDialog.tsx",
+        "line": 95,
+        "assumed": false,
+        "meta": {
+          "props": [
+            {
+              "name": "open",
+              "valueKind": "expression",
+              "valuePreview": "open",
+              "assumed": false
+            },
+            {
+              "name": "onClose",
+              "valueKind": "expression",
+              "valuePreview": "importing ? undefined : onClose",
+              "assumed": false
+            },
+            {
+              "name": "maxWidth",
+              "valueKind": "literal",
+              "valuePreview": "md",
+              "assumed": false
+            }
+          ]
+        }
+      },
+      {
+        "id": "component:DialogActions",
+        "kind": "component",
+        "label": "DialogActions",
+        "filePath": "src/features/admin/ExcelImportDialog.tsx",
+        "line": 178,
+        "assumed": false,
+        "meta": {
+          "props": []
+        }
+      },
+      {
+        "id": "component:DialogContent",
+        "kind": "component",
+        "label": "DialogContent",
+        "filePath": "src/features/admin/ExcelImportDialog.tsx",
+        "line": 98,
+        "assumed": false,
+        "meta": {
+          "props": []
+        }
+      },
+      {
+        "id": "component:DialogTitle",
+        "kind": "component",
+        "label": "DialogTitle",
+        "filePath": "src/features/admin/ExcelImportDialog.tsx",
+        "line": 96,
+        "assumed": false,
+        "meta": {
+          "props": []
+        }
+      },
+      {
+        "id": "component:ExcelImportDialog",
+        "kind": "component",
+        "label": "ExcelImportDialog",
+        "filePath": "src/features/admin/ExcelImportDialog.tsx",
+        "line": 1,
+        "assumed": false,
+        "meta": {
+          "role": "root"
+        }
+      },
+      {
+        "id": "component:HTMLInputElement",
+        "kind": "component",
+        "label": "HTMLInputElement",
+        "filePath": "src/features/admin/ExcelImportDialog.tsx",
+        "line": 35,
+        "assumed": false,
+        "meta": {
+          "props": []
+        }
+      },
+      {
+        "id": "component:Link",
+        "kind": "component",
+        "label": "Link",
+        "filePath": "src/features/admin/ExcelImportDialog.tsx",
+        "line": 103,
+        "assumed": false,
+        "meta": {
+          "props": [
+            {
+              "name": "component",
+              "valueKind": "literal",
+              "valuePreview": "button",
+              "assumed": false
+            },
+            {
+              "name": "type",
+              "valueKind": "literal",
+              "valuePreview": "button",
+              "assumed": false
+            },
+            {
+              "name": "onClick",
+              "valueKind": "expression",
+              "valuePreview": "downloadTemplate",
+              "assumed": false
+            }
+          ]
+        }
+      },
+      {
+        "id": "component:Stack",
+        "kind": "component",
+        "label": "Stack",
+        "filePath": "src/features/admin/ExcelImportDialog.tsx",
+        "line": 99,
+        "assumed": false,
+        "meta": {
+          "props": [
+            {
+              "name": "spacing",
+              "valueKind": "expression",
+              "valuePreview": "2.5",
+              "assumed": false
+            }
+          ]
+        }
+      },
+      {
+        "id": "component:Table",
+        "kind": "component",
+        "label": "Table",
+        "filePath": "src/features/admin/ExcelImportDialog.tsx",
+        "line": 153,
+        "assumed": false,
+        "meta": {
+          "props": [
+            {
+              "name": "size",
+              "valueKind": "literal",
+              "valuePreview": "small",
+              "assumed": false
+            }
+          ]
+        }
+      },
+      {
+        "id": "component:TableBody",
+        "kind": "component",
+        "label": "TableBody",
+        "filePath": "src/features/admin/ExcelImportDialog.tsx",
+        "line": 161,
+        "assumed": false,
+        "meta": {
+          "props": []
+        }
+      },
+      {
+        "id": "component:TableCell",
+        "kind": "component",
+        "label": "TableCell",
+        "filePath": "src/features/admin/ExcelImportDialog.tsx",
+        "line": 156,
+        "assumed": false,
+        "meta": {
+          "props": []
+        }
+      },
+      {
+        "id": "component:TableHead",
+        "kind": "component",
+        "label": "TableHead",
+        "filePath": "src/features/admin/ExcelImportDialog.tsx",
+        "line": 154,
+        "assumed": false,
+        "meta": {
+          "props": []
+        }
+      },
+      {
+        "id": "component:TableRow",
+        "kind": "component",
+        "label": "TableRow",
+        "filePath": "src/features/admin/ExcelImportDialog.tsx",
+        "line": 155,
+        "assumed": false,
+        "meta": {
+          "props": []
+        }
+      },
+      {
+        "id": "component:Typography",
+        "kind": "component",
+        "label": "Typography",
+        "filePath": "src/features/admin/ExcelImportDialog.tsx",
+        "line": 130,
+        "assumed": false,
+        "meta": {
+          "props": [
+            {
+              "name": "variant",
+              "valueKind": "literal",
+              "valuePreview": "body2",
+              "assumed": false
+            },
+            {
+              "name": "color",
+              "valueKind": "literal",
+              "valuePreview": "text.secondary",
+              "assumed": false
+            }
+          ]
+        }
+      }
+    ],
+    "edges": [
+      {
+        "id": "mounts:component:ExcelImportDialog->component:Alert:11",
+        "kind": "mounts",
+        "from": "component:ExcelImportDialog",
+        "to": "component:Alert",
+        "assumed": false,
+        "label": null,
+        "meta": {
+          "props": [
+            {
+              "name": "severity",
+              "valueKind": "literal",
+              "valuePreview": "error",
+              "assumed": false
+            }
+          ]
+        }
+      },
+      {
+        "id": "mounts:component:ExcelImportDialog->component:Alert:5",
+        "kind": "mounts",
+        "from": "component:ExcelImportDialog",
+        "to": "component:Alert",
+        "assumed": false,
+        "label": null,
+        "meta": {
+          "props": [
+            {
+              "name": "severity",
+              "valueKind": "literal",
+              "valuePreview": "info",
+              "assumed": false
+            }
+          ]
+        }
+      },
+      {
+        "id": "mounts:component:ExcelImportDialog->component:Box:15",
+        "kind": "mounts",
+        "from": "component:ExcelImportDialog",
+        "to": "component:Box",
+        "assumed": false,
+        "label": null,
+        "meta": {
+          "props": []
+        }
+      },
+      {
+        "id": "mounts:component:ExcelImportDialog->component:Box:17",
+        "kind": "mounts",
+        "from": "component:ExcelImportDialog",
+        "to": "component:Box",
+        "assumed": false,
+        "label": null,
+        "meta": {
+          "props": []
+        }
+      },
+      {
+        "id": "mounts:component:ExcelImportDialog->component:Box:8",
+        "kind": "mounts",
+        "from": "component:ExcelImportDialog",
+        "to": "component:Box",
+        "assumed": false,
+        "label": null,
+        "meta": {
+          "props": []
+        }
+      },
+      {
+        "id": "mounts:component:ExcelImportDialog->component:Button:30",
+        "kind": "mounts",
+        "from": "component:ExcelImportDialog",
+        "to": "component:Button",
+        "assumed": false,
+        "label": null,
+        "meta": {
+          "props": []
+        }
+      },
+      {
+        "id": "mounts:component:ExcelImportDialog->component:Button:31",
+        "kind": "mounts",
+        "from": "component:ExcelImportDialog",
+        "to": "component:Button",
+        "assumed": false,
+        "label": null,
+        "meta": {
+          "props": [
+            {
+              "name": "variant",
+              "valueKind": "literal",
+              "valuePreview": "contained",
+              "assumed": false
+            },
+            {
+              "name": "disabled",
+              "valueKind": "expression",
+              "valuePreview": "accepted.length === 0 || importing",
+              "assumed": false
+            }
+          ]
+        }
+      },
+      {
+        "id": "mounts:component:ExcelImportDialog->component:Button:9",
+        "kind": "mounts",
+        "from": "component:ExcelImportDialog",
+        "to": "component:Button",
+        "assumed": false,
+        "label": null,
+        "meta": {
+          "props": [
+            {
+              "name": "variant",
+              "valueKind": "literal",
+              "valuePreview": "outlined",
+              "assumed": false
+            }
+          ]
+        }
+      },
+      {
+        "id": "mounts:component:ExcelImportDialog->component:Chip:13",
+        "kind": "mounts",
+        "from": "component:ExcelImportDialog",
+        "to": "component:Chip",
+        "assumed": false,
+        "label": null,
+        "meta": {
+          "props": [
+            {
+              "name": "color",
+              "valueKind": "literal",
+              "valuePreview": "success",
+              "assumed": false
+            },
+            {
+              "name": "variant",
+              "valueKind": "literal",
+              "valuePreview": "outlined",
+              "assumed": false
+            }
+          ]
+        }
+      },
+      {
+        "id": "mounts:component:ExcelImportDialog->component:Chip:14",
+        "kind": "mounts",
+        "from": "component:ExcelImportDialog",
+        "to": "component:Chip",
+        "assumed": false,
+        "label": null,
+        "meta": {
+          "props": [
+            {
+              "name": "color",
+              "valueKind": "literal",
+              "valuePreview": "error",
+              "assumed": false
+            },
+            {
+              "name": "variant",
+              "valueKind": "literal",
+              "valuePreview": "outlined",
+              "assumed": false
+            }
+          ]
+        }
+      },
+      {
+        "id": "mounts:component:ExcelImportDialog->component:Dialog:1",
+        "kind": "mounts",
+        "from": "component:ExcelImportDialog",
+        "to": "component:Dialog",
+        "assumed": false,
+        "label": null,
+        "meta": {
+          "props": [
+            {
+              "name": "open",
+              "valueKind": "expression",
+              "valuePreview": "open",
+              "assumed": false
+            },
+            {
+              "name": "onClose",
+              "valueKind": "expression",
+              "valuePreview": "importing ? undefined : onClose",
+              "assumed": false
+            },
+            {
+              "name": "maxWidth",
+              "valueKind": "literal",
+              "valuePreview": "md",
+              "assumed": false
+            }
+          ]
+        }
+      },
+      {
+        "id": "mounts:component:ExcelImportDialog->component:DialogActions:29",
+        "kind": "mounts",
+        "from": "component:ExcelImportDialog",
+        "to": "component:DialogActions",
+        "assumed": false,
+        "label": null,
+        "meta": {
+          "props": []
+        }
+      },
+      {
+        "id": "mounts:component:ExcelImportDialog->component:DialogContent:3",
+        "kind": "mounts",
+        "from": "component:ExcelImportDialog",
+        "to": "component:DialogContent",
+        "assumed": false,
+        "label": null,
+        "meta": {
+          "props": []
+        }
+      },
+      {
+        "id": "mounts:component:ExcelImportDialog->component:DialogTitle:2",
+        "kind": "mounts",
+        "from": "component:ExcelImportDialog",
+        "to": "component:DialogTitle",
+        "assumed": false,
+        "label": null,
+        "meta": {
+          "props": []
+        }
+      },
+      {
+        "id": "mounts:component:ExcelImportDialog->component:HTMLInputElement:0",
+        "kind": "mounts",
+        "from": "component:ExcelImportDialog",
+        "to": "component:HTMLInputElement",
+        "assumed": false,
+        "label": null,
+        "meta": {
+          "props": []
+        }
+      },
+      {
+        "id": "mounts:component:ExcelImportDialog->component:Link:7",
+        "kind": "mounts",
+        "from": "component:ExcelImportDialog",
+        "to": "component:Link",
+        "assumed": false,
+        "label": null,
+        "meta": {
+          "props": [
+            {
+              "name": "component",
+              "valueKind": "literal",
+              "valuePreview": "button",
+              "assumed": false
+            },
+            {
+              "name": "type",
+              "valueKind": "literal",
+              "valuePreview": "button",
+              "assumed": false
+            },
+            {
+              "name": "onClick",
+              "valueKind": "expression",
+              "valuePreview": "downloadTemplate",
+              "assumed": false
+            }
+          ]
+        }
+      },
+      {
+        "id": "mounts:component:ExcelImportDialog->component:Stack:12",
+        "kind": "mounts",
+        "from": "component:ExcelImportDialog",
+        "to": "component:Stack",
+        "assumed": false,
+        "label": null,
+        "meta": {
+          "props": [
+            {
+              "name": "direction",
+              "valueKind": "literal",
+              "valuePreview": "row",
+              "assumed": false
+            },
+            {
+              "name": "spacing",
+              "valueKind": "expression",
+              "valuePreview": "1",
+              "assumed": false
+            }
+          ]
+        }
+      },
+      {
+        "id": "mounts:component:ExcelImportDialog->component:Stack:4",
+        "kind": "mounts",
+        "from": "component:ExcelImportDialog",
+        "to": "component:Stack",
+        "assumed": false,
+        "label": null,
+        "meta": {
+          "props": [
+            {
+              "name": "spacing",
+              "valueKind": "expression",
+              "valuePreview": "2.5",
+              "assumed": false
+            }
+          ]
+        }
+      },
+      {
+        "id": "mounts:component:ExcelImportDialog->component:Stack:6",
+        "kind": "mounts",
+        "from": "component:ExcelImportDialog",
+        "to": "component:Stack",
+        "assumed": false,
+        "label": null,
+        "meta": {
+          "props": [
+            {
+              "name": "direction",
+              "valueKind": "literal",
+              "valuePreview": "row",
+              "assumed": false
+            },
+            {
+              "name": "spacing",
+              "valueKind": "expression",
+              "valuePreview": "1",
+              "assumed": false
+            }
+          ]
+        }
+      },
+      {
+        "id": "mounts:component:ExcelImportDialog->component:Table:18",
+        "kind": "mounts",
+        "from": "component:ExcelImportDialog",
+        "to": "component:Table",
+        "assumed": false,
+        "label": null,
+        "meta": {
+          "props": [
+            {
+              "name": "size",
+              "valueKind": "literal",
+              "valuePreview": "small",
+              "assumed": false
+            }
+          ]
+        }
+      },
+      {
+        "id": "mounts:component:ExcelImportDialog->component:TableBody:24",
+        "kind": "mounts",
+        "from": "component:ExcelImportDialog",
+        "to": "component:TableBody",
+        "assumed": false,
+        "label": null,
+        "meta": {
+          "props": []
+        }
+      },
+      {
+        "id": "mounts:component:ExcelImportDialog->component:TableCell:21",
+        "kind": "mounts",
+        "from": "component:ExcelImportDialog",
+        "to": "component:TableCell",
+        "assumed": false,
+        "label": null,
+        "meta": {
+          "props": []
+        }
+      },
+      {
+        "id": "mounts:component:ExcelImportDialog->component:TableCell:22",
+        "kind": "mounts",
+        "from": "component:ExcelImportDialog",
+        "to": "component:TableCell",
+        "assumed": false,
+        "label": null,
+        "meta": {
+          "props": []
+        }
+      },
+      {
+        "id": "mounts:component:ExcelImportDialog->component:TableCell:23",
+        "kind": "mounts",
+        "from": "component:ExcelImportDialog",
+        "to": "component:TableCell",
+        "assumed": false,
+        "label": null,
+        "meta": {
+          "props": []
+        }
+      },
+      {
+        "id": "mounts:component:ExcelImportDialog->component:TableCell:26",
+        "kind": "mounts",
+        "from": "component:ExcelImportDialog",
+        "to": "component:TableCell",
+        "assumed": true,
+        "label": null,
+        "meta": {
+          "props": []
+        }
+      },
+      {
+        "id": "mounts:component:ExcelImportDialog->component:TableCell:27",
+        "kind": "mounts",
+        "from": "component:ExcelImportDialog",
+        "to": "component:TableCell",
+        "assumed": false,
+        "label": null,
+        "meta": {
+          "props": []
+        }
+      },
+      {
+        "id": "mounts:component:ExcelImportDialog->component:TableCell:28",
+        "kind": "mounts",
+        "from": "component:ExcelImportDialog",
+        "to": "component:TableCell",
+        "assumed": false,
+        "label": null,
+        "meta": {
+          "props": []
+        }
+      },
+      {
+        "id": "mounts:component:ExcelImportDialog->component:TableHead:19",
+        "kind": "mounts",
+        "from": "component:ExcelImportDialog",
+        "to": "component:TableHead",
+        "assumed": false,
+        "label": null,
+        "meta": {
+          "props": []
+        }
+      },
+      {
+        "id": "mounts:component:ExcelImportDialog->component:TableRow:20",
+        "kind": "mounts",
+        "from": "component:ExcelImportDialog",
+        "to": "component:TableRow",
+        "assumed": false,
+        "label": null,
+        "meta": {
+          "props": []
+        }
+      },
+      {
+        "id": "mounts:component:ExcelImportDialog->component:TableRow:25",
+        "kind": "mounts",
+        "from": "component:ExcelImportDialog",
+        "to": "component:TableRow",
+        "assumed": true,
+        "label": null,
+        "meta": {
+          "props": [
+            {
+              "name": "key",
+              "valueKind": "expression",
+              "valuePreview": "row.rowNumber",
+              "assumed": false
+            }
+          ]
+        }
+      },
+      {
+        "id": "mounts:component:ExcelImportDialog->component:Typography:10",
+        "kind": "mounts",
+        "from": "component:ExcelImportDialog",
+        "to": "component:Typography",
+        "assumed": false,
+        "label": null,
+        "meta": {
+          "props": [
+            {
+              "name": "variant",
+              "valueKind": "literal",
+              "valuePreview": "body2",
+              "assumed": false
+            },
+            {
+              "name": "color",
+              "valueKind": "literal",
+              "valuePreview": "text.secondary",
+              "assumed": false
+            }
+          ]
+        }
+      },
+      {
+        "id": "mounts:component:ExcelImportDialog->component:Typography:16",
+        "kind": "mounts",
+        "from": "component:ExcelImportDialog",
+        "to": "component:Typography",
+        "assumed": false,
+        "label": null,
+        "meta": {
+          "props": [
+            {
+              "name": "variant",
+              "valueKind": "literal",
+              "valuePreview": "subtitle2",
+              "assumed": false
+            }
+          ]
+        }
+      },
+      {
+        "id": "prop:component:ExcelImportDialog->component:Alert:severity:11",
+        "kind": "passes_prop",
+        "from": "component:ExcelImportDialog",
+        "to": "component:Alert",
+        "assumed": false,
+        "label": "severity",
+        "meta": {
+          "valueKind": "literal",
+          "valuePreview": "error"
+        }
+      },
+      {
+        "id": "prop:component:ExcelImportDialog->component:Alert:severity:5",
+        "kind": "passes_prop",
+        "from": "component:ExcelImportDialog",
+        "to": "component:Alert",
+        "assumed": false,
+        "label": "severity",
+        "meta": {
+          "valueKind": "literal",
+          "valuePreview": "info"
+        }
+      },
+      {
+        "id": "prop:component:ExcelImportDialog->component:Button:disabled:31",
+        "kind": "passes_prop",
+        "from": "component:ExcelImportDialog",
+        "to": "component:Button",
+        "assumed": false,
+        "label": "disabled",
+        "meta": {
+          "valueKind": "expression",
+          "valuePreview": "accepted.length === 0 || importing"
+        }
+      },
+      {
+        "id": "prop:component:ExcelImportDialog->component:Button:variant:31",
+        "kind": "passes_prop",
+        "from": "component:ExcelImportDialog",
+        "to": "component:Button",
+        "assumed": false,
+        "label": "variant",
+        "meta": {
+          "valueKind": "literal",
+          "valuePreview": "contained"
+        }
+      },
+      {
+        "id": "prop:component:ExcelImportDialog->component:Button:variant:9",
+        "kind": "passes_prop",
+        "from": "component:ExcelImportDialog",
+        "to": "component:Button",
+        "assumed": false,
+        "label": "variant",
+        "meta": {
+          "valueKind": "literal",
+          "valuePreview": "outlined"
+        }
+      },
+      {
+        "id": "prop:component:ExcelImportDialog->component:Chip:color:13",
+        "kind": "passes_prop",
+        "from": "component:ExcelImportDialog",
+        "to": "component:Chip",
+        "assumed": false,
+        "label": "color",
+        "meta": {
+          "valueKind": "literal",
+          "valuePreview": "success"
+        }
+      },
+      {
+        "id": "prop:component:ExcelImportDialog->component:Chip:color:14",
+        "kind": "passes_prop",
+        "from": "component:ExcelImportDialog",
+        "to": "component:Chip",
+        "assumed": false,
+        "label": "color",
+        "meta": {
+          "valueKind": "literal",
+          "valuePreview": "error"
+        }
+      },
+      {
+        "id": "prop:component:ExcelImportDialog->component:Chip:variant:13",
+        "kind": "passes_prop",
+        "from": "component:ExcelImportDialog",
+        "to": "component:Chip",
+        "assumed": false,
+        "label": "variant",
+        "meta": {
+          "valueKind": "literal",
+          "valuePreview": "outlined"
+        }
+      },
+      {
+        "id": "prop:component:ExcelImportDialog->component:Chip:variant:14",
+        "kind": "passes_prop",
+        "from": "component:ExcelImportDialog",
+        "to": "component:Chip",
+        "assumed": false,
+        "label": "variant",
+        "meta": {
+          "valueKind": "literal",
+          "valuePreview": "outlined"
+        }
+      },
+      {
+        "id": "prop:component:ExcelImportDialog->component:Dialog:maxWidth:1",
+        "kind": "passes_prop",
+        "from": "component:ExcelImportDialog",
+        "to": "component:Dialog",
+        "assumed": false,
+        "label": "maxWidth",
+        "meta": {
+          "valueKind": "literal",
+          "valuePreview": "md"
+        }
+      },
+      {
+        "id": "prop:component:ExcelImportDialog->component:Dialog:onClose:1",
+        "kind": "passes_prop",
+        "from": "component:ExcelImportDialog",
+        "to": "component:Dialog",
+        "assumed": false,
+        "label": "onClose",
+        "meta": {
+          "valueKind": "expression",
+          "valuePreview": "importing ? undefined : onClose"
+        }
+      },
+      {
+        "id": "prop:component:ExcelImportDialog->component:Dialog:open:1",
+        "kind": "passes_prop",
+        "from": "component:ExcelImportDialog",
+        "to": "component:Dialog",
+        "assumed": false,
+        "label": "open",
+        "meta": {
+          "valueKind": "expression",
+          "valuePreview": "open"
+        }
+      },
+      {
+        "id": "prop:component:ExcelImportDialog->component:Link:component:7",
+        "kind": "passes_prop",
+        "from": "component:ExcelImportDialog",
+        "to": "component:Link",
+        "assumed": false,
+        "label": "component",
+        "meta": {
+          "valueKind": "literal",
+          "valuePreview": "button"
+        }
+      },
+      {
+        "id": "prop:component:ExcelImportDialog->component:Link:onClick:7",
+        "kind": "passes_prop",
+        "from": "component:ExcelImportDialog",
+        "to": "component:Link",
+        "assumed": false,
+        "label": "onClick",
+        "meta": {
+          "valueKind": "expression",
+          "valuePreview": "downloadTemplate"
+        }
+      },
+      {
+        "id": "prop:component:ExcelImportDialog->component:Link:type:7",
+        "kind": "passes_prop",
+        "from": "component:ExcelImportDialog",
+        "to": "component:Link",
+        "assumed": false,
+        "label": "type",
+        "meta": {
+          "valueKind": "literal",
+          "valuePreview": "button"
+        }
+      },
+      {
+        "id": "prop:component:ExcelImportDialog->component:Stack:direction:12",
+        "kind": "passes_prop",
+        "from": "component:ExcelImportDialog",
+        "to": "component:Stack",
+        "assumed": false,
+        "label": "direction",
+        "meta": {
+          "valueKind": "literal",
+          "valuePreview": "row"
+        }
+      },
+      {
+        "id": "prop:component:ExcelImportDialog->component:Stack:direction:6",
+        "kind": "passes_prop",
+        "from": "component:ExcelImportDialog",
+        "to": "component:Stack",
+        "assumed": false,
+        "label": "direction",
+        "meta": {
+          "valueKind": "literal",
+          "valuePreview": "row"
+        }
+      },
+      {
+        "id": "prop:component:ExcelImportDialog->component:Stack:spacing:12",
+        "kind": "passes_prop",
+        "from": "component:ExcelImportDialog",
+        "to": "component:Stack",
+        "assumed": false,
+        "label": "spacing",
+        "meta": {
+          "valueKind": "expression",
+          "valuePreview": "1"
+        }
+      },
+      {
+        "id": "prop:component:ExcelImportDialog->component:Stack:spacing:4",
+        "kind": "passes_prop",
+        "from": "component:ExcelImportDialog",
+        "to": "component:Stack",
+        "assumed": false,
+        "label": "spacing",
+        "meta": {
+          "valueKind": "expression",
+          "valuePreview": "2.5"
+        }
+      },
+      {
+        "id": "prop:component:ExcelImportDialog->component:Stack:spacing:6",
+        "kind": "passes_prop",
+        "from": "component:ExcelImportDialog",
+        "to": "component:Stack",
+        "assumed": false,
+        "label": "spacing",
+        "meta": {
+          "valueKind": "expression",
+          "valuePreview": "1"
+        }
+      },
+      {
+        "id": "prop:component:ExcelImportDialog->component:Table:size:18",
+        "kind": "passes_prop",
+        "from": "component:ExcelImportDialog",
+        "to": "component:Table",
+        "assumed": false,
+        "label": "size",
+        "meta": {
+          "valueKind": "literal",
+          "valuePreview": "small"
+        }
+      },
+      {
+        "id": "prop:component:ExcelImportDialog->component:TableRow:key:25",
+        "kind": "passes_prop",
+        "from": "component:ExcelImportDialog",
+        "to": "component:TableRow",
+        "assumed": false,
+        "label": "key",
+        "meta": {
+          "valueKind": "expression",
+          "valuePreview": "row.rowNumber"
+        }
+      },
+      {
+        "id": "prop:component:ExcelImportDialog->component:Typography:color:10",
+        "kind": "passes_prop",
+        "from": "component:ExcelImportDialog",
+        "to": "component:Typography",
+        "assumed": false,
+        "label": "color",
+        "meta": {
+          "valueKind": "literal",
+          "valuePreview": "text.secondary"
+        }
+      },
+      {
+        "id": "prop:component:ExcelImportDialog->component:Typography:variant:10",
+        "kind": "passes_prop",
+        "from": "component:ExcelImportDialog",
+        "to": "component:Typography",
+        "assumed": false,
+        "label": "variant",
+        "meta": {
+          "valueKind": "literal",
+          "valuePreview": "body2"
+        }
+      },
+      {
+        "id": "prop:component:ExcelImportDialog->component:Typography:variant:16",
+        "kind": "passes_prop",
+        "from": "component:ExcelImportDialog",
+        "to": "component:Typography",
+        "assumed": false,
+        "label": "variant",
+        "meta": {
+          "valueKind": "literal",
+          "valuePreview": "subtitle2"
+        }
+      }
+    ]
+  },
+  "lifecycleFlows": [
+    {
+      "id": "flow:ExcelImportDialog:handleFile",
+      "title": "handleFile",
+      "trigger": "handleFile",
+      "steps": [
+        {
+          "order": 1,
+          "action": "event",
+          "label": "handleFile",
+          "nodeId": null,
+          "lineRange": [
+            53,
+            82
+          ],
+          "assumed": false
+        },
+        {
+          "order": 2,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            36,
+            36
+          ],
+          "assumed": true
+        },
+        {
+          "order": 3,
+          "action": "render",
+          "label": "re-render",
+          "nodeId": null,
+          "lineRange": null,
+          "assumed": true
+        }
+      ],
+      "assumed": true,
+      "confidence": 0.5
+    },
+    {
+      "id": "flow:ExcelImportDialog:inline_onChange_L116",
+      "title": "inline_onChange_L116",
+      "trigger": "inline_onChange_L116",
+      "steps": [
+        {
+          "order": 1,
+          "action": "event",
+          "label": "inline_onChange_L116",
+          "nodeId": null,
+          "lineRange": [
+            116,
+            116
+          ],
+          "assumed": true
+        },
+        {
+          "order": 2,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            36,
+            36
+          ],
+          "assumed": true
+        },
+        {
+          "order": 3,
+          "action": "render",
+          "label": "re-render",
+          "nodeId": null,
+          "lineRange": null,
+          "assumed": true
+        }
+      ],
+      "assumed": true,
+      "confidence": 0.5
+    },
+    {
+      "id": "flow:ExcelImportDialog:inline_onClick_L103",
+      "title": "inline_onClick_L103",
+      "trigger": "inline_onClick_L103",
+      "steps": [
+        {
+          "order": 1,
+          "action": "event",
+          "label": "inline_onClick_L103",
+          "nodeId": null,
+          "lineRange": [
+            103,
+            103
+          ],
+          "assumed": true
+        },
+        {
+          "order": 2,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            36,
+            36
+          ],
+          "assumed": true
+        },
+        {
+          "order": 3,
+          "action": "render",
+          "label": "re-render",
+          "nodeId": null,
+          "lineRange": null,
+          "assumed": true
+        }
+      ],
+      "assumed": true,
+      "confidence": 0.5
+    },
+    {
+      "id": "flow:ExcelImportDialog:inline_onClick_L124",
+      "title": "inline_onClick_L124",
+      "trigger": "inline_onClick_L124",
+      "steps": [
+        {
+          "order": 1,
+          "action": "event",
+          "label": "inline_onClick_L124",
+          "nodeId": null,
+          "lineRange": [
+            124,
+            124
+          ],
+          "assumed": true
+        },
+        {
+          "order": 2,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            36,
+            36
+          ],
+          "assumed": true
+        },
+        {
+          "order": 3,
+          "action": "render",
+          "label": "re-render",
+          "nodeId": null,
+          "lineRange": null,
+          "assumed": true
+        }
+      ],
+      "assumed": true,
+      "confidence": 0.5
+    },
+    {
+      "id": "flow:ExcelImportDialog:inline_onClick_L179",
+      "title": "inline_onClick_L179",
+      "trigger": "inline_onClick_L179",
+      "steps": [
+        {
+          "order": 1,
+          "action": "event",
+          "label": "inline_onClick_L179",
+          "nodeId": null,
+          "lineRange": [
+            179,
+            179
+          ],
+          "assumed": true
+        },
+        {
+          "order": 2,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            36,
+            36
+          ],
+          "assumed": true
+        },
+        {
+          "order": 3,
+          "action": "render",
+          "label": "re-render",
+          "nodeId": null,
+          "lineRange": null,
+          "assumed": true
+        }
+      ],
+      "assumed": true,
+      "confidence": 0.5
+    },
+    {
+      "id": "flow:ExcelImportDialog:inline_onClick_L183",
+      "title": "inline_onClick_L183",
+      "trigger": "inline_onClick_L183",
+      "steps": [
+        {
+          "order": 1,
+          "action": "event",
+          "label": "inline_onClick_L183",
+          "nodeId": null,
+          "lineRange": [
+            183,
+            183
+          ],
+          "assumed": true
+        },
+        {
+          "order": 2,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            36,
+            36
+          ],
+          "assumed": true
+        },
+        {
+          "order": 3,
+          "action": "render",
+          "label": "re-render",
+          "nodeId": null,
+          "lineRange": null,
+          "assumed": true
+        }
+      ],
+      "assumed": true,
+      "confidence": 0.5
+    },
+    {
+      "id": "flow:ExcelImportDialog:inline_onClose_L95",
+      "title": "inline_onClose_L95",
+      "trigger": "inline_onClose_L95",
+      "steps": [
+        {
+          "order": 1,
+          "action": "event",
+          "label": "inline_onClose_L95",
+          "nodeId": null,
+          "lineRange": [
+            95,
+            95
+          ],
+          "assumed": true
+        },
+        {
+          "order": 2,
+          "action": "state_update",
+          "label": "useState",
+          "nodeId": null,
+          "lineRange": [
+            36,
+            36
+          ],
+          "assumed": true
+        },
+        {
+          "order": 3,
+          "action": "render",
+          "label": "re-render",
+          "nodeId": null,
+          "lineRange": null,
+          "assumed": true
+        }
+      ],
+      "assumed": true,
+      "confidence": 0.5
+    }
+  ],
+  "securityFlags": [],
+  "visualTheme": {
+    "stack": "react",
+    "primary": "#61DAFB",
+    "secondary": "#087EA4",
+    "onDark": "#61DAFB",
+    "logoAssetId": "react-logo-ondark",
+    "logoPath": "visuals/logos/react.svg"
+  },
+  "mermaid": "flowchart TD\n  component_Alert[\"Alert\"]\n  component_Box[\"Box\"]\n  component_Button[\"Button\"]\n  component_Chip[\"Chip\"]\n  component_Dialog[\"Dialog\"]\n  component_DialogActions[\"DialogActions\"]\n  component_DialogContent[\"DialogContent\"]\n  component_DialogTitle[\"DialogTitle\"]\n  component_ExcelImportDialog[\"ExcelImportDialog\"]\n  component_HTMLInputElement[\"HTMLInputElement\"]\n  component_Link[\"Link\"]\n  component_Stack[\"Stack\"]\n  component_Table[\"Table\"]\n  component_TableBody[\"TableBody\"]\n  component_TableCell[\"TableCell\"]\n  component_TableHead[\"TableHead\"]\n  component_TableRow[\"TableRow\"]\n  component_Typography[\"Typography\"]\n  component_ExcelImportDialog --> component_Alert\n  component_ExcelImportDialog --> component_Alert\n  component_ExcelImportDialog --> component_Box\n  component_ExcelImportDialog --> component_Box\n  component_ExcelImportDialog --> component_Box\n  component_ExcelImportDialog --> component_Button\n  component_ExcelImportDialog --> component_Button\n  component_ExcelImportDialog --> component_Button\n  component_ExcelImportDialog --> component_Chip\n  component_ExcelImportDialog --> component_Chip\n  component_ExcelImportDialog --> component_Dialog\n  component_ExcelImportDialog --> component_DialogActions\n  component_ExcelImportDialog --> component_DialogContent\n  component_ExcelImportDialog --> component_DialogTitle\n  component_ExcelImportDialog --> component_HTMLInputElement\n  component_ExcelImportDialog --> component_Link\n  component_ExcelImportDialog --> component_Stack\n  component_ExcelImportDialog --> component_Stack\n  component_ExcelImportDialog --> component_Stack\n  component_ExcelImportDialog --> component_Table\n  component_ExcelImportDialog --> component_TableBody\n  component_ExcelImportDialog --> component_TableCell\n  component_ExcelImportDialog --> component_TableCell\n  component_ExcelImportDialog --> component_TableCell\n  component_ExcelImportDialog -.-> component_TableCell\n  component_ExcelImportDialog --> component_TableCell\n  component_ExcelImportDialog --> component_TableCell\n  component_ExcelImportDialog --> component_TableHead\n  component_ExcelImportDialog --> component_TableRow\n  component_ExcelImportDialog -.-> component_TableRow\n  component_ExcelImportDialog --> component_Typography\n  component_ExcelImportDialog --> component_Typography"
+}

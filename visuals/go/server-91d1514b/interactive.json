@@ -1,0 +1,942 @@
+{
+  "chunkId": "server-91d1514b",
+  "filePath": "api/cmd/server/main.go",
+  "stack": "go",
+  "visualAvailability": {
+    "componentTree": "partial",
+    "lifecycleFlow": "partial",
+    "interactiveBreakdown": "partial",
+    "reasons": {
+      "lifecycleFlow": "Middleware/handler steps hedged under regex fidelity."
+    }
+  },
+  "fidelity": "regex",
+  "visualGraph": {
+    "schemaVersion": 1,
+    "kind": "route_tree",
+    "rootId": "module:main",
+    "nodes": [
+      {
+        "id": "handler:alumni_BulkDelete",
+        "kind": "handler",
+        "label": "BulkDelete",
+        "filePath": "api/cmd/server/main.go",
+        "line": 93,
+        "assumed": false,
+        "meta": {
+          "qualified": "alumni.BulkDelete"
+        }
+      },
+      {
+        "id": "handler:alumni_Create",
+        "kind": "handler",
+        "label": "Create",
+        "filePath": "api/cmd/server/main.go",
+        "line": 91,
+        "assumed": false,
+        "meta": {
+          "qualified": "alumni.Create"
+        }
+      },
+      {
+        "id": "handler:alumni_Import",
+        "kind": "handler",
+        "label": "Import",
+        "filePath": "api/cmd/server/main.go",
+        "line": 94,
+        "assumed": false,
+        "meta": {
+          "qualified": "alumni.Import"
+        }
+      },
+      {
+        "id": "handler:alumni_List",
+        "kind": "handler",
+        "label": "List",
+        "filePath": "api/cmd/server/main.go",
+        "line": 90,
+        "assumed": false,
+        "meta": {
+          "qualified": "alumni.List"
+        }
+      },
+      {
+        "id": "handler:alumni_Update",
+        "kind": "handler",
+        "label": "Update",
+        "filePath": "api/cmd/server/main.go",
+        "line": 92,
+        "assumed": false,
+        "meta": {
+          "qualified": "alumni.Update"
+        }
+      },
+      {
+        "id": "middleware:app_cors_New_1",
+        "kind": "middleware",
+        "label": "cors.New",
+        "filePath": "api/cmd/server/main.go",
+        "line": 80,
+        "assumed": true,
+        "meta": {
+          "isAuth": false,
+          "isCors": true,
+          "order": 1,
+          "routerVar": "app",
+          "source": "use"
+        }
+      },
+      {
+        "id": "middleware:app_recover_New_0",
+        "kind": "middleware",
+        "label": "recover.New",
+        "filePath": "api/cmd/server/main.go",
+        "line": 77,
+        "assumed": true,
+        "meta": {
+          "isAuth": false,
+          "isCors": false,
+          "order": 0,
+          "routerVar": "app",
+          "source": "use"
+        }
+      },
+      {
+        "id": "module:main",
+        "kind": "module",
+        "label": "main",
+        "filePath": "api/cmd/server/main.go",
+        "line": 1,
+        "assumed": false,
+        "meta": {
+          "role": "root",
+          "usesFiber": true
+        }
+      },
+      {
+        "id": "route:GET__api_v1_alumni",
+        "kind": "route",
+        "label": "GET /api/v1/alumni",
+        "filePath": "api/cmd/server/main.go",
+        "line": 90,
+        "assumed": true,
+        "meta": {
+          "method": "GET",
+          "path": "/api/v1/alumni",
+          "protected": false,
+          "routerVar": "v1",
+          "type": "static"
+        }
+      },
+      {
+        "id": "route:GET__health",
+        "kind": "route",
+        "label": "GET /health",
+        "filePath": "api/cmd/server/main.go",
+        "line": 82,
+        "assumed": true,
+        "meta": {
+          "method": "GET",
+          "path": "/health",
+          "protected": false,
+          "routerVar": "app",
+          "type": "static"
+        }
+      },
+      {
+        "id": "route:POST__api_v1_alumni",
+        "kind": "route",
+        "label": "POST /api/v1/alumni",
+        "filePath": "api/cmd/server/main.go",
+        "line": 91,
+        "assumed": true,
+        "meta": {
+          "method": "POST",
+          "path": "/api/v1/alumni",
+          "protected": false,
+          "routerVar": "v1",
+          "type": "static"
+        }
+      },
+      {
+        "id": "route:POST__api_v1_alumni_bulk-delete",
+        "kind": "route",
+        "label": "POST /api/v1/alumni/bulk-delete",
+        "filePath": "api/cmd/server/main.go",
+        "line": 93,
+        "assumed": true,
+        "meta": {
+          "method": "POST",
+          "path": "/api/v1/alumni/bulk-delete",
+          "protected": false,
+          "routerVar": "v1",
+          "type": "static"
+        }
+      },
+      {
+        "id": "route:POST__api_v1_alumni_import",
+        "kind": "route",
+        "label": "POST /api/v1/alumni/import",
+        "filePath": "api/cmd/server/main.go",
+        "line": 94,
+        "assumed": true,
+        "meta": {
+          "method": "POST",
+          "path": "/api/v1/alumni/import",
+          "protected": false,
+          "routerVar": "v1",
+          "type": "static"
+        }
+      },
+      {
+        "id": "route:PUT__api_v1_alumni__id",
+        "kind": "route",
+        "label": "PUT /api/v1/alumni/:id",
+        "filePath": "api/cmd/server/main.go",
+        "line": 92,
+        "assumed": true,
+        "meta": {
+          "method": "PUT",
+          "path": "/api/v1/alumni/:id",
+          "protected": false,
+          "routerVar": "v1",
+          "type": "dynamic"
+        }
+      },
+      {
+        "id": "route:group_v1",
+        "kind": "route",
+        "label": "/api/v1",
+        "filePath": "api/cmd/server/main.go",
+        "line": null,
+        "assumed": false,
+        "meta": {
+          "routerVar": "v1",
+          "role": "group",
+          "prefix": "/api/v1"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "id": "middleware_before:middleware:app_cors_New_1->module:main:1",
+        "kind": "middleware_before",
+        "from": "middleware:app_cors_New_1",
+        "to": "module:main",
+        "assumed": true,
+        "label": null,
+        "meta": {
+          "fiberAccent": true
+        }
+      },
+      {
+        "id": "middleware_before:middleware:app_cors_New_1->route:GET__api_v1_alumni:1:1",
+        "kind": "middleware_before",
+        "from": "middleware:app_cors_New_1",
+        "to": "route:GET__api_v1_alumni",
+        "assumed": true,
+        "label": null,
+        "meta": {
+          "fiberAccent": true,
+          "order": 1
+        }
+      },
+      {
+        "id": "middleware_before:middleware:app_cors_New_1->route:GET__health:0:1",
+        "kind": "middleware_before",
+        "from": "middleware:app_cors_New_1",
+        "to": "route:GET__health",
+        "assumed": true,
+        "label": null,
+        "meta": {
+          "fiberAccent": true,
+          "order": 1
+        }
+      },
+      {
+        "id": "middleware_before:middleware:app_cors_New_1->route:POST__api_v1_alumni:2:1",
+        "kind": "middleware_before",
+        "from": "middleware:app_cors_New_1",
+        "to": "route:POST__api_v1_alumni",
+        "assumed": true,
+        "label": null,
+        "meta": {
+          "fiberAccent": true,
+          "order": 1
+        }
+      },
+      {
+        "id": "middleware_before:middleware:app_cors_New_1->route:POST__api_v1_alumni_bulk-delete:4:1",
+        "kind": "middleware_before",
+        "from": "middleware:app_cors_New_1",
+        "to": "route:POST__api_v1_alumni_bulk-delete",
+        "assumed": true,
+        "label": null,
+        "meta": {
+          "fiberAccent": true,
+          "order": 1
+        }
+      },
+      {
+        "id": "middleware_before:middleware:app_cors_New_1->route:POST__api_v1_alumni_import:5:1",
+        "kind": "middleware_before",
+        "from": "middleware:app_cors_New_1",
+        "to": "route:POST__api_v1_alumni_import",
+        "assumed": true,
+        "label": null,
+        "meta": {
+          "fiberAccent": true,
+          "order": 1
+        }
+      },
+      {
+        "id": "middleware_before:middleware:app_cors_New_1->route:PUT__api_v1_alumni__id:3:1",
+        "kind": "middleware_before",
+        "from": "middleware:app_cors_New_1",
+        "to": "route:PUT__api_v1_alumni__id",
+        "assumed": true,
+        "label": null,
+        "meta": {
+          "fiberAccent": true,
+          "order": 1
+        }
+      },
+      {
+        "id": "middleware_before:middleware:app_recover_New_0->module:main:0",
+        "kind": "middleware_before",
+        "from": "middleware:app_recover_New_0",
+        "to": "module:main",
+        "assumed": true,
+        "label": null,
+        "meta": {
+          "fiberAccent": true
+        }
+      },
+      {
+        "id": "middleware_before:middleware:app_recover_New_0->route:GET__api_v1_alumni:1:0",
+        "kind": "middleware_before",
+        "from": "middleware:app_recover_New_0",
+        "to": "route:GET__api_v1_alumni",
+        "assumed": true,
+        "label": null,
+        "meta": {
+          "fiberAccent": true,
+          "order": 0
+        }
+      },
+      {
+        "id": "middleware_before:middleware:app_recover_New_0->route:GET__health:0:0",
+        "kind": "middleware_before",
+        "from": "middleware:app_recover_New_0",
+        "to": "route:GET__health",
+        "assumed": true,
+        "label": null,
+        "meta": {
+          "fiberAccent": true,
+          "order": 0
+        }
+      },
+      {
+        "id": "middleware_before:middleware:app_recover_New_0->route:POST__api_v1_alumni:2:0",
+        "kind": "middleware_before",
+        "from": "middleware:app_recover_New_0",
+        "to": "route:POST__api_v1_alumni",
+        "assumed": true,
+        "label": null,
+        "meta": {
+          "fiberAccent": true,
+          "order": 0
+        }
+      },
+      {
+        "id": "middleware_before:middleware:app_recover_New_0->route:POST__api_v1_alumni_bulk-delete:4:0",
+        "kind": "middleware_before",
+        "from": "middleware:app_recover_New_0",
+        "to": "route:POST__api_v1_alumni_bulk-delete",
+        "assumed": true,
+        "label": null,
+        "meta": {
+          "fiberAccent": true,
+          "order": 0
+        }
+      },
+      {
+        "id": "middleware_before:middleware:app_recover_New_0->route:POST__api_v1_alumni_import:5:0",
+        "kind": "middleware_before",
+        "from": "middleware:app_recover_New_0",
+        "to": "route:POST__api_v1_alumni_import",
+        "assumed": true,
+        "label": null,
+        "meta": {
+          "fiberAccent": true,
+          "order": 0
+        }
+      },
+      {
+        "id": "middleware_before:middleware:app_recover_New_0->route:PUT__api_v1_alumni__id:3:0",
+        "kind": "middleware_before",
+        "from": "middleware:app_recover_New_0",
+        "to": "route:PUT__api_v1_alumni__id",
+        "assumed": true,
+        "label": null,
+        "meta": {
+          "fiberAccent": true,
+          "order": 0
+        }
+      },
+      {
+        "id": "routes_to:module:main->route:GET__health:0",
+        "kind": "routes_to",
+        "from": "module:main",
+        "to": "route:GET__health",
+        "assumed": true,
+        "label": null,
+        "meta": {}
+      },
+      {
+        "id": "routes_to:module:main->route:group_v1",
+        "kind": "routes_to",
+        "from": "module:main",
+        "to": "route:group_v1",
+        "assumed": false,
+        "label": null,
+        "meta": {}
+      },
+      {
+        "id": "routes_to:route:GET__api_v1_alumni->handler:alumni_List:1",
+        "kind": "routes_to",
+        "from": "route:GET__api_v1_alumni",
+        "to": "handler:alumni_List",
+        "assumed": false,
+        "label": null,
+        "meta": {}
+      },
+      {
+        "id": "routes_to:route:POST__api_v1_alumni->handler:alumni_Create:2",
+        "kind": "routes_to",
+        "from": "route:POST__api_v1_alumni",
+        "to": "handler:alumni_Create",
+        "assumed": false,
+        "label": null,
+        "meta": {}
+      },
+      {
+        "id": "routes_to:route:POST__api_v1_alumni_bulk-delete->handler:alumni_BulkDelete:4",
+        "kind": "routes_to",
+        "from": "route:POST__api_v1_alumni_bulk-delete",
+        "to": "handler:alumni_BulkDelete",
+        "assumed": false,
+        "label": null,
+        "meta": {}
+      },
+      {
+        "id": "routes_to:route:POST__api_v1_alumni_import->handler:alumni_Import:5",
+        "kind": "routes_to",
+        "from": "route:POST__api_v1_alumni_import",
+        "to": "handler:alumni_Import",
+        "assumed": false,
+        "label": null,
+        "meta": {}
+      },
+      {
+        "id": "routes_to:route:PUT__api_v1_alumni__id->handler:alumni_Update:3",
+        "kind": "routes_to",
+        "from": "route:PUT__api_v1_alumni__id",
+        "to": "handler:alumni_Update",
+        "assumed": false,
+        "label": null,
+        "meta": {}
+      },
+      {
+        "id": "routes_to:route:group_v1->route:GET__api_v1_alumni:1",
+        "kind": "routes_to",
+        "from": "route:group_v1",
+        "to": "route:GET__api_v1_alumni",
+        "assumed": true,
+        "label": null,
+        "meta": {}
+      },
+      {
+        "id": "routes_to:route:group_v1->route:POST__api_v1_alumni:2",
+        "kind": "routes_to",
+        "from": "route:group_v1",
+        "to": "route:POST__api_v1_alumni",
+        "assumed": true,
+        "label": null,
+        "meta": {}
+      },
+      {
+        "id": "routes_to:route:group_v1->route:POST__api_v1_alumni_bulk-delete:4",
+        "kind": "routes_to",
+        "from": "route:group_v1",
+        "to": "route:POST__api_v1_alumni_bulk-delete",
+        "assumed": true,
+        "label": null,
+        "meta": {}
+      },
+      {
+        "id": "routes_to:route:group_v1->route:POST__api_v1_alumni_import:5",
+        "kind": "routes_to",
+        "from": "route:group_v1",
+        "to": "route:POST__api_v1_alumni_import",
+        "assumed": true,
+        "label": null,
+        "meta": {}
+      },
+      {
+        "id": "routes_to:route:group_v1->route:PUT__api_v1_alumni__id:3",
+        "kind": "routes_to",
+        "from": "route:group_v1",
+        "to": "route:PUT__api_v1_alumni__id",
+        "assumed": true,
+        "label": null,
+        "meta": {}
+      }
+    ]
+  },
+  "lifecycleFlows": [
+    {
+      "id": "flow:main:GET:/api/v1/alumni",
+      "title": "GET /api/v1/alumni",
+      "trigger": "GET /api/v1/alumni",
+      "steps": [
+        {
+          "order": 1,
+          "action": "middleware",
+          "label": "recover.New",
+          "nodeId": null,
+          "lineRange": [
+            77,
+            77
+          ],
+          "assumed": true,
+          "meta": {
+            "isAuth": false,
+            "isCors": false
+          }
+        },
+        {
+          "order": 2,
+          "action": "middleware",
+          "label": "cors.New",
+          "nodeId": null,
+          "lineRange": [
+            80,
+            80
+          ],
+          "assumed": true,
+          "meta": {
+            "isAuth": false,
+            "isCors": true
+          }
+        },
+        {
+          "order": 3,
+          "action": "handler",
+          "label": "List",
+          "nodeId": null,
+          "lineRange": [
+            90,
+            90
+          ],
+          "assumed": false
+        },
+        {
+          "order": 4,
+          "action": "response",
+          "label": "response write",
+          "nodeId": null,
+          "lineRange": null,
+          "assumed": true
+        }
+      ],
+      "assumed": true,
+      "confidence": 0.45,
+      "meta": {
+        "protected": false,
+        "hasMiddleware": true
+      }
+    },
+    {
+      "id": "flow:main:POST:/api/v1/alumni",
+      "title": "POST /api/v1/alumni",
+      "trigger": "POST /api/v1/alumni",
+      "steps": [
+        {
+          "order": 1,
+          "action": "middleware",
+          "label": "recover.New",
+          "nodeId": null,
+          "lineRange": [
+            77,
+            77
+          ],
+          "assumed": true,
+          "meta": {
+            "isAuth": false,
+            "isCors": false
+          }
+        },
+        {
+          "order": 2,
+          "action": "middleware",
+          "label": "cors.New",
+          "nodeId": null,
+          "lineRange": [
+            80,
+            80
+          ],
+          "assumed": true,
+          "meta": {
+            "isAuth": false,
+            "isCors": true
+          }
+        },
+        {
+          "order": 3,
+          "action": "handler",
+          "label": "Create",
+          "nodeId": null,
+          "lineRange": [
+            91,
+            91
+          ],
+          "assumed": false
+        },
+        {
+          "order": 4,
+          "action": "response",
+          "label": "response write",
+          "nodeId": null,
+          "lineRange": null,
+          "assumed": true
+        }
+      ],
+      "assumed": true,
+      "confidence": 0.45,
+      "meta": {
+        "protected": false,
+        "hasMiddleware": true
+      }
+    },
+    {
+      "id": "flow:main:POST:/api/v1/alumni/bulk-delete",
+      "title": "POST /api/v1/alumni/bulk-delete",
+      "trigger": "POST /api/v1/alumni/bulk-delete",
+      "steps": [
+        {
+          "order": 1,
+          "action": "middleware",
+          "label": "recover.New",
+          "nodeId": null,
+          "lineRange": [
+            77,
+            77
+          ],
+          "assumed": true,
+          "meta": {
+            "isAuth": false,
+            "isCors": false
+          }
+        },
+        {
+          "order": 2,
+          "action": "middleware",
+          "label": "cors.New",
+          "nodeId": null,
+          "lineRange": [
+            80,
+            80
+          ],
+          "assumed": true,
+          "meta": {
+            "isAuth": false,
+            "isCors": true
+          }
+        },
+        {
+          "order": 3,
+          "action": "handler",
+          "label": "BulkDelete",
+          "nodeId": null,
+          "lineRange": [
+            93,
+            93
+          ],
+          "assumed": false
+        },
+        {
+          "order": 4,
+          "action": "response",
+          "label": "response write",
+          "nodeId": null,
+          "lineRange": null,
+          "assumed": true
+        }
+      ],
+      "assumed": true,
+      "confidence": 0.45,
+      "meta": {
+        "protected": false,
+        "hasMiddleware": true
+      }
+    },
+    {
+      "id": "flow:main:POST:/api/v1/alumni/import",
+      "title": "POST /api/v1/alumni/import",
+      "trigger": "POST /api/v1/alumni/import",
+      "steps": [
+        {
+          "order": 1,
+          "action": "middleware",
+          "label": "recover.New",
+          "nodeId": null,
+          "lineRange": [
+            77,
+            77
+          ],
+          "assumed": true,
+          "meta": {
+            "isAuth": false,
+            "isCors": false
+          }
+        },
+        {
+          "order": 2,
+          "action": "middleware",
+          "label": "cors.New",
+          "nodeId": null,
+          "lineRange": [
+            80,
+            80
+          ],
+          "assumed": true,
+          "meta": {
+            "isAuth": false,
+            "isCors": true
+          }
+        },
+        {
+          "order": 3,
+          "action": "handler",
+          "label": "Import",
+          "nodeId": null,
+          "lineRange": [
+            94,
+            94
+          ],
+          "assumed": false
+        },
+        {
+          "order": 4,
+          "action": "response",
+          "label": "response write",
+          "nodeId": null,
+          "lineRange": null,
+          "assumed": true
+        }
+      ],
+      "assumed": true,
+      "confidence": 0.45,
+      "meta": {
+        "protected": false,
+        "hasMiddleware": true
+      }
+    },
+    {
+      "id": "flow:main:PUT:/api/v1/alumni/:id",
+      "title": "PUT /api/v1/alumni/:id",
+      "trigger": "PUT /api/v1/alumni/:id",
+      "steps": [
+        {
+          "order": 1,
+          "action": "middleware",
+          "label": "recover.New",
+          "nodeId": null,
+          "lineRange": [
+            77,
+            77
+          ],
+          "assumed": true,
+          "meta": {
+            "isAuth": false,
+            "isCors": false
+          }
+        },
+        {
+          "order": 2,
+          "action": "middleware",
+          "label": "cors.New",
+          "nodeId": null,
+          "lineRange": [
+            80,
+            80
+          ],
+          "assumed": true,
+          "meta": {
+            "isAuth": false,
+            "isCors": true
+          }
+        },
+        {
+          "order": 3,
+          "action": "handler",
+          "label": "Update",
+          "nodeId": null,
+          "lineRange": [
+            92,
+            92
+          ],
+          "assumed": false
+        },
+        {
+          "order": 4,
+          "action": "response",
+          "label": "response write",
+          "nodeId": null,
+          "lineRange": null,
+          "assumed": true
+        }
+      ],
+      "assumed": true,
+      "confidence": 0.45,
+      "meta": {
+        "protected": false,
+        "hasMiddleware": true
+      }
+    }
+  ],
+  "securityFlags": [
+    {
+      "id": "unauthed-route:route:GET__api_v1_alumni",
+      "severity": "medium",
+      "ruleId": "missing_auth_middleware",
+      "message": "Route GET /api/v1/alumni has no auth/jwt middleware in this file's ordered chain.",
+      "nodeIds": [
+        "route:GET__api_v1_alumni"
+      ],
+      "edgeIds": [],
+      "assumed": true
+    },
+    {
+      "id": "unauthed-route:route:GET__health",
+      "severity": "medium",
+      "ruleId": "missing_auth_middleware",
+      "message": "Route GET /health has no auth/jwt middleware in this file's ordered chain.",
+      "nodeIds": [
+        "route:GET__health"
+      ],
+      "edgeIds": [],
+      "assumed": true
+    },
+    {
+      "id": "unauthed-route:route:POST__api_v1_alumni",
+      "severity": "medium",
+      "ruleId": "missing_auth_middleware",
+      "message": "Route POST /api/v1/alumni has no auth/jwt middleware in this file's ordered chain.",
+      "nodeIds": [
+        "route:POST__api_v1_alumni"
+      ],
+      "edgeIds": [],
+      "assumed": true
+    },
+    {
+      "id": "unauthed-route:route:POST__api_v1_alumni_bulk-delete",
+      "severity": "medium",
+      "ruleId": "missing_auth_middleware",
+      "message": "Route POST /api/v1/alumni/bulk-delete has no auth/jwt middleware in this file's ordered chain.",
+      "nodeIds": [
+        "route:POST__api_v1_alumni_bulk-delete"
+      ],
+      "edgeIds": [],
+      "assumed": true
+    },
+    {
+      "id": "unauthed-route:route:POST__api_v1_alumni_import",
+      "severity": "medium",
+      "ruleId": "missing_auth_middleware",
+      "message": "Route POST /api/v1/alumni/import has no auth/jwt middleware in this file's ordered chain.",
+      "nodeIds": [
+        "route:POST__api_v1_alumni_import"
+      ],
+      "edgeIds": [],
+      "assumed": true
+    },
+    {
+      "id": "unauthed-route:route:PUT__api_v1_alumni__id",
+      "severity": "medium",
+      "ruleId": "missing_auth_middleware",
+      "message": "Route PUT /api/v1/alumni/:id has no auth/jwt middleware in this file's ordered chain.",
+      "nodeIds": [
+        "route:PUT__api_v1_alumni__id"
+      ],
+      "edgeIds": [],
+      "assumed": true
+    },
+    {
+      "id": "cors:cors.New:1",
+      "severity": "low",
+      "ruleId": "cors_middleware_present",
+      "message": "CORS middleware detected; verify origins are not wide open.",
+      "nodeIds": [
+        "middleware:app_cors_New_1"
+      ],
+      "edgeIds": [],
+      "assumed": true
+    },
+    {
+      "id": "unauthed-flow:flow:main:GET:/api/v1/alumni",
+      "severity": "medium",
+      "ruleId": "missing_auth_middleware",
+      "message": "Lifecycle for GET /api/v1/alumni has no auth middleware step in this file.",
+      "nodeIds": [],
+      "edgeIds": [],
+      "assumed": true
+    },
+    {
+      "id": "unauthed-flow:flow:main:POST:/api/v1/alumni",
+      "severity": "medium",
+      "ruleId": "missing_auth_middleware",
+      "message": "Lifecycle for POST /api/v1/alumni has no auth middleware step in this file.",
+      "nodeIds": [],
+      "edgeIds": [],
+      "assumed": true
+    },
+    {
+      "id": "unauthed-flow:flow:main:POST:/api/v1/alumni/bulk-delete",
+      "severity": "medium",
+      "ruleId": "missing_auth_middleware",
+      "message": "Lifecycle for POST /api/v1/alumni/bulk-delete has no auth middleware step in this file.",
+      "nodeIds": [],
+      "edgeIds": [],
+      "assumed": true
+    },
+    {
+      "id": "unauthed-flow:flow:main:POST:/api/v1/alumni/import",
+      "severity": "medium",
+      "ruleId": "missing_auth_middleware",
+      "message": "Lifecycle for POST /api/v1/alumni/import has no auth middleware step in this file.",
+      "nodeIds": [],
+      "edgeIds": [],
+      "assumed": true
+    },
+    {
+      "id": "unauthed-flow:flow:main:PUT:/api/v1/alumni/:id",
+      "severity": "medium",
+      "ruleId": "missing_auth_middleware",
+      "message": "Lifecycle for PUT /api/v1/alumni/:id has no auth middleware step in this file.",
+      "nodeIds": [],
+      "edgeIds": [],
+      "assumed": true
+    }
+  ],
+  "visualTheme": {
+    "stack": "go",
+    "primary": "#00ADD8",
+    "secondary": "#00C853",
+    "onDark": "#00E5FF",
+    "logoAssetId": "go-fiber-logo-ondark",
+    "logoPath": "visuals/logos/go-fiber.svg"
+  },
+  "mermaid": "flowchart TD\n  handler_alumni_BulkDelete[\"BulkDelete\"]\n  handler_alumni_Create[\"Create\"]\n  handler_alumni_Import[\"Import\"]\n  handler_alumni_List[\"List\"]\n  handler_alumni_Update[\"Update\"]\n  middleware_app_cors_New_1[\"cors.New\"]\n  middleware_app_recover_New_0[\"recover.New\"]\n  module_main[\"main\"]\n  route_GET__api_v1_alumni[\"GET /api/v1/alumni\"]\n  route_GET__health[\"GET /health\"]\n  route_POST__api_v1_alumni[\"POST /api/v1/alumni\"]\n  route_POST__api_v1_alumni_bulk_delete[\"POST /api/v1/alumni/bulk-delete\"]\n  route_POST__api_v1_alumni_import[\"POST /api/v1/alumni/import\"]\n  route_PUT__api_v1_alumni__id[\"PUT /api/v1/alumni/:id\"]\n  route_group_v1[\"/api/v1\"]\n  middleware_app_cors_New_1 -.-> module_main\n  middleware_app_cors_New_1 -.-> route_GET__api_v1_alumni\n  middleware_app_cors_New_1 -.-> route_GET__health\n  middleware_app_cors_New_1 -.-> route_POST__api_v1_alumni\n  middleware_app_cors_New_1 -.-> route_POST__api_v1_alumni_bulk_delete\n  middleware_app_cors_New_1 -.-> route_POST__api_v1_alumni_import\n  middleware_app_cors_New_1 -.-> route_PUT__api_v1_alumni__id\n  middleware_app_recover_New_0 -.-> module_main\n  middleware_app_recover_New_0 -.-> route_GET__api_v1_alumni\n  middleware_app_recover_New_0 -.-> route_GET__health\n  middleware_app_recover_New_0 -.-> route_POST__api_v1_alumni\n  middleware_app_recover_New_0 -.-> route_POST__api_v1_alumni_bulk_delete\n  middleware_app_recover_New_0 -.-> route_POST__api_v1_alumni_import\n  middleware_app_recover_New_0 -.-> route_PUT__api_v1_alumni__id\n  module_main -.-> route_GET__health\n  module_main --> route_group_v1\n  route_GET__api_v1_alumni --> handler_alumni_List\n  route_POST__api_v1_alumni --> handler_alumni_Create\n  route_POST__api_v1_alumni_bulk_delete --> handler_alumni_BulkDelete\n  route_POST__api_v1_alumni_import --> handler_alumni_Import\n  route_PUT__api_v1_alumni__id --> handler_alumni_Update\n  route_group_v1 -.-> route_GET__api_v1_alumni\n  route_group_v1 -.-> route_POST__api_v1_alumni\n  route_group_v1 -.-> route_POST__api_v1_alumni_bulk_delete\n  route_group_v1 -.-> route_POST__api_v1_alumni_import\n  route_group_v1 -.-> route_PUT__api_v1_alumni__id"
+}
