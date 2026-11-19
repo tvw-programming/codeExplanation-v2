@@ -19,7 +19,7 @@ the full explanation.
 | 1 | `_find_marker_hits()` | Marker-file detection (`go.mod`, `package.json`, ...) | Extension-based scanning — misclassifies stray files as a detected stack |
 | 1 | bounded `max_depth` walk | Depth-limited directory walk | Unbounded recursive walk — slow in large/vendored trees |
 | 1 | `_find_unclaimed_hints()` | Surface hinted-but-unmarked files for human review | Silently ignore them, or silently promote them to a detected stack |
-| 1 | `_detect_frontend_flavor()` | Checks actual `package.json` dependencies | Assuming every `package.json` means React |
+| 1 | `_detect_frontend_flavor()` | Checks actual `package.json` deps (react/angular/vue/solid/qwik/javascript + express backend) | Assuming every `package.json` means React / `react_or_angular` |
 | 1 | `_detect_java_flavor()` | Checks for `spring-boot` dependency in build file contents | Assuming any Maven/Gradle project is Spring Boot |
 | 1 | architecture heuristic | Count of distinct backend marker-file roots | Counting Dockerfiles or top-level folders — less direct a signal |
 | 2 | `group_react_or_angular_features()` | Checks a list of conventional organizing-folder names; **flat files in the organizing folder are now claimed** | Hardcoding one specific layout; earlier only *subdirectories* became features (silent empty runs) |
@@ -54,8 +54,10 @@ the full explanation.
 | 6 | `build_estimated_words()` / `transcribe.mjs` | **Legacy / unused** by the live bundle (still unit-tested) | Presenting them as the production aligner |
 | 6 | `highlight_config.py` | Kept to a pure seconds→frames conversion | Folding rendering logic into Python |
 | 6 | `ChunkView.tsx` highlights | CSS selection bar over plain text | Shiki decorations (dependency present, **not imported**) |
-| 6 | Remotion `FullVideo` + `FileCard` | Concatenates every staged chunk; card introduces each file | Shipping only `CodeExplainerChunk` (that composition remains the sample-chunk demo) |
-| 6 | `calculateMetadata` | Duration from measured `durationMs` (plus card frames) | A fixed/hardcoded composition duration |
+| 6 | Remotion `FullVideo` | FileCard → optional tree/lifecycle → ChunkView → optional breakdown; skip unavailable | Shipping only `CodeExplainerChunk`; inventing placeholder visual slides |
+| 6 | `DiagramHeader` | Shared brand-tinted file-path bar + logo on every FullVideo segment | Per-clip one-off headers that drift |
+| 6 | `treeLayout.ts` | Center-packed trees with header/logo safe zones | Ad-hoc node positions that collide with chrome |
+| 6 | `calculateMetadata` | Duration from measured `durationMs` (plus card + visual frames) | A fixed/hardcoded composition duration |
 | 7 | `validate_record()` | Checks `pullRequest`'s **key**, not its value, for presence | Requiring non-null — would force fabricating a PR URL for a legitimately unknown one |
 | 7 | placeholder records for unimplemented stacks | Allowed to legitimately fail schema validation | Special-casing them to pass — hides a real, known gap |
 | 7 | `run_pilot()` double extraction run | Re-runs extraction once more inside the pilot to prove reuse on real data | Trusting Phase 4's unit tests alone — proves the mechanism in isolation, not on this specific real repo |

@@ -1,15 +1,14 @@
 # Phase 1 — Project Type Detection
 
-Status: done, 26 tests passing at phase completion. **Historical**
-Alumni-web snapshot: `frontend=react, backend=[go], architecture=monolith, dockerized=true`.
+Status: done. **Historical** Alumni-web snapshot:
+`frontend=react, backend=[go], architecture=monolith, dockerized=true`.
 
-Detection is marker-file based and is **not** "any stack." There is
-**no Express/Node backend value**. A `package.json` without `react` or
-`@angular/core` becomes frontend `"react_or_angular"`
-(`_detect_frontend_flavor`). `chunk_repo()` then uses
-`project_type.frontend_stack or "react"` — a silent React default the
-"no unknown fallback" rule forbids in spirit. See
-[`14-stack-support-validation.md`](./14-stack-support-validation.md).
+Detection is marker-file based. Frontend flavors from `package.json`
+deps: `react`, `angular`, `vue`, `solid`, `qwik`, else `javascript`.
+Backend markers include Go, Python, Spring Boot, **Express** (`express`
+in deps), and **Rust** (`Cargo.toml`). The old `"react_or_angular"`
+catch-all for non-React/Angular packages is gone. See
+[`17-multi-stack-visuals.md`](./17-multi-stack-visuals.md).
 
 ## What this phase delivers
 
@@ -78,28 +77,16 @@ real alumni repo.
 
 ### `_detect_frontend_flavor(package_json_path)`
 
-**What it does:** given a `package.json`, returns `"react"`,
-`"angular"`, or `"react_or_angular"` (ambiguous/unreadable **or
-neither**) by checking actual dependencies (`@angular/core`, `react`).
-
-**Current detection bug — Express / Node:** there is no `"express"` /
-`"node"` backend stack. `package.json` is only a *frontend* marker.
-Express, a vanilla Node API, or any other Node backend is labeled
-`"react_or_angular"` with `backend: []`. Keep Express as a **roadmap**
-extractor, and also call this a **current detection bug**, not only a
-doc-14 footnote. The chunker then defaults that flavor to `"react"`
-(`chunker.py`: `stack = project_type.frontend_stack or "react"`).
+**What it does:** given a `package.json`, returns a frontend flavor
+(`react` / `angular` / `vue` / `solid` / `qwik` / `javascript`) from
+declared dependencies, and may also append **`express`** to backend
+stacks when `express` is present.
 
 **Why check `dependencies`/`devDependencies` instead of assuming every
-`package.json` means React (since React is the stack this project
-happens to be tested against):** this is a direct instance of the
-dynamic-design principle — `package.json` alone only proves "this is a
-JS/TS project," not which framework. Checking the actual declared
-dependency is the only way to tell React and Angular apart (or neither)
-without hardcoding an assumption that would silently misclassify any
-non-React frontend fed into the pipeline. The remaining hole is the
-`"react_or_angular"` catch-all: "neither" is not the same as
-"ambiguous React-or-Angular."
+`package.json` means React:** `package.json` alone only proves "this is
+a JS/TS project." Checking declared deps is how React, Angular, Vue,
+Solid, Qwik, plain JavaScript, and Express are told apart without a
+silent React default.
 
 ### `_detect_java_flavor(root, directory)`
 

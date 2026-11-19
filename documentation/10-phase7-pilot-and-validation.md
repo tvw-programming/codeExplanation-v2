@@ -3,14 +3,13 @@
 Status: done. 12 new tests at original phase completion (10
 `schema_check`, 2 `run_pilot`). **Do not treat 147 / 168 as live.**
 
-**Tests (2026-11-19):** `pytest -q` → **245 passed, 3 skipped**. Re-run
+**Tests (2026-11-19):** `pytest -q` → **290 passed, 3 skipped**. Re-run
 locally; pin a new dated count here when it changes.
 
-Phases 0–7 run end-to-end. Extraction is **not** complete for all
-advertised stacks. Schema validation is **report-only**: invalid
-Python/Spring/Express placeholders still get narrated and can still
-produce an mp4 (`run_pilot.py` records `schemaValidation.invalid` then
-unconditionally continues).
+Phases 0–7 run end-to-end. Multi-stack extractors + visuals are
+shipped (`EXTRACTOR_VERSION` 8); fidelity and coverage still vary by
+stack (doc 17). Schema validation remains **report-only**
+(`run_pilot.py` records `schemaValidation.invalid` then continues).
 
 ## What this phase delivers
 
@@ -55,17 +54,12 @@ calls `pullRequest` required, but Phase 3/4 established that its
 *value* can honestly be `null`. Checking only for the key's presence
 enforces "the field was considered and explicitly recorded as unknown."
 
-**Why a Phase-3 placeholder record for an unimplemented stack (Python /
-Spring Boot / Express) is allowed to legitimately *fail* this
-validator:** the gap is surfaced, not hidden. Special-casing the
-placeholder to pass would hide a known limitation. **Angular is the
-opposite failure:** empty content lists are schema-valid, so this
-check does **not** catch the silent-success path (confidence is now
-0.3; the record still validates). See doc 14.
-
-**Report-only:** `run_pilot` still narrates and renders invalid
-records. A stack with no extractor can still produce an mp4. Closing
-that is a code follow-up, not a docs fiction.
+**Why schema validation stays report-only:** incomplete or
+low-confidence records still narrate/render so a pilot can finish; the
+report surfaces `schemaValidation.invalid` instead of hiding gaps.
+Angular-empty and similar cases remain schema-valid with empty lists —
+visuals now go `unavailable` (doc 17) rather than inventing graphs.
+Doc 14’s “placeholder-only Python/Spring/Express” claim is obsolete.
 
 ### `run_pilot(repo_root, output_root, render=True)` — extraction twice
 

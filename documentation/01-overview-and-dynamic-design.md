@@ -16,11 +16,9 @@ each with:
 - a rendered audio track + measured-beat code-highlight timeline,
   assembled by Remotion.
 
-Extraction is **not** equally complete for every stack. Honest matrix
-(detect / chunk / extract / narrate / render): root `README.md` and
-[`14-stack-support-validation.md`](./14-stack-support-validation.md).
-How to add a stack is sketched there (marker → grouping → extractor →
-schema → narration hedges).
+Extraction depth varies by stack. Honest matrix: root `README.md` and
+[`17-multi-stack-visuals.md`](./17-multi-stack-visuals.md). Historical
+ceilings: [`14-stack-support-validation.md`](./14-stack-support-validation.md).
 
 This is the production implementation that followed an earlier,
 more exploratory requirement/plan (see the original `Requirement`
@@ -58,11 +56,14 @@ Per-chunk NarrationScript (4 beats + item beats + file overview)
 Per-chunk audio + measured-beat highlight config (Piper | espeak-ng)
         │  staging → render-app/public/chunks/ + FullVideo
         ▼
-FileCard → walkthrough → next file → output/video.mp4
+FullVideo per chunk: FileCard → tree? → lifecycle? → ChunkView → breakdown?
         │  Phase 7 — run_pilot() (schema report-only; does not halt render)
         ▼
 pilot_report.json + staged bundles
 ```
+
+Unavailable visual segments are omitted. Shared `DiagramHeader` chrome
+on every segment — see [`17-multi-stack-visuals.md`](./17-multi-stack-visuals.md).
 
 Each arrow is a phase, and each phase is a separate, independently
 tested Python package under `src/`. The pipeline is designed so any
@@ -81,12 +82,10 @@ enforced at every layer:
    case," not a special-cased target (see `README.md` at the repo root
    and every phase doc below reiterates this).
 2. **No hardcoded *repo*.** `detect_project_type()` looks for marker
-   files (`package.json`, `go.mod`, `requirements.txt`, `pom.xml`, …) —
-   it never assumes "this is a React+Go project." It is **not** "any
-   stack": there is no Express/Node backend value; a non-React
-   non-Angular `package.json` becomes `"react_or_angular"`; the chunker
-   defaults missing frontend flavor to `"react"`. See
-   [`04-phase1-project-type-detection.md`](./04-phase1-project-type-detection.md).
+   files (`package.json`, `go.mod`, `requirements.txt`, `pom.xml`,
+   `Cargo.toml`, …) — it never assumes "this is a React+Go project."
+   Frontend flavor and Express/Rust backends come from declared deps /
+   markers (doc 04 / 17).
 3. **No hardcoded folder names.** `feature_grouping.py`'s docstring is
    explicit about this: grouping works off *generic structural signals*
    (an organizing folder like `features/`/`pages/`/`routes/`, or a
