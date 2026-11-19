@@ -68,12 +68,16 @@ const shortPath = (path: string): string => {
   return parts.length > 2 ? ".../" + parts.slice(-2).join("/") : path;
 };
 
-const Badge: React.FC<{ text: string; color: string }> = ({ text, color }) => (
+const Badge: React.FC<{ text: string; color: string; textColor?: string }> = ({
+  text,
+  color,
+  textColor = "#0b1020",
+}) => (
   <Box
     sx={{
       flexShrink: 0,
       bgcolor: color,
-      color: "#0b1020",
+      color: textColor,
       fontFamily: "Helvetica, Arial, sans-serif",
       fontSize: 15,
       fontWeight: 700,
@@ -259,7 +263,11 @@ export const FileCard: React.FC<{
           </Typography>
           <Box sx={{ display: "flex", gap: "8px", flexShrink: 0 }}>
             <Badge text={overview.layer} color={layerColor} />
-            <Badge text={overview.fileType} color="rgba(255,255,255,0.14)" />
+            <Badge
+              text={overview.fileType}
+              color="rgba(255,255,255,0.14)"
+              textColor="#e8eaed"
+            />
           </Box>
         </Box>
 
