@@ -226,7 +226,7 @@ def classify_layer(file_path: str, record: dict) -> str:
         if any(fragment in path for fragment in ("/server/", "/backend/", "/api/server")):
             return LAYER_BACKEND
         return LAYER_FRONTEND
-    if file_path.endswith(".py"):
+    if file_path.endswith((".py", ".java", ".kt", ".rb", ".php", ".cs", ".rs")):
         return LAYER_BACKEND
     return LAYER_BACKEND if record.get("language") == "Go" else LAYER_FRONTEND
 
@@ -439,9 +439,14 @@ def build_file_overview(
         f"{c.get('method', '')} {c.get('url', '')}".strip()
         for c in record.get("apiCalls") or []
     ]
+    # The record's schema names this field "type" (see
+    # src/extract/json_builder.py); "kind" is only the in-memory name
+    # the extractors use before serialising. Reading "kind" here meant
+    # the card's side effects were silently always empty.
     side_effects = sorted({
-        effect.get("kind") for effect in record.get("sideEffects") or []
-        if isinstance(effect, dict) and effect.get("kind")
+        effect.get("type") or effect.get("kind")
+        for effect in record.get("sideEffects") or []
+        if isinstance(effect, dict) and (effect.get("type") or effect.get("kind"))
     })
 
     # Counts of what the file actually holds — a quick sense of how much

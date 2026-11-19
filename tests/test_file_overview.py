@@ -248,3 +248,21 @@ def test_overview_keeps_the_full_purpose_alongside_the_card_version():
     overview = build_file_overview(rec, resolve_relationships([rec]), [rec])
     assert len(overview["purpose"]) <= CARD_PURPOSE_CHARS
     assert overview["purposeFull"] == long_purpose
+
+
+def test_side_effects_are_read_under_the_name_the_record_actually_uses():
+    """json_builder serialises these as "type"; reading "kind" meant the
+    card's side effects were silently always empty."""
+    rec = record("src/a.ts", sideEffects=[
+        {"type": "navigation", "description": "Detected at line 10"},
+        {"type": "storage", "description": "Detected at line 20"},
+    ])
+    overview = build_file_overview(rec, resolve_relationships([rec]), [rec])
+    assert overview["sideEffects"] == ["navigation", "storage"]
+
+
+def test_server_side_languages_are_not_labelled_frontend():
+    """A .java file fell through to the Frontend fallback."""
+    for path in ("src/main/java/com/example/UserService.java", "app/models/user.rb",
+                 "src/main.rs", "api/Service.cs"):
+        assert classify_layer(path, record("x")) == LAYER_BACKEND
