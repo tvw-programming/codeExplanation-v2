@@ -9,8 +9,8 @@ def build_lifecycle_beats(flow: dict, stack: str = "react") -> list[dict]:
     """Present-tense narration for one flow (React handlers or Go Fiber routes)."""
     if not flow:
         return []
-    if stack in ("go", "go_fiber", "gofiber"):
-        return _go_fiber_beats(flow)
+    if stack in ("go", "go_fiber", "gofiber", "python", "express", "spring_boot", "java", "rust"):
+        return _go_fiber_beats(flow)  # middleware → handler → response vocabulary
     return _react_beats(flow)
 
 
@@ -80,6 +80,12 @@ def _go_fiber_beats(flow: dict) -> list[dict]:
             spoken = f"it hits the database via {label}."
         elif action == "response":
             spoken = "then it writes the response."
+        elif action == "resume":
+            spoken = "the client resumes."
+        elif action == "emit":
+            spoken = f"it emits {label}."
+        elif action == "event":
+            continue
         else:
             spoken = f"it reaches {label}."
         if assumed:

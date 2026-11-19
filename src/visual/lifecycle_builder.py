@@ -236,3 +236,209 @@ def build_go_fiber_lifecycle_flows(record: dict) -> list[dict]:
         f.get("title") or "",
     ))
     return flows
+
+
+def build_http_route_lifecycle_flows(record: dict, stack: str = "express") -> list[dict]:
+    """Generic HTTP lifecycle: middleware* → handler → response for routes in this file."""
+    routes = record.get("routes") or []
+    file_path = record.get("filePath") or ""
+    stem = Path(file_path).stem if file_path else "routes"
+    flows: list[dict] = []
+    for route in routes:
+        method = (route.get("method") or "?").upper()
+        path = route.get("path") or "/"
+        title = f"{method} {path}"
+        handler = (route.get("handler") or "handler").split(".")[-1]
+        steps: list[dict] = []
+        order = 1
+        for mw in route.get("middleware") or []:
+            steps.append({
+                "order": order, "action": "middleware",
+                "label": mw.get("name") or "middleware",
+                "nodeId": None,
+                "lineRange": [mw["line"], mw["line"]] if mw.get("line") else None,
+                "assumed": bool(mw.get("assumed", True)),
+                "meta": {"isAuth": bool(mw.get("isAuth"))},
+            })
+            order += 1
+        for dep in route.get("depends") or []:
+            steps.append({
+                "order": order, "action": "middleware", "label": f"Depends({dep})",
+                "nodeId": None, "lineRange": None, "assumed": True,
+                "meta": {"isAuth": "auth" in dep.lower()},
+            })
+            order += 1
+        steps.append({
+            "order": order, "action": "handler", "label": handler,
+            "nodeId": None,
+            "lineRange": [route["line"], route["line"]] if route.get("line") else None,
+            "assumed": False,
+        })
+        order += 1
+        steps.append({
+            "order": order, "action": "response", "label": "response write",
+            "nodeId": None, "lineRange": None, "assumed": True,
+        })
+        flows.append({
+            "id": f"flow:{stem}:{method}:{path}",
+            "title": title,
+            "trigger": title,
+            "steps": steps,
+            "assumed": bool(route.get("assumed")) or any(s.get("assumed") for s in steps),
+            "confidence": 0.5,
+            "meta": {
+                "protected": bool(route.get("protected")),
+                "hasMiddleware": bool(route.get("middleware") or route.get("depends")),
+                "stack": stack,
+            },
+        })
+    flows.sort(key=lambda f: (0 if (f.get("meta") or {}).get("hasMiddleware") else 1, f.get("title") or ""))
+    return flows
+
+
+def build_python_lifecycle_flows(record: dict) -> list[dict]:
+    return build_http_route_lifecycle_flows(record, stack="python")
+
+
+def build_express_lifecycle_flows(record: dict) -> list[dict]:
+    return build_http_route_lifecycle_flows(record, stack="express")
+
+
+def build_spring_lifecycle_flows(record: dict) -> list[dict]:
+    return build_http_route_lifecycle_flows(record, stack="spring_boot")
+
+
+def build_rust_lifecycle_flows(record: dict) -> list[dict]:
+    return build_http_route_lifecycle_flows(record, stack="rust")
+
+
+def build_angular_lifecycle_flows(record: dict) -> list[dict]:
+    handlers = record.get("eventHandlers") or []
+    api_calls = record.get("apiCalls") or []
+    file_path = record.get("filePath") or ""
+    stem = Path(file_path).stem if file_path else "component"
+    flows: list[dict] = []
+    for h in handlers:
+        name = h.get("name") or "handler"
+        steps = [{
+            "order": 1, "action": "event", "label": name,
+            "nodeId": None, "lineRange": h.get("lineRange"), "assumed": bool(h.get("assumed")),
+        }]
+        order = 2
+        for call in api_calls:
+            steps.append({
+                "order": order, "action": "api_call",
+                "label": f"{call.get('method', '')} {call.get('url', '')}".strip(),
+                "nodeId": None,
+                "lineRange": [call["line"], call["line"]] if call.get("line") else None,
+                "assumed": bool(call.get("assumed")),
+            })
+            order += 1
+        steps.append({
+            "order": order, "action": "emit" if record.get("outputs") else "render",
+            "label": "emit / view update", "nodeId": None, "lineRange": None, "assumed": True,
+        })
+        flows.append({
+            "id": f"flow:{stem}:{name}",
+            "title": name,
+            "trigger": name,
+            "steps": steps,
+            "assumed": any(s.get("assumed") for s in steps),
+            "confidence": 0.45,
+        })
+    return flows
+
+
+def build_vue_lifecycle_flows(record: dict) -> list[dict]:
+    return build_angular_lifecycle_flows(record)  # same handler→api shape
+
+
+def build_solid_lifecycle_flows(record: dict) -> list[dict]:
+    flows = build_react_lifecycle_flows(record)
+    # Rewrite assumed render steps — Solid does not full re-render
+    for flow in flows:
+        for step in flow.get("steps") or []:
+            if step.get("action") == "render":
+                step["label"] = "DOM patch (fine-grained)"
+                step["assumed"] = True
+    if flows:
+        return flows
+    # Signal-only file
+    signals = record.get("signals") or []
+    if not signals:
+        return []
+    stem = Path(record.get("filePath") or "comp").stem
+    steps = [{"order": 1, "action": "event", "label": "signal write", "assumed": True, "nodeId": None, "lineRange": None}]
+    for i, sig in enumerate(signals[:3]):
+        steps.append({
+            "order": i + 2, "action": "state_update", "label": sig.get("kind"),
+            "assumed": True, "nodeId": None,
+            "lineRange": [sig["line"], sig["line"]] if sig.get("line") else None,
+        })
+    steps.append({"order": len(steps) + 1, "action": "render", "label": "DOM patch (fine-grained)", "assumed": True, "nodeId": None, "lineRange": None})
+    return [{
+        "id": f"flow:{stem}:signal",
+        "title": "signal update",
+        "trigger": "signal update",
+        "steps": steps,
+        "assumed": True,
+        "confidence": 0.4,
+    }]
+
+
+def build_qwik_lifecycle_flows(record: dict) -> list[dict]:
+    flows = build_react_lifecycle_flows(record)
+    if flows:
+        for flow in flows:
+            flow["steps"].insert(0, {
+                "order": 0, "action": "resume", "label": "client resume",
+                "assumed": True, "nodeId": None, "lineRange": None,
+            })
+            for i, s in enumerate(flow["steps"], start=1):
+                s["order"] = i
+        return flows
+    boundaries = [b for b in (record.get("qwikBoundaries") or []) if b.get("kind") == "handler$"]
+    if not boundaries:
+        return []
+    stem = Path(record.get("filePath") or "comp").stem
+    flows = []
+    for b in boundaries:
+        name = b.get("name") or "handler$"
+        flows.append({
+            "id": f"flow:{stem}:{name}",
+            "title": name,
+            "trigger": name,
+            "steps": [
+                {"order": 1, "action": "resume", "label": "client resume", "assumed": True, "nodeId": None, "lineRange": None},
+                {"order": 2, "action": "handler", "label": name, "assumed": False, "nodeId": None,
+                 "lineRange": [b["line"], b["line"]] if b.get("line") else None},
+                {"order": 3, "action": "state_update", "label": "signal", "assumed": True, "nodeId": None, "lineRange": None},
+            ],
+            "assumed": True,
+            "confidence": 0.4,
+        })
+    return flows
+
+
+def build_js_lifecycle_flows(record: dict) -> list[dict]:
+    handlers = record.get("eventHandlers") or []
+    stem = Path(record.get("filePath") or "module").stem
+    flows = []
+    for h in handlers:
+        name = h.get("name") or "handler"
+        flows.append({
+            "id": f"flow:{stem}:{name}",
+            "title": name,
+            "trigger": h.get("event") or name,
+            "steps": [
+                {"order": 1, "action": "event", "label": h.get("event") or name, "assumed": False,
+                 "nodeId": None, "lineRange": h.get("lineRange")},
+                {"order": 2, "action": "handler", "label": name, "assumed": bool(h.get("assumed")),
+                 "nodeId": None, "lineRange": h.get("lineRange")},
+                {"order": 3, "action": "other", "label": "DOM / fetch", "assumed": True,
+                 "nodeId": None, "lineRange": None},
+            ],
+            "assumed": True,
+            "confidence": 0.45,
+        })
+    return flows

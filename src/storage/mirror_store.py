@@ -39,7 +39,9 @@ from src.extract.common import content_hash
 #       hooks / callback outputs on frontend records.
 #   7 - Go Fiber route_tree + ordered middleware lifecycle; middleware /
 #       routeGroups / usesFiber on backend Go records.
-EXTRACTOR_VERSION = 7
+#   8 - Multi-stack visuals: Python ast, Express detect+routes, Spring DI,
+#       Angular dedicated extractor, Vue/Solid/Qwik/JS/Rust extract+graphs.
+EXTRACTOR_VERSION = 8
 
 
 def output_path_for(output_root: Path, file_path: str) -> Path:

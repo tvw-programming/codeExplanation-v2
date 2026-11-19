@@ -140,6 +140,59 @@ def flag_go_fiber_tree_security(graph: dict | None, record: dict | None = None) 
     return flags
 
 
+def flag_generic_route_security(
+    graph: dict | None,
+    flows: list[dict],
+    record: dict | None = None,
+) -> list[dict]:
+    """Shared auth-missing / sink flags for backend and FE stacks."""
+    flags: list[dict] = []
+    record = record or {}
+    for hint in record.get("securityHints") or []:
+        flags.append({
+            "id": hint.get("id") or f"hint:{hint.get('ruleId')}",
+            "severity": hint.get("severity", "medium"),
+            "ruleId": hint.get("ruleId", "hint"),
+            "message": hint.get("message", "Security hint"),
+            "nodeIds": hint.get("nodeIds") or (
+                [graph["rootId"]] if graph and graph.get("rootId") else []
+            ),
+            "edgeIds": [],
+            "assumed": bool(hint.get("assumed", True)),
+        })
+    if graph:
+        for node in graph.get("nodes") or []:
+            meta = node.get("meta") or {}
+            if node.get("kind") == "route" and meta.get("method") and not meta.get("protected"):
+                flags.append({
+                    "id": f"unauthed-route:{node['id']}",
+                    "severity": "medium",
+                    "ruleId": "missing_auth_middleware",
+                    "message": f"Route {node.get('label')} has no auth gate in this file.",
+                    "nodeIds": [node["id"]],
+                    "edgeIds": [],
+                    "assumed": True,
+                })
+    for flow in flows or []:
+        if not (flow.get("meta") or {}).get("protected"):
+            has_auth = any(
+                (s.get("meta") or {}).get("isAuth")
+                for s in (flow.get("steps") or [])
+                if s.get("action") == "middleware"
+            )
+            if not has_auth and any(s.get("action") == "handler" for s in (flow.get("steps") or [])):
+                flags.append({
+                    "id": f"unauthed-flow:{flow.get('id')}",
+                    "severity": "medium",
+                    "ruleId": "missing_auth_middleware",
+                    "message": f"Lifecycle for {flow.get('title')} has no auth step in this file.",
+                    "nodeIds": [],
+                    "edgeIds": [],
+                    "assumed": True,
+                })
+    return flags
+
+
 def flag_go_fiber_lifecycle_security(flows: list[dict]) -> list[dict]:
     flags: list[dict] = []
     for flow in flows:
