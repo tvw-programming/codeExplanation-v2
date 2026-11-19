@@ -13,6 +13,7 @@ here are what that write-up draws on.
 | Folder | Question | Write-up |
 |---|---|---|
 | `pipeline-support-across-six-stacks/` | Will this pipeline work for React, Angular, Python, Express/Node, Java Spring Boot and Go Fiber projects, and what does each stack actually demand? | `documentation/14-stack-support-validation.md` |
+| `extractor-implementation-blueprint/` | How to actually build the Python, Java/Spring and Express extractors, and the shared layer all three need. Follows directly from the validation above. | `documentation/16-extractor-implementation-plan.md` |
 
 ## How to read these
 
