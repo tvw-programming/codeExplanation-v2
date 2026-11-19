@@ -244,6 +244,7 @@ def test_teaser_copy_file_scoped_go():
     beats = script_breakdown_teaser({"filePath": "cmd/api/routes.go"})
     assert "routes.go" in beats[0]["spoken"]
     assert "checkout" not in beats[0]["spoken"].lower()
+    assert "chat" not in beats[0]["spoken"].lower()
 
 
 def test_full_go_record_from_fixture(tmp_path):

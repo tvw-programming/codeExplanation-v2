@@ -5,7 +5,6 @@ import type { ClipNarration, SecurityFlag } from "./ComponentTreeClip";
 import { DiagramHeader } from "./DiagramHeader";
 import {
   CEV_BG_VIDEO,
-  CEV_FG_PRIMARY,
   CEV_SECURITY,
   type VisualTheme,
   themeForStack,
@@ -37,7 +36,7 @@ export const LIFECYCLE_GAP_SECONDS = 0.3;
 
 export function lifecycleFramesFor(narration: ClipNarration | null | undefined): number {
   if (!narration) return 0;
-  const spoken = narration.durationMs / 1000 + LIFECYCLE_GAP_SECONDS;
+  const spoken = (narration.durationMs || 0) / 1000 + LIFECYCLE_GAP_SECONDS;
   const clamped = Math.min(LIFECYCLE_MAX_SECONDS, Math.max(LIFECYCLE_MIN_SECONDS, spoken));
   return Math.ceil(clamped * FPS);
 }
@@ -74,79 +73,91 @@ export const LifecycleFlowClip: React.FC<{
         titleFallback={flow?.title || "handler"}
       />
 
+      {/* Center the flowchart in the remaining viewport (below header). */}
       <Box
         sx={{
           position: "absolute",
-          top: HEADER_HEIGHT + 28,
-          left: 28,
-          right: 28,
-        }}
-      >
-        <Typography sx={{ color: CEV_FG_PRIMARY, fontSize: 22, fontWeight: 600, mb: 2 }}>
-          {flow?.title || "handler"}
-        </Typography>
-      </Box>
-
-      <Box
-        sx={{
-          position: "absolute",
-          top: HEADER_HEIGHT + 80,
-          left: 40,
-          right: 40,
+          top: HEADER_HEIGHT,
+          left: 0,
+          right: 0,
+          bottom: 0,
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          gap: "12px",
-          flexWrap: "wrap",
+          px: 4,
+          boxSizing: "border-box",
         }}
       >
-        {steps.map((step, i) => {
-          const active = i === activeStep;
-          const accent =
-            step.action === "middleware" ? theme.secondary || accentBase : accentBase;
-          return (
-            <Box key={`${step.order}-${step.label}`} sx={{ display: "flex", alignItems: "center", gap: "12px" }}>
-              <Box
-                sx={{
-                  border: `2px ${step.assumed ? "dashed" : "solid"} ${accent}`,
-                  bgcolor: active ? accent : `${accent}22`,
-                  color: active
-                    ? theme.stack === "javascript"
-                      ? theme.secondary
-                      : "#0b1020"
-                    : labelColor,
-                  opacity: step.assumed && !active ? 0.7 : 1,
-                  borderRadius: "999px",
-                  px: 2,
-                  py: 1,
-                  minWidth: 100,
-                  textAlign: "center",
-                  position: "relative",
-                }}
-              >
-                <Typography sx={{ fontSize: 12, fontWeight: 700 }}>{step.action}</Typography>
-                <Typography sx={{ fontSize: 13 }}>{step.label}</Typography>
-                {securityFlags.some((f) => f.message && step.label && f.message.includes("API")) &&
-                step.action === "api_call" ? (
-                  <Box
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "12px",
+            flexWrap: "wrap",
+            maxWidth: 1200,
+          }}
+        >
+          {steps.map((step, i) => {
+            const active = i === activeStep;
+            const accent =
+              step.action === "middleware" ? theme.secondary || accentBase : accentBase;
+            return (
+              <Box key={`${step.order}-${step.label}`} sx={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                <Box
+                  sx={{
+                    border: `2px ${step.assumed ? "dashed" : "solid"} ${accent}`,
+                    bgcolor: active ? accent : `${accent}22`,
+                    color: active
+                      ? theme.stack === "javascript"
+                        ? theme.secondary
+                        : "#0b1020"
+                      : labelColor,
+                    opacity: step.assumed && !active ? 0.7 : 1,
+                    borderRadius: "999px",
+                    px: 2,
+                    py: 1,
+                    minWidth: 100,
+                    textAlign: "center",
+                    position: "relative",
+                  }}
+                >
+                  <Typography sx={{ fontSize: 12, fontWeight: 700 }}>{step.action}</Typography>
+                  <Typography
                     sx={{
-                      position: "absolute",
-                      top: -6,
-                      right: -6,
-                      width: 12,
-                      height: 12,
-                      borderRadius: "50%",
-                      bgcolor: CEV_SECURITY,
+                      fontSize: 13,
+                      lineHeight: 1.2,
+                      display: "-webkit-box",
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: "vertical",
+                      overflow: "hidden",
+                      wordBreak: "break-word",
                     }}
-                  />
+                  >
+                    {step.label}
+                  </Typography>
+                  {securityFlags.some((f) => f.message && step.label && f.message.includes("API")) &&
+                  step.action === "api_call" ? (
+                    <Box
+                      sx={{
+                        position: "absolute",
+                        top: -6,
+                        right: -6,
+                        width: 12,
+                        height: 12,
+                        borderRadius: "50%",
+                        bgcolor: CEV_SECURITY,
+                      }}
+                    />
+                  ) : null}
+                </Box>
+                {i < steps.length - 1 ? (
+                  <Typography sx={{ color: accentBase, fontSize: 22 }}>→</Typography>
                 ) : null}
               </Box>
-              {i < steps.length - 1 ? (
-                <Typography sx={{ color: accentBase, fontSize: 22 }}>→</Typography>
-              ) : null}
-            </Box>
-          );
-        })}
+            );
+          })}
+        </Box>
       </Box>
 
       {narration?.audio ? (

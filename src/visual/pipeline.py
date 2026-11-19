@@ -357,12 +357,27 @@ def video_flows_for_record(record: dict, n: int = 2) -> list[dict]:
 
 
 def _infer_stack(record: dict) -> str:
+    """Resolve stack for artifact paths / attach dispatch.
+
+    Prefer explicit `stack` and theme. In monorepos, do not let
+    `projectType.frontend` eclipse a backend chunk that has routes /
+    Fiber middleware (that bug skipped Go Fiber FullVideo segments while
+    leaving stale visuals/go artifacts on disk).
+    """
     if record.get("stack"):
         return record["stack"]
+    theme = record.get("visualTheme") or {}
+    if theme.get("stack"):
+        return theme["stack"]
+    graph = record.get("visualGraph") or {}
     pt = record.get("projectType") or {}
+    backends = pt.get("backend") or []
+    if graph.get("kind") == "route_tree" or record.get("routes") or record.get("usesFiber") or record.get("middleware"):
+        if backends:
+            return backends[0]
+        return "go"
     if pt.get("frontend"):
         return pt["frontend"]
-    backends = pt.get("backend") or []
     if backends:
         return backends[0]
     return "unknown"

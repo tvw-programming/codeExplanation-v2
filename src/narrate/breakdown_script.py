@@ -10,12 +10,13 @@ from src.render.script_text import strip_visual_tokens
 def script_breakdown_teaser(chunk_meta: dict) -> list[dict]:
     file_path = chunk_meta.get("filePath") or ""
     name = Path(file_path).name if file_path else (chunk_meta.get("chunkId") or "this file")
-    spoken = f"Here is the structure graph for {name}. Open it in chat to inspect nodes."
+    spoken = f"Here is the structure graph for {name}."
     clean, _ = strip_visual_tokens(spoken)
     return [{
         "id": "breakdown-teaser",
-        "summary": f"Inspect {name}",
+        "summary": f"Graph for {name}",
         "spoken": clean,
+        # Extra pause so Remotion's +2s still hold reads as intentional dwell.
         "pause_after_ms": 400,
     }]
 

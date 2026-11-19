@@ -231,6 +231,7 @@ const VideoBody: React.FC<VideoProps> = ({
                   visualTheme={v.visualTheme}
                   narration={v.breakdownNarration}
                   filePath={overview?.filePath}
+                  securityFlags={v.securityFlags}
                 />
               </Series.Sequence>,
             );
