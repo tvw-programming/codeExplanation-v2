@@ -61,15 +61,18 @@ def extract_repo(root: str | Path, project_type: ProjectType) -> list[dict]:
             # the alumni repo has no genuine marker for either, so there is
             # nothing real to extract against yet. Recorded honestly rather
             # than skipped silently.
-            records.append({
+            from src.visual.pipeline import attach_visuals
+            placeholder = {
                 "chunkId": chunk.chunk_id,
                 "filePath": chunk.file_path,
                 "featureName": chunk.feature_name,
                 "projectType": project_type_dict,
+                "stack": chunk.stack,
                 "notes": f"Extraction for stack '{chunk.stack}' is not yet implemented in Phase 3.",
                 "confidence": 0,
                 "confidenceLevel": "low",
-            })
+            }
+            records.append(attach_visuals(placeholder, stack=chunk.stack))
 
     _apply_feature_mapping(records, result.chunks, base_url)
     return records

@@ -82,16 +82,18 @@ def extract_repo_with_reuse(
         elif chunk.stack == "go":
             record = build_backend_go_chunk_record(root, chunk, project_type_dict, module_path, uses_fiber)
         else:
-            record = {
+            from src.visual.pipeline import attach_visuals
+            record = attach_visuals({
                 "chunkId": chunk.chunk_id,
                 "filePath": chunk.file_path,
                 "featureName": chunk.feature_name,
                 "projectType": project_type_dict,
+                "stack": chunk.stack,
                 "notes": f"Extraction for stack '{chunk.stack}' is not yet implemented in Phase 3.",
                 "confidence": 0,
                 "confidenceLevel": "low",
                 "contentHash": current_hash,
-            }
+            }, stack=chunk.stack)
 
         if github_owner and github_repo:
             pr_url = find_last_pull_request_url(github_owner, github_repo, chunk.file_path)

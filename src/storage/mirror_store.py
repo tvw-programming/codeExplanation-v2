@@ -34,7 +34,10 @@ from src.extract.common import content_hash
 #       only naming it.
 #   4 - records carry the file's own header comment, for the card that
 #       introduces each file in the video.
-EXTRACTOR_VERSION = 4
+#   5 - fidelity + visualAvailability envelope; refuse blank visuals.
+#   6 - visualGraph component_tree + lifecycleFlows for React; jsxMounts /
+#       hooks / callback outputs on frontend records.
+EXTRACTOR_VERSION = 6
 
 
 def output_path_for(output_root: Path, file_path: str) -> Path:

@@ -113,6 +113,13 @@ def build_frontend_chunk_record(
         if props_model else []
     )
 
+    # React visual Slice A: JSX mounts, hooks, HTML sinks. Angular shares
+    # this builder today but attach_visuals will mark its visuals unavailable.
+    jsx_mounts, jsx_providers = ts.extract_jsx_mounts(text, functions, component_name)
+    hooks = ts.extract_hooks(text, functions, component_name)
+    html_sinks = ts.extract_html_sink_hints(text)
+    callback_outputs = ts.callback_outputs_from_mounts(jsx_mounts)
+
     important_functions = [
         {
             "name": fn.name,
@@ -169,8 +176,53 @@ def build_frontend_chunk_record(
             "queryParams": None,
             "sampleRequestBody": None,
             "sampleResponse": None,
+            "line": c.line,
         }
         for c in api_calls
+    ]
+
+    jsx_mounts_out = [
+        {
+            "parent": m.parent,
+            "child": m.child,
+            "line": m.line,
+            "assumed": m.assumed,
+            "note": m.note,
+            "props": [
+                {
+                    "name": p.name,
+                    "valueKind": p.value_kind,
+                    "valuePreview": p.value_preview,
+                    "assumed": p.assumed,
+                }
+                for p in m.props
+            ],
+        }
+        for m in jsx_mounts
+    ]
+    jsx_providers_out = [
+        {"name": p.name, "line": p.line, "assumed": p.assumed} for p in jsx_providers
+    ]
+    hooks_out = [
+        {
+            "name": h.name,
+            "kind": h.kind,
+            "line": h.line,
+            "owner": h.owner,
+            "assumed": h.assumed,
+        }
+        for h in hooks
+    ]
+    security_hints = [
+        {
+            "id": h.id,
+            "ruleId": h.rule_id,
+            "message": h.message,
+            "line": h.line,
+            "severity": h.severity,
+            "assumed": h.assumed,
+        }
+        for h in html_sinks
     ]
 
     side_effects_out = [{"type": kind, "description": f"Detected at line {line}"} for kind, line in
@@ -203,11 +255,19 @@ def build_frontend_chunk_record(
                       "chunk before it was written; verify the source file for exposed credentials.")
         confidence = min(confidence, 0.5)
 
-    return {
+    # Prefer named-function body ranges on event handlers when available,
+    # so lifecycle steps can associate apiCalls inside the handler.
+    handler_bodies = {fn.name: list(fn.line_range) for fn in functions if fn.is_event_handler}
+    for h in event_handlers:
+        if h["name"] in handler_bodies and not h["assumed"]:
+            h["lineRange"] = handler_bodies[h["name"]]
+
+    record = {
         "chunkId": chunk.chunk_id,
         "filePath": chunk.file_path,
         "featureName": chunk.feature_name,
         "projectType": project_type_dict,
+        "stack": chunk.stack,
         "language": detect_language(chunk.file_path),
         "lineRange": [1, len(lines)],
         # The file's own header comment, where it has one: the author's
@@ -216,11 +276,15 @@ def build_frontend_chunk_record(
         "fileDescription": file_header_comment(lines),
         "frameworkOrLibrary": framework_or_library,
         "inputs": inputs,
-        "outputs": [],
+        "outputs": callback_outputs,
         "eventHandlers": event_handlers,
         "apiCalls": api_calls_out,
         "importantFunctions": important_functions,
         "sideEffects": side_effects_out,
+        "jsxMounts": jsx_mounts_out,
+        "jsxProviders": jsx_providers_out,
+        "hooks": hooks_out,
+        "securityHints": security_hints,
         "featureMapping": [],   # filled in by the orchestrator once all chunks are extracted
         "dependencies": dependencies,
         "dataModels": data_models_out,
@@ -238,6 +302,9 @@ def build_frontend_chunk_record(
                             "does not call the GitHub API. Required by the rules doc but genuinely "
                             "unavailable here — see the plan's Phase 3 gap note.",
     }
+
+    from src.visual.pipeline import attach_visuals
+    return attach_visuals(record, stack=chunk.stack)
 
 
 def build_backend_go_chunk_record(
@@ -325,11 +392,12 @@ def build_backend_go_chunk_record(
                       "chunk before it was written; verify the source file for exposed credentials.")
         confidence = min(confidence, 0.5)
 
-    return {
+    record = {
         "chunkId": chunk.chunk_id,
         "filePath": chunk.file_path,
         "featureName": chunk.feature_name,
         "projectType": project_type_dict,
+        "stack": chunk.stack,
         "language": detect_language(chunk.file_path),
         "lineRange": [1, len(lines)],
         # The file's own header comment, where it has one: the author's
@@ -360,3 +428,6 @@ def build_backend_go_chunk_record(
                             "does not call the GitHub API. Required by the rules doc but genuinely "
                             "unavailable here — see the plan's Phase 3 gap note.",
     }
+
+    from src.visual.pipeline import attach_visuals
+    return attach_visuals(record, stack=chunk.stack)
