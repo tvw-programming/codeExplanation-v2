@@ -22,3 +22,7 @@ def script_breakdown_teaser(chunk_meta: dict) -> list[dict]:
 
 def script_react_breakdown_teaser(meta: dict) -> list[dict]:
     return script_breakdown_teaser(meta)
+
+
+def script_go_fiber_breakdown_teaser(meta: dict) -> list[dict]:
+    return script_breakdown_teaser(meta)

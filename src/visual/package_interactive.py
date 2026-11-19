@@ -12,6 +12,15 @@ from .theme import theme_for_stack
 
 def package_react_interactive_breakdown(record: dict) -> dict | None:
     """Embed this file's graph + flows. Refuse when interactiveBreakdown unavailable."""
+    return _package_interactive_breakdown(record)
+
+
+def package_go_fiber_interactive_breakdown(record: dict) -> dict | None:
+    """Embed this file/package route tree + flows for Go Fiber."""
+    return _package_interactive_breakdown(record)
+
+
+def _package_interactive_breakdown(record: dict) -> dict | None:
     avail = (record.get("visualAvailability") or {}).get("interactiveBreakdown")
     if not is_present(avail):
         return None
@@ -38,18 +47,49 @@ def package_react_interactive_breakdown(record: dict) -> dict | None:
     return payload
 
 
+_CHILD_EDGE_KINDS = ("mounts", "routes_to", "middleware_before", "provides")
+
+
 def canvas_react_node_detail(node: dict, graph: dict, flows: list[dict] | None = None) -> dict:
-    """Developer-facing detail panel fields for one node."""
+    """Developer-facing detail panel fields for one React node."""
+    return _canvas_node_detail(node, graph, flows, child_kinds=("mounts",))
+
+
+def canvas_go_fiber_node_detail(node: dict, graph: dict, flows: list[dict] | None = None) -> dict:
+    """Click route → middleware stack + handler cues for this chunk."""
+    detail = _canvas_node_detail(
+        node, graph, flows, child_kinds=("routes_to", "middleware_before"),
+    )
+    node_id = node.get("id")
+    middleware = [
+        e["from"] for e in (graph.get("edges") or [])
+        if e.get("to") == node_id and e.get("kind") == "middleware_before"
+    ]
+    detail["middleware"] = middleware
+    detail["middlewareCount"] = len(middleware)
+    return detail
+
+
+def _canvas_node_detail(
+    node: dict,
+    graph: dict,
+    flows: list[dict] | None,
+    child_kinds: tuple[str, ...] = _CHILD_EDGE_KINDS,
+) -> dict:
     node_id = node.get("id")
     children = [
         e["to"] for e in (graph.get("edges") or [])
-        if e.get("from") == node_id and e.get("kind") == "mounts"
+        if e.get("from") == node_id and e.get("kind") in child_kinds
     ]
     related = []
     for flow in flows or []:
         for step in flow.get("steps") or []:
             if step.get("nodeId") == node_id:
                 related.append({"flowId": flow.get("id"), "title": flow.get("title"), "step": step})
+            # Also link flows whose title matches this route label.
+            elif node.get("kind") == "route" and flow.get("title") == node.get("label"):
+                related.append({"flowId": flow.get("id"), "title": flow.get("title"), "step": step})
+                break
     meta = node.get("meta") or {}
     line = node.get("line")
     file_path = node.get("filePath") or ""
@@ -75,7 +115,12 @@ def write_interactive_artifact(payload: dict, dest_dir: Path) -> Path:
 
 
 def _stack_of(record: dict) -> str:
+    if record.get("stack"):
+        return record["stack"]
     pt = record.get("projectType") or {}
-    return pt.get("frontend") or (pt.get("backend") or ["unknown"])[0] if isinstance(pt.get("backend"), list) else (
-        pt.get("frontend") or "unknown"
-    )
+    if pt.get("frontend"):
+        return pt["frontend"]
+    backends = pt.get("backend") or []
+    if isinstance(backends, list) and backends:
+        return backends[0]
+    return "unknown"

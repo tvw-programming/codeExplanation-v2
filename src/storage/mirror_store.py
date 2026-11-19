@@ -37,7 +37,9 @@ from src.extract.common import content_hash
 #   5 - fidelity + visualAvailability envelope; refuse blank visuals.
 #   6 - visualGraph component_tree + lifecycleFlows for React; jsxMounts /
 #       hooks / callback outputs on frontend records.
-EXTRACTOR_VERSION = 6
+#   7 - Go Fiber route_tree + ordered middleware lifecycle; middleware /
+#       routeGroups / usesFiber on backend Go records.
+EXTRACTOR_VERSION = 7
 
 
 def output_path_for(output_root: Path, file_path: str) -> Path:
