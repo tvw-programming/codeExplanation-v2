@@ -29,17 +29,16 @@ export type LifecycleFlow = {
   assumed?: boolean;
 };
 
-const FPS = 30;
-export const LIFECYCLE_MIN_SECONDS = 4;
-export const LIFECYCLE_MAX_SECONDS = 12;
-export const LIFECYCLE_GAP_SECONDS = 0.3;
+// Timing lives in segmentTiming.ts (shared with the viewer's segment
+// index) and is re-exported here for existing importers.
+import { FPS } from "./segmentTiming";
 
-export function lifecycleFramesFor(narration: ClipNarration | null | undefined): number {
-  if (!narration) return 0;
-  const spoken = (narration.durationMs || 0) / 1000 + LIFECYCLE_GAP_SECONDS;
-  const clamped = Math.min(LIFECYCLE_MAX_SECONDS, Math.max(LIFECYCLE_MIN_SECONDS, spoken));
-  return Math.ceil(clamped * FPS);
-}
+export {
+  LIFECYCLE_MIN_SECONDS,
+  LIFECYCLE_MAX_SECONDS,
+  LIFECYCLE_GAP_SECONDS,
+  lifecycleFramesFor,
+} from "./segmentTiming";
 
 export const LifecycleFlowClip: React.FC<{
   chunkDir: string;

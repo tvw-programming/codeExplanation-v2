@@ -25,3 +25,12 @@ render-app/.whisper-cpp/
 # One-time downloaded narration voice model (see src/render/tts.py,
 # scripts/ensure_piper_voice.py) — fetched, not source, ~64MB.
 .cache/
+
+# React repo viewer (frontend/) — build output. Its node_modules is
+# already covered by the node_modules/ rule above.
+frontend/dist/
+
+# Pipeline progress published for the viewer: regenerated on every run.
+# (render-app/public/chunks/ — which holds project.json and each
+# stack's segments.json — is already ignored above.)
+render-app/public/status.json

@@ -32,10 +32,13 @@ sys.path.insert(0, str(REPO_ROOT))
 
 from src.config.load_config import load_config, ConfigError  # noqa: E402
 from src.detect.source_resolver import resolve_source, SourceResolutionError  # noqa: E402
+from src.pilot.project_manifest import write_project_manifest  # noqa: E402
 from src.pilot.run_pilot import run_pilot  # noqa: E402
+from src.pilot.status import StatusWriter  # noqa: E402
 
 SAMPLE_CHUNK_DIR = REPO_ROOT / "render-app" / "public" / "sample-chunk"
 CHUNKS_DIR = REPO_ROOT / "render-app" / "public" / "chunks"
+PROJECT_MANIFEST = CHUNKS_DIR / "project.json"
 
 
 def _chunk_id_to_file_path(output_root: Path) -> dict[str, str]:
@@ -237,6 +240,19 @@ def _stage_all_chunks(report: dict, resolved_root: Path, output_root: Path) -> d
     if sample_id:
         _stage_one_chunk(sample_id, SAMPLE_CHUNK_DIR, resolved_root, output_root)
 
+    # Describe the analysed project for the viewer frontend: which
+    # stacks exist and which of them is the frontend. Derived from
+    # Phase 1 detection, so a Vue + Spring Boot repo needs no change
+    # here (see src/pilot/project_manifest.py).
+    if staged_by_stack:
+        write_project_manifest(
+            PROJECT_MANIFEST,
+            resolved_root,
+            report.get("projectType") or {},
+            staged_by_stack,
+        )
+        print(f"[backend]   -> {PROJECT_MANIFEST}")
+
     return staged_by_stack
 
 
@@ -254,17 +270,25 @@ def main() -> int:
     workdir = REPO_ROOT / ".local-run" / "source"
     output_root = REPO_ROOT / ".local-run" / "output"
 
+    # Publish live progress for the viewer frontend, which is already
+    # running by now (run-local.sh starts it first) and polls this file.
+    status = StatusWriter()
+    status.start(source=source_value, render=render)
+
     print(f"[backend] Source (from pipeline.config.yaml): {source_value}")
     try:
         resolved = resolve_source(source_value, workdir)
     except SourceResolutionError as exc:
         print(f"[backend] Could not resolve source: {exc}", file=sys.stderr)
+        status.fail(f"Could not resolve source: {exc}")
         return 1
 
     print(f"[backend] Resolved to local directory: {resolved.local_root}")
     print(f"[backend] Running the full pipeline (render={'on' if render else 'off'}) ...")
 
-    report = run_pilot(resolved.local_root, output_root, render=render)
+    report = run_pilot(
+        resolved.local_root, output_root, render=render, progress=status.on_progress
+    )
 
     print(f"[backend] Done. {report['chunkCount']} chunk(s) processed.")
     print(f"[backend] Schema validation: {report['schemaValidation']['valid']}/"
@@ -272,6 +296,7 @@ def main() -> int:
     print(f"[backend] Full report written to: {output_root / 'pilot_report.json'}")
 
     if render:
+        status.update(phase="staging")
         staged_by_stack = _stage_all_chunks(report, resolved.local_root, output_root)
         total_staged = sum(len(ids) for ids in staged_by_stack.values())
         if staged_by_stack:
@@ -282,6 +307,16 @@ def main() -> int:
                   f"chunk(s) across {len(staged_by_stack)} stack(s): {stacks_summary}")
             for stack in staged_by_stack:
                 print(f"[backend]   -> {CHUNKS_DIR / stack}/manifest.json")
+            # The videos do not exist yet — run-local.sh flips each
+            # `ready` as its render finishes.
+            status.set_stacks({
+                stack: {
+                    "composition": f"StackVideo-{stack}",
+                    "file": f"video-{stack}.mp4",
+                    "ready": False,
+                }
+                for stack in staged_by_stack
+            })
         else:
             print("[backend] No successfully-rendered chunk to stage for video "
                   "rendering.", file=sys.stderr)
@@ -298,10 +333,12 @@ def main() -> int:
             else:
                 print("[backend] See pilot_report.json's render section for details.",
                       file=sys.stderr)
+            status.fail(first_error or "No successfully-rendered chunk to stage.")
             return 2
     else:
         print("[backend] Rendering was skipped (--no-render); run-local.sh will "
               "not be able to produce output.mp4 from this run.")
+        status.finish()
 
     return 0
 

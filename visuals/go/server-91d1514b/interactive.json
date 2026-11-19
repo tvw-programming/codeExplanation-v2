@@ -7,7 +7,7 @@
     "lifecycleFlow": "partial",
     "interactiveBreakdown": "partial",
     "reasons": {
-      "lifecycleFlow": "Middleware/handler steps hedged under regex fidelity."
+      "lifecycleFlow": "Hedged under regex fidelity."
     }
   },
   "fidelity": "regex",

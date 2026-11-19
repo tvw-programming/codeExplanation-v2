@@ -49,17 +49,16 @@ export type SecurityFlag = {
   nodeIds?: string[];
 };
 
-const FPS = 30;
-export const TREE_TAIL_SECONDS = 0.4;
-export const TREE_MIN_SECONDS = 3;
-export const TREE_MAX_SECONDS = 8;
+// Timing lives in segmentTiming.ts (shared with the viewer's segment
+// index) and is re-exported here for existing importers.
+import { FPS } from "./segmentTiming";
 
-export function treeFramesFor(narration: ClipNarration | null | undefined): number {
-  if (!narration) return 0;
-  const spoken = (narration.durationMs || 0) / 1000 + TREE_TAIL_SECONDS;
-  const clamped = Math.min(TREE_MAX_SECONDS, Math.max(TREE_MIN_SECONDS, spoken));
-  return Math.ceil(clamped * FPS);
-}
+export {
+  TREE_TAIL_SECONDS,
+  TREE_MIN_SECONDS,
+  TREE_MAX_SECONDS,
+  treeFramesFor,
+} from "./segmentTiming";
 
 function eyebrowFor(kind: string): string {
   switch (kind) {

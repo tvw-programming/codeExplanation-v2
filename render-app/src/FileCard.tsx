@@ -57,9 +57,9 @@ const DIM_TEXT = "#8b9099";
 const PANEL_BG = "#1b1e25";
 const BORDER = "1px solid rgba(255,255,255,0.07)";
 
-export const MIN_FILE_CARD_SECONDS = 6;
-// A little air after the narration ends before the walkthrough starts.
-export const FILE_CARD_TAIL_SECONDS = 0.6;
+// Card timing lives in segmentTiming.ts (shared with the viewer's
+// segment index) and is re-exported here for existing importers.
+export { MIN_FILE_CARD_SECONDS, FILE_CARD_TAIL_SECONDS } from "./segmentTiming";
 
 const LAYER_COLORS: Record<string, string> = {
   Frontend: "#60a5fa",

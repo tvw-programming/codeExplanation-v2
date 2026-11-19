@@ -47,34 +47,52 @@ See `docs/json-structure-rules.md` for the field-level rules this pipeline imple
 ./run-local.sh
 ```
 
-With no arguments, this does four things with the default configuration
+With no arguments, this does five things with the default configuration
 and no manual setup:
 
-1. **Backend** — sets up a Python venv, installs `requirements.txt`,
+1. **Repo viewer** — starts the React app in [`frontend/`](frontend/)
+   at **`http://localhost:5174/`** (port via `$WEB_PORT`) and leaves it
+   running. It comes up **first**, in seconds, because everything after
+   it takes minutes: it shows the analysed repo as one file tree per
+   detected technology, and clicking a file jumps straight to that
+   file's moment in its stack video. It fills in live as the pipeline
+   publishes progress. Details: [`documentation/18-repo-viewer.md`](documentation/18-repo-viewer.md).
+2. **Backend** — sets up a Python venv, installs `requirements.txt`,
    creates `pipeline.config.yaml` from the example file if you don't
    have one yet, optionally downloads the Piper Indian-English voice
    once (`scripts/ensure_piper_voice.py`, ~64MB into `.cache/piper-voices/`),
    and runs the full pipeline (detect → chunk → extract → narrate →
    render) against whatever repo that config points at.
-2. **Frontend install** — runs `npm install` for `render-app`, if its
-   `node_modules` isn't already there.
-3. **Docs server** — builds the MUI documentation viewer and serves it
-   (left running) at **`http://localhost:4173/docs-viewer/`**
-   (port via `$DOCS_PORT`).
-4. **Video** — renders the **`FullVideo`** composition (every staged
-   chunk, each introduced by a FileCard) to **`./output/video.mp4`**.
+3. **Render app + docs server** — runs `npm install` for `render-app`
+   (if its `node_modules` isn't already there), builds the MUI
+   documentation viewer and serves it (left running) at
+   **`http://localhost:4173/docs-viewer/`** (port via `$DOCS_PORT`).
+4. **Segment index** — records where each source file appears inside
+   its stack video, so the viewer can seek to it. Runs before the
+   render, from the staged bundles.
+5. **Video** — renders one **`StackVideo-<stack>`** composition per
+   detected stack (every staged chunk, each introduced by a FileCard)
+   to **`./output/video-<stack>.mp4`**.
 
 Other modes:
 
 ```console
-./run-local.sh --no-render           # steps 1-3 only, skip TTS/video (no output/video.mp4)
-./run-local.sh --backend-only        # step 1 only
-./run-local.sh --skip-docs-server    # steps 1, 2, 4 — no web server started
-./run-local.sh --preview             # first 120s only, to output/video-preview.mp4
+./run-local.sh --no-render           # steps 1-3 only, skip TTS/video (no videos)
+./run-local.sh --backend-only        # the pipeline only
+./run-local.sh --web-only            # just the viewer, over whatever is already on disk
+./run-local.sh --skip-web            # no repo viewer
+./run-local.sh --skip-docs-server    # no documentation server
+./run-local.sh --preview             # first 120s only, to output/video-<stack>-preview.mp4
 ./run-local.sh --preview=30          # first 30s only
+./run-local.sh --stop-web            # stop a repo viewer left running from a previous run
 ./run-local.sh --stop-docs-server    # stop a docs server left running from a previous run
 ./run-local.sh --help
 ```
+
+`--web-only` is the quick way back in after a run: the viewer reads the
+staged chunks, the segment index and the rendered videos straight off
+disk, so you can browse a previous run's output without re-running
+anything.
 
 `--preview` / `--preview=N` still run detect → chunk → extract → narrate
 → stage in full; they only limit the Remotion frame range. The preview
@@ -105,9 +123,19 @@ invoked as subprocesses — see `src/render/tts.py`.
 | `output/video-preview.mp4` | Preview only, when `--preview` is used |
 | `render-app/public/chunks/` | Staged bundles + `manifest.json` for Remotion |
 | `.cache/piper-voices/` | One-time Piper model cache |
+| `render-app/public/chunks/<stack>/segments.json` | Where each file sits inside its stack video (start/end seconds + chapters) |
+| `render-app/public/chunks/project.json` | Detected stacks and their roles, for the viewer's sidebar |
+| `render-app/public/status.json` | Live pipeline progress the viewer polls |
+| `http://localhost:5174/` | **Repo viewer** — per-technology file trees, click a file to watch it |
 | `http://localhost:4173/docs-viewer/` | Docs viewer (reads `render-app/public/docs/`) |
 
 Video anatomy per chunk: **FileCard** → **ComponentTreeClip** (if available) → **LifecycleFlowClip** (if available) → **ChunkView** (code highlights) → **VisualBreakdownStill** (if available). Shared **DiagramHeader** (brand-tinted bar + file path + logo) on every segment. Details: doc 17.
+
+Those same five segments are the chapters the viewer offers under the
+player, and they are laid out by one shared module
+(`render-app/src/segmentTiming.ts`) that both the renderer and the
+segment index use — so a published offset describes the rendered video
+rather than approximating it. Details: doc 18.
 
 ## Test repo
 

@@ -12,21 +12,19 @@ import {
   videoAccent,
 } from "./visualTheme";
 
-const FPS = 30;
-/** Hold the still this long after narration ends before advancing. */
-export const BREAKDOWN_HOLD_SECONDS = 2;
-export const BREAKDOWN_MIN_SECONDS = 3;
-/** Allow spoken audio + hold without clamping the hold away. */
-export const BREAKDOWN_MAX_SECONDS = 12;
+// Timing lives in segmentTiming.ts (shared with the viewer's segment
+// index) and is re-exported here for existing importers.
+import { BREAKDOWN_HOLD_SECONDS } from "./segmentTiming";
+
+export {
+  BREAKDOWN_HOLD_SECONDS,
+  BREAKDOWN_MIN_SECONDS,
+  BREAKDOWN_MAX_SECONDS,
+  breakdownFramesFor,
+} from "./segmentTiming";
+
 /** @deprecated use BREAKDOWN_HOLD_SECONDS */
 export const BREAKDOWN_TAIL_SECONDS = BREAKDOWN_HOLD_SECONDS;
-
-export function breakdownFramesFor(narration: ClipNarration | null | undefined): number {
-  if (!narration) return 0;
-  const spoken = (narration.durationMs || 0) / 1000;
-  const total = Math.max(BREAKDOWN_MIN_SECONDS, spoken + BREAKDOWN_HOLD_SECONDS);
-  return Math.ceil(Math.min(BREAKDOWN_MAX_SECONDS, total) * FPS);
-}
 
 export const VisualBreakdownStill: React.FC<{
   chunkDir: string;

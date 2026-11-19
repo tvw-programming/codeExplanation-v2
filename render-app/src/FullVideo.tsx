@@ -1,24 +1,28 @@
 import { CalculateMetadataFunction, Composition, Series, staticFile } from "remotion";
 import { ThemeProvider } from "@mui/material/styles";
 import { theme } from "../shared/theme";
-import { ChunkView, bundleDurationInFrames, fetchBundle } from "./ChunkView";
+import { ChunkView, fetchBundle } from "./ChunkView";
 import {
-  FILE_CARD_TAIL_SECONDS,
   FileCard,
-  MIN_FILE_CARD_SECONDS,
   type CardNarration,
   type FileOverview,
 } from "./FileCard";
 import {
   ComponentTreeClip,
-  treeFramesFor,
   type ClipNarration,
   type SecurityFlag,
   type VisualGraph,
 } from "./ComponentTreeClip";
-import { LifecycleFlowClip, lifecycleFramesFor, type LifecycleFlow } from "./LifecycleFlowClip";
-import { VisualBreakdownStill, breakdownFramesFor } from "./VisualBreakdownStill";
+import { LifecycleFlowClip, type LifecycleFlow } from "./LifecycleFlowClip";
+import { VisualBreakdownStill } from "./VisualBreakdownStill";
 import type { VisualTheme } from "./visualTheme";
+import {
+  FPS,
+  cardFramesFor,
+  chapterFramesFor,
+  segmentsForStack,
+  type TimingBundle,
+} from "./segmentTiming";
 
 // Per-stack video isolation: the backend pipeline now stages chunks
 // under public/chunks/<stack>/<chunkId>/ and writes a per-stack
@@ -33,16 +37,9 @@ import type { VisualTheme } from "./visualTheme";
 // Segment order (Q1 A): FileCard → ComponentTreeClip → LifecycleFlowClip
 // → ChunkView → VisualBreakdownStill. Q5 A: omit unavailable segments.
 
-const FPS = 30;
-
-/** A card stays up for as long as its narration takes to read, plus a
- *  short tail, and never less than the minimum — so the viewer is
- *  neither read a summary that has left the screen nor left waiting on
- *  a card after the audio has finished. */
-function cardFramesFor(narration: CardNarration | null): number {
-  const spoken = narration ? (narration.durationMs / 1000) + FILE_CARD_TAIL_SECONDS : 0;
-  return Math.ceil(Math.max(MIN_FILE_CARD_SECONDS, spoken) * FPS);
-}
+// FPS and every per-segment duration come from segmentTiming.ts, which
+// scripts/build-segment-index.ts also uses to publish each file's
+// offset into this video — so the index and the render cannot disagree.
 
 // ---------- manifest types ----------
 
@@ -82,51 +79,46 @@ async function loadChunks(chunkIds: string[], chunkDirPrefix: string) {
         securityFlags?: SecurityFlag[];
         lifecycleFlows?: LifecycleFlow[];
       };
-      const treeNarration = bundle.treeNarration ?? null;
-      const lifecycleNarration = bundle.lifecycleNarration ?? null;
-      const breakdownNarration = bundle.breakdownNarration ?? null;
-      // Q5: only count frames when the narration artifact is present.
+      // Q5: a visual segment counts only when both its narration and
+      // the thing it draws are present — chapterFramesFor() applies
+      // that rule, and the published segment index applies the same one.
+      const frames = chapterFramesFor(bundle as TimingBundle);
       const visuals: ChunkVisuals = {
-        treeNarration,
-        treeFrames: treeNarration && bundle.visualGraph ? treeFramesFor(treeNarration) : 0,
-        lifecycleNarration,
-        lifecycleFrames:
-          lifecycleNarration && (bundle.lifecycleFlows?.length ?? 0) > 0
-            ? lifecycleFramesFor(lifecycleNarration)
-            : 0,
+        treeNarration: bundle.treeNarration ?? null,
+        treeFrames: frames.tree,
+        lifecycleNarration: bundle.lifecycleNarration ?? null,
+        lifecycleFrames: frames.lifecycle,
         lifecycleFlows: bundle.lifecycleFlows ?? [],
-        breakdownNarration,
-        breakdownFrames:
-          breakdownNarration && bundle.visualGraph ? breakdownFramesFor(breakdownNarration) : 0,
+        breakdownNarration: bundle.breakdownNarration ?? null,
+        breakdownFrames: frames.breakdown,
         visualGraph: bundle.visualGraph ?? null,
         visualTheme: bundle.visualTheme ?? null,
         securityFlags: bundle.securityFlags ?? [],
       };
       return {
-        duration: bundleDurationInFrames(bundle, FPS),
+        bundle: bundle as TimingBundle,
+        duration: frames.code,
+        cardFrames: frames.card,
         overview: bundle.fileOverview ?? null,
         narration: bundle.cardNarration ?? null,
         visuals,
       };
     }),
   );
+  // The composition's length comes from the same layout function that
+  // publishes each file's start/end seconds, so a chunk's position in
+  // this video is exactly what segments.json says it is.
+  const byId = new Map(chunkIds.map((id, i) => [id, loaded[i].bundle]));
+  const { totalFrames } = segmentsForStack(chunkIds, (id) => byId.get(id) ?? null);
+
   return {
     durations: loaded.map((e) => e.duration),
     overviews: loaded.map((e) => e.overview),
     cardNarrations: loaded.map((e) => e.narration),
-    cardDurations: loaded.map((e) => cardFramesFor(e.narration)),
+    cardDurations: loaded.map((e) => e.cardFrames),
     visuals: loaded.map((e) => e.visuals),
+    totalFrames,
   };
-}
-
-function chunkTotalFrames(
-  cardFrames: number,
-  treeFrames: number,
-  lifecycleFrames: number,
-  chunkFrames: number,
-  breakdownFrames: number,
-): number {
-  return cardFrames + treeFrames + lifecycleFrames + chunkFrames + breakdownFrames;
 }
 
 // ---------- shared props & component ----------
@@ -264,23 +256,11 @@ function makeStackCalculateMetadata(
     try {
       const manifest = await fetchStackManifest(stack);
       const chunkDirPrefix = `chunks/${stack}`;
-      const { durations, overviews, cardNarrations, cardDurations, visuals } =
+      const { durations, overviews, cardNarrations, cardDurations, visuals, totalFrames } =
         await loadChunks(manifest.chunkIds, chunkDirPrefix);
 
-      const total = durations.reduce(
-        (sum, d, i) =>
-          sum +
-          chunkTotalFrames(
-            cardDurations[i],
-            visuals[i]?.treeFrames ?? 0,
-            visuals[i]?.lifecycleFrames ?? 0,
-            d,
-            visuals[i]?.breakdownFrames ?? 0,
-          ),
-        0,
-      );
       return {
-        durationInFrames: Math.max(1, total),
+        durationInFrames: Math.max(1, totalFrames),
         props: {
           chunkIds: manifest.chunkIds,
           durations,
@@ -366,23 +346,11 @@ async function fetchCombinedManifest(): Promise<CombinedManifest> {
 
 const calculateMetadata: CalculateMetadataFunction<VideoProps> = async () => {
   const manifest = await fetchCombinedManifest();
-  const { durations, overviews, cardNarrations, cardDurations, visuals } =
+  const { durations, overviews, cardNarrations, cardDurations, visuals, totalFrames } =
     await loadChunks(manifest.chunkIds, "chunks");
 
-  const total = durations.reduce(
-    (sum, d, i) =>
-      sum +
-      chunkTotalFrames(
-        cardDurations[i],
-        visuals[i]?.treeFrames ?? 0,
-        visuals[i]?.lifecycleFrames ?? 0,
-        d,
-        visuals[i]?.breakdownFrames ?? 0,
-      ),
-    0,
-  );
   return {
-    durationInFrames: Math.max(1, total),
+    durationInFrames: Math.max(1, totalFrames),
     props: {
       chunkIds: manifest.chunkIds,
       durations,

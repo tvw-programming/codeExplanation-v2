@@ -1,25 +1,33 @@
 #!/usr/bin/env bash
 # run-local.sh — run the whole codeExplanation-v2 project locally with
-# one command and the default configuration. Does four things, in order:
+# one command and the default configuration. Does five things, in order:
 #
-#   1. Run the Python backend pipeline (detect -> chunk -> extract ->
+#   1. Start the React viewer (frontend/) and leave it running, so you
+#      can browse the repo being analysed — one file tree per detected
+#      technology — and click a file to watch its explanation. It comes
+#      up FIRST, before the pipeline, because a full run takes many
+#      minutes; it fills in live as the pipeline publishes progress.
+#   2. Run the Python backend pipeline (detect -> chunk -> extract ->
 #      narrate -> render) against whatever repo pipeline.config.yaml
 #      points at (creating it from pipeline.config.example.yaml first
 #      if you don't have one yet).
-#   2. Install render-app's node modules (npm install), if not already
-#      installed.
-#   3. Start a local web server and leave it running, so you can open
-#      the documentation (the MUI tree viewer over /documentation) in
-#      a browser at http://localhost:4173/docs-viewer/
-#   4. Render the pipeline's output to per-stack video files at
+#   3. Install render-app's node modules and serve the documentation
+#      viewer (the MUI tree viewer over /documentation) at
+#      http://localhost:4173/docs-viewer/
+#   4. Index where each source file appears inside its stack video, so
+#      the viewer can seek straight to it.
+#   5. Render the pipeline's output to per-stack video files at
 #      ./output/video-<stack>.mp4 (e.g. video-react.mp4, video-go.mp4)
 #
 # Usage:
-#   ./run-local.sh                  # all four steps
+#   ./run-local.sh                  # all five steps
 #   ./run-local.sh --no-render      # steps 1-3 only; skips TTS/video,
-#                                     # so step 4 is skipped too
-#   ./run-local.sh --backend-only   # step 1 only
-#   ./run-local.sh --skip-docs-server   # steps 1, 2, 4 — no web server
+#                                     # so steps 4-5 are skipped too
+#   ./run-local.sh --backend-only   # step 2 only
+#   ./run-local.sh --web-only       # step 1 only — browse what is
+#                                     # already on disk, run nothing
+#   ./run-local.sh --skip-web           # no React viewer
+#   ./run-local.sh --skip-docs-server   # no documentation server
 #   ./run-local.sh --preview            # first 120s only, for a fast look
 #   ./run-local.sh --preview=30         # first 30s only
 #
@@ -34,11 +42,14 @@
 # instead of spending the window on handler files with no visuals.
 # It is never written over output/video.mp4.
 #   ./run-local.sh --stop-docs-server   # stop a server from a previous run
+#   ./run-local.sh --stop-web           # stop the React viewer
 #   ./run-local.sh --help
 #
 # Fixed locations:
 #   Videos:         ./output/video-<stack>.mp4 (one per detected stack)
-#   Frontend:       http://localhost:4173/              (docs-server root over
+#   Viewer:         http://localhost:5174/              (React app over
+#                   frontend/; port via $WEB_PORT)
+#   Static root:    http://localhost:4173/              (docs-server root over
 #                   render-app/public; port via $DOCS_PORT)
 #   Docs viewer:    http://localhost:4173/docs-viewer/  (same server)
 #   Backend data:   ./.local-run/  (resolved source clone + pilot report)
@@ -51,21 +62,27 @@ set -euo pipefail
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$PROJECT_ROOT"
 
+RUN_WEB_SERVER=1
 RUN_BACKEND=1
 RUN_NPM_INSTALL=1
 RUN_DOCS_SERVER=1
+RUN_SEGMENT_INDEX=1
 RUN_VIDEO_RENDER=1
 RENDER_FLAG=""
 RENDER_ENABLED=1
 
 DOCS_PORT="${DOCS_PORT:-4173}"
+WEB_PORT="${WEB_PORT:-5174}"
 # Docs server (python http.server over render-app/public): root = frontend
 # static tree; /docs-viewer/ = MUI documentation viewer (from build:docs).
 FRONTEND_URL="http://localhost:${DOCS_PORT}/"
 DOCS_VIEWER_URL="http://localhost:${DOCS_PORT}/docs-viewer/"
+APP_URL="http://localhost:${WEB_PORT}/"
 LOCAL_RUN_DIR="$PROJECT_ROOT/.local-run"
 DOCS_PID_FILE="$LOCAL_RUN_DIR/docs-server.pid"
 DOCS_LOG_FILE="$LOCAL_RUN_DIR/docs-server.log"
+WEB_PID_FILE="$LOCAL_RUN_DIR/web-server.pid"
+WEB_LOG_FILE="$LOCAL_RUN_DIR/web-server.log"
 OUTPUT_DIR="$PROJECT_ROOT/output"
 OUTPUT_VIDEO="$OUTPUT_DIR/video.mp4"
 OUTPUT_PREVIEW="$OUTPUT_DIR/video-preview.mp4"
@@ -82,13 +99,26 @@ for arg in "$@"; do
     --no-render)
       RENDER_FLAG="--no-render"
       RENDER_ENABLED=0
+      RUN_SEGMENT_INDEX=0
       RUN_VIDEO_RENDER=0
       ;;
     --backend-only)
+      RUN_WEB_SERVER=0
       RUN_NPM_INSTALL=0
       RUN_DOCS_SERVER=0
+      RUN_SEGMENT_INDEX=0
       RUN_VIDEO_RENDER=0
       ;;
+    --web-only)
+      # Browse whatever a previous run left on disk. Starts nothing
+      # else and spends no time on narration or rendering.
+      RUN_BACKEND=0
+      RUN_NPM_INSTALL=0
+      RUN_DOCS_SERVER=0
+      RUN_SEGMENT_INDEX=0
+      RUN_VIDEO_RENDER=0
+      ;;
+    --skip-web) RUN_WEB_SERVER=0 ;;
     --skip-docs-server) RUN_DOCS_SERVER=0 ;;
     --preview) PREVIEW_SECONDS=120 ;;
     --preview=*)
@@ -104,6 +134,16 @@ for arg in "$@"; do
         exit 2
       fi
       ;;
+    --stop-web)
+      if [ -f "$WEB_PID_FILE" ] && kill -0 "$(cat "$WEB_PID_FILE")" 2>/dev/null; then
+        kill "$(cat "$WEB_PID_FILE")"
+        rm -f "$WEB_PID_FILE"
+        echo "Stopped the React viewer."
+      else
+        echo "No React viewer is running (per $WEB_PID_FILE)."
+      fi
+      exit 0
+      ;;
     --stop-docs-server)
       stop_docs_server() {
         if [ -f "$DOCS_PID_FILE" ] && kill -0 "$(cat "$DOCS_PID_FILE")" 2>/dev/null; then
@@ -118,7 +158,7 @@ for arg in "$@"; do
       exit 0
       ;;
     -h|--help)
-      sed -n '2,27p' "$0"
+      sed -n '2,42p' "$0"
       exit 0
       ;;
     *)
@@ -135,8 +175,23 @@ log() { printf '\n\033[1;36m==> %s\033[0m\n' "$1"; }
 print_local_urls() {
   echo ""
   echo "Local URLs:"
-  echo "  Frontend:     $FRONTEND_URL"
-  echo "  Docs viewer:  $DOCS_VIEWER_URL"
+  if [ "$RUN_WEB_SERVER" = "1" ]; then
+    echo "  Repo viewer:  $APP_URL   <- click a file to watch its explanation"
+  fi
+  if [ "$RUN_DOCS_SERVER" = "1" ]; then
+    echo "  Static root:  $FRONTEND_URL"
+    echo "  Docs viewer:  $DOCS_VIEWER_URL"
+  fi
+}
+
+# Publish a line of progress for the React viewer to show. Best effort:
+# a missing venv or a failed write must never stop a run (see
+# src/pilot/status.py).
+status_update() {
+  if [ -x "$PROJECT_ROOT/.venv/bin/python" ]; then
+    (cd "$PROJECT_ROOT" && "$PROJECT_ROOT/.venv/bin/python" -m src.pilot.status "$@") \
+      >/dev/null 2>&1 || true
+  fi
 }
 
 # ---------------------------------------------------------------------
@@ -182,10 +237,59 @@ check_render_prerequisites() {
 }
 
 # ---------------------------------------------------------------------
-# 1) Python backend pipeline, default configuration
+# 1) React viewer — started FIRST, and independent of everything else
+#
+# The pipeline takes many minutes (narration audio per chunk, then a
+# video per stack). The viewer must not wait for it: it comes up in
+# seconds, reads whatever is already on disk, and polls
+# render-app/public/status.json so it can show the run's progress and
+# unlock each file as its chunk is staged.
+# ---------------------------------------------------------------------
+run_web_server() {
+  log "[1/5] Viewer: starting the React repo viewer"
+
+  if ! command -v npm >/dev/null 2>&1; then
+    echo "npm (Node.js) is required for the viewer but was not found on PATH." >&2
+    echo "Re-run with --skip-web to carry on without it." >&2
+    return 0
+  fi
+
+  cd "$PROJECT_ROOT/frontend"
+  if [ ! -d node_modules ]; then
+    echo "Installing the viewer's node modules (first run only)..."
+    npm install
+  fi
+  cd "$PROJECT_ROOT"
+
+  mkdir -p "$LOCAL_RUN_DIR"
+
+  # Stop a viewer left over from a previous run before starting a new
+  # one, so the port is free (vite is started with --strictPort: a
+  # silently different port would make the URL printed here a lie).
+  if [ -f "$WEB_PID_FILE" ] && kill -0 "$(cat "$WEB_PID_FILE")" 2>/dev/null; then
+    kill "$(cat "$WEB_PID_FILE")"
+    sleep 0.3
+  fi
+
+  ( cd "$PROJECT_ROOT/frontend" && exec npx vite --port "$WEB_PORT" --strictPort ) \
+    > "$WEB_LOG_FILE" 2>&1 &
+  echo $! > "$WEB_PID_FILE"
+  sleep 1.5
+
+  if kill -0 "$(cat "$WEB_PID_FILE")" 2>/dev/null; then
+    echo "Repo viewer running (background):  $APP_URL"
+    echo "(stop it with: ./run-local.sh --stop-web)"
+  else
+    echo "The repo viewer failed to start — see $WEB_LOG_FILE" >&2
+    echo "Everything else still runs; re-run with --skip-web to silence this." >&2
+  fi
+}
+
+# ---------------------------------------------------------------------
+# 2) Python backend pipeline, default configuration
 # ---------------------------------------------------------------------
 run_backend() {
-  log "[1/4] Backend: setting up Python environment"
+  log "[2/5] Backend: setting up Python environment"
 
   if ! command -v python3 >/dev/null 2>&1; then
     echo "python3 is required but was not found on PATH." >&2
@@ -220,17 +324,17 @@ run_backend() {
     python scripts/ensure_piper_voice.py
   fi
 
-  log "[1/4] Backend: running the pipeline (detect -> chunk -> extract -> narrate -> render)"
+  log "[2/5] Backend: running the pipeline (detect -> chunk -> extract -> narrate -> render)"
   python scripts/run_backend_pilot.py $RENDER_FLAG
 
   deactivate
 }
 
 # ---------------------------------------------------------------------
-# 2) Install render-app's node modules
+# 3a) Install render-app's node modules
 # ---------------------------------------------------------------------
 run_npm_install() {
-  log "[2/4] Frontend: installing render-app's node modules"
+  log "[3/5] Render app: installing render-app's node modules"
 
   if ! command -v npm >/dev/null 2>&1; then
     echo "npm (Node.js) is required but was not found on PATH." >&2
@@ -247,10 +351,10 @@ run_npm_install() {
 }
 
 # ---------------------------------------------------------------------
-# 3) Start a local server so the documentation is viewable in a browser
+# 3b) Start a local server so the documentation is viewable in a browser
 # ---------------------------------------------------------------------
 run_docs_server() {
-  log "[3/4] Docs: building and serving the documentation viewer"
+  log "[3/5] Docs: building and serving the documentation viewer"
 
   cd "$PROJECT_ROOT/render-app"
   npm run build:docs
@@ -279,7 +383,34 @@ run_docs_server() {
 }
 
 # ---------------------------------------------------------------------
-# 4) Render the pipeline's output to a real video file at a fixed path
+# 4) Index where each file appears inside its stack video
+#
+# Runs BEFORE the render: the offsets are computed from the staged
+# bundles, not from the mp4, so the viewer can already show every
+# file's chapter table while the videos are still encoding.
+# ---------------------------------------------------------------------
+run_segment_index() {
+  if [ ! -f render-app/public/chunks/manifest.json ]; then
+    return 0
+  fi
+
+  log "[4/5] Index: locating each file inside its stack video"
+  status_update --phase indexing
+
+  cd "$PROJECT_ROOT/render-app"
+  if npx --yes tsx scripts/build-segment-index.ts; then
+    cd "$PROJECT_ROOT"
+  else
+    cd "$PROJECT_ROOT"
+    echo "Could not build the segment index — the viewer will still list" >&2
+    echo "the files, but clicking one cannot jump to its moment in the video." >&2
+    echo "Re-run just this step with:" >&2
+    echo "    cd render-app && npx --yes tsx scripts/build-segment-index.ts" >&2
+  fi
+}
+
+# ---------------------------------------------------------------------
+# 5) Render the pipeline's output to a real video file at a fixed path
 # ---------------------------------------------------------------------
 run_video_render() {
   if [ ! -f render-app/public/chunks/manifest.json ]; then
@@ -397,10 +528,11 @@ run_video_render() {
   if [ "${#DETECTED_STACKS[@]}" -gt 0 ]; then
     # ---- per-stack rendering ----
     if [ -n "$PREVIEW_SECONDS" ]; then
-      log "[4/4] Video: rendering ${PREVIEW_SECONDS}s PREVIEW per stack (${DETECTED_STACKS[*]})"
+      log "[5/5] Video: rendering ${PREVIEW_SECONDS}s PREVIEW per stack (${DETECTED_STACKS[*]})"
     else
-      log "[4/4] Video: rendering per-stack videos (${DETECTED_STACKS[*]})"
+      log "[5/5] Video: rendering per-stack videos (${DETECTED_STACKS[*]})"
     fi
+    status_update --phase rendering
 
     RENDERED_VIDEOS=()
     RENDER_FAILED=0
@@ -412,6 +544,9 @@ run_video_render() {
       fi
       if render_one_composition "StackVideo-${stack}" "$TARGET" "$stack"; then
         RENDERED_VIDEOS+=("$TARGET")
+        # Tell the viewer this one is watchable now, rather than making
+        # the user wait for every other stack to finish rendering.
+        status_update --video-ready "$stack" --video-file "$(basename "$TARGET")"
       else
         RENDER_FAILED=1
       fi
@@ -420,20 +555,23 @@ run_video_render() {
     if [ "$RENDER_FAILED" = "1" ] && [ "${#RENDERED_VIDEOS[@]}" -eq 0 ]; then
       cd "$PROJECT_ROOT"
       echo "All per-stack renders failed." >&2
+      status_update --error "Every per-stack video render failed."
       exit 1
     fi
   else
     # ---- fallback: single combined video (no per-stack manifests) ----
     if [ -n "$PREVIEW_SECONDS" ]; then
       RENDER_TARGET="$OUTPUT_PREVIEW"
-      log "[4/4] Video: rendering a ${PREVIEW_SECONDS}s PREVIEW to output/video-preview.mp4"
+      log "[5/5] Video: rendering a ${PREVIEW_SECONDS}s PREVIEW to output/video-preview.mp4"
     else
       RENDER_TARGET="$OUTPUT_VIDEO"
-      log "[4/4] Video: rendering output/video.mp4"
+      log "[5/5] Video: rendering output/video.mp4"
     fi
+    status_update --phase rendering
 
     if ! render_one_composition "FullVideo" "$RENDER_TARGET" "combined"; then
       cd "$PROJECT_ROOT"
+      status_update --error "The combined video render failed."
       exit 1
     fi
     RENDERED_VIDEOS=("$RENDER_TARGET")
@@ -451,13 +589,19 @@ run_video_render() {
   fi
 }
 
+# The viewer goes up first and stays up: everything after this point
+# can take tens of minutes, and the whole point is to be able to watch
+# it happen.
+if [ "$RUN_WEB_SERVER" = "1" ]; then run_web_server; fi
 if [ "$RUN_BACKEND" = "1" ]; then run_backend; fi
 if [ "$RUN_NPM_INSTALL" = "1" ]; then run_npm_install; fi
 if [ "$RUN_DOCS_SERVER" = "1" ]; then run_docs_server; fi
+if [ "$RUN_SEGMENT_INDEX" = "1" ]; then run_segment_index; fi
 if [ "$RUN_VIDEO_RENDER" = "1" ]; then run_video_render; fi
+if [ "$RUN_VIDEO_RENDER" = "1" ]; then status_update --done; fi
 
 log "Done."
-if [ "$RUN_DOCS_SERVER" = "1" ]; then print_local_urls; fi
+if [ "$RUN_WEB_SERVER" = "1" ] || [ "$RUN_DOCS_SERVER" = "1" ]; then print_local_urls; fi
 if [ "$RUN_VIDEO_RENDER" = "1" ]; then
   echo "Videos:        $OUTPUT_DIR/video-<stack>.mp4 (one per detected stack)"
 fi

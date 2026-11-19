@@ -83,7 +83,6 @@ export type Bundle = {
   stack?: string | null;
 };
 
-const FPS = 30;
 
 const WIDTH = 1280;
 const HEIGHT = 720;
@@ -122,9 +121,10 @@ const SELECTION_BAR_WIDTH = 4;
 // How far unselected code fades back while a block is selected.
 const UNSELECTED_DIM = 0.45;
 
-export function bundleDurationInFrames(bundle: Bundle, fps: number = FPS): number {
-  return Math.max(1, Math.ceil((bundle.durationMs / 1000) * fps));
-}
+// Timing now lives in segmentTiming.ts so the viewer's segment index
+// and this video are laid out by the same function — re-exported here
+// so every existing import keeps working.
+export { bundleDurationInFrames } from "./segmentTiming";
 
 export async function fetchBundle(chunkDir: string): Promise<Bundle> {
   const res = await fetch(staticFile(`${chunkDir}/bundle.json`));
