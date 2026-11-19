@@ -123,7 +123,11 @@ def _stage_all_chunks(report: dict, resolved_root: Path, output_root: Path) -> d
         if "error" in result:
             continue
         chunk_id = result["chunkId"]
-        stack = chunk_stacks.get(chunk_id, "unknown")
+        # Remotion composition IDs allow only a-z, A-Z, 0-9, CJK and
+        # hyphens — no underscores. Sanitize the stack name so the
+        # directory matches the composition ID (e.g. spring_boot ->
+        # spring-boot).
+        stack = chunk_stacks.get(chunk_id, "unknown").replace("_", "-")
         stack_dir = CHUNKS_DIR / stack
         if _stage_one_chunk(chunk_id, stack_dir / chunk_id, resolved_root, output_root):
             staged_by_stack.setdefault(stack, []).append(chunk_id)

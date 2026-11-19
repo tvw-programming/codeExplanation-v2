@@ -136,7 +136,14 @@ function makeStackCalculateMetadata(
   stack: string,
 ): CalculateMetadataFunction<VideoProps> {
   return async () => {
-    const manifest = await fetchStackManifest(stack);
+    let manifest: StackManifest;
+    try {
+      manifest = await fetchStackManifest(stack);
+    } catch {
+      // No manifest for this stack — produce a minimal 1-frame
+      // composition so Remotion doesn't crash the whole bundle.
+      return { durationInFrames: 1, props: { chunkIds: [] } };
+    }
     const chunkDirPrefix = `chunks/${stack}`;
     const { durations, overviews, cardNarrations, cardDurations } =
       await loadChunks(manifest.chunkIds, chunkDirPrefix);
@@ -173,7 +180,7 @@ export const StackVideoCompositions: React.FC = () => {
   // approach: register a fixed set of well-known stacks. Any stack
   // that doesn't have a manifest simply produces a 1-frame empty
   // video (calculateMetadata catches the fetch error).
-  const KNOWN_STACKS = ["react", "angular", "go", "python", "spring_boot", "express", "unknown"];
+  const KNOWN_STACKS = ["react", "angular", "go", "python", "spring-boot", "express", "unknown"];
 
   return (
     <>
