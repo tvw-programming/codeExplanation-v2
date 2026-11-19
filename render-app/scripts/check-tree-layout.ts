@@ -102,7 +102,7 @@ function profilePageGraph(): LayoutGraph {
   assert.ok(nodeBox(depth2[0]).bottom <= H - CAPTION_ZONE + 0.5);
 }
 
-// Fixed node height keeps centers on the baseline
-assert.equal(NODE_HEIGHT, 36);
+// Fixed node height keeps centers on the baseline (2-line labels)
+assert.equal(NODE_HEIGHT, 44);
 
 console.log("check-tree-layout: ok");

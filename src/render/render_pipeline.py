@@ -284,11 +284,53 @@ def build_render_bundle(
     return bundle
 
 
+def _resolve_visual_stack(record: dict) -> str:
+    """Prefer explicit stack / theme; never let monorepo frontend eclipse Go routes."""
+    if record.get("stack"):
+        return record["stack"]
+    theme = record.get("visualTheme") or {}
+    if theme.get("stack"):
+        return theme["stack"]
+    graph = record.get("visualGraph") or {}
+    if graph.get("kind") == "route_tree":
+        backends = ((record.get("projectType") or {}).get("backend") or [])
+        if backends:
+            return backends[0]
+        return "go"
+    if record.get("routes") or record.get("usesFiber") or record.get("middleware"):
+        backends = ((record.get("projectType") or {}).get("backend") or [])
+        if backends:
+            return backends[0]
+        return "go"
+    pt = record.get("projectType") or {}
+    if pt.get("frontend"):
+        return pt["frontend"]
+    backends = pt.get("backend") or []
+    if backends:
+        return backends[0]
+    return "unknown"
+
+
+def _silent_clip_narration(duration_ms: int) -> dict:
+    """Hold a visual still when TTS is unavailable — still show the graph (Q5: only
+    skip when visualAvailability says unavailable, not when TTS fails)."""
+    return {
+        "audio": "",
+        "durationMs": max(1, int(duration_ms)),
+        "ttsEngine": "none",
+        "beats": [],
+        "alignmentSource": "silent-hold",
+    }
+
+
 def _build_visual_clip_fields(record: dict, output_dir: Path) -> dict:
     """Tree / lifecycle / breakdown narration + graph payload for FullVideo.
 
     Q5: omit keys entirely when unavailable (no placeholder sequences).
     Q4: measured-beat TTS via the same synthesize + pad + concat path.
+    When availability is present but TTS fails, still embed the graph/flows
+    with a silent min-duration hold so Go Fiber (and other) chunks that have
+    graphs are not dropped from the video.
     """
     from src.narrate.breakdown_script import script_breakdown_teaser
     from src.narrate.lifecycle_script import build_lifecycle_beats
@@ -300,7 +342,7 @@ def _build_visual_clip_fields(record: dict, output_dir: Path) -> dict:
 
     fields: dict = {}
     avail = record.get("visualAvailability") or {}
-    stack = record.get("stack") or (record.get("projectType") or {}).get("frontend") or "unknown"
+    stack = _resolve_visual_stack(record)
     theme = record.get("visualTheme") or theme_for_stack(stack)
 
     # Stage visuals/<stack>/<chunkId>/ sibling artifacts when possible.
@@ -311,41 +353,43 @@ def _build_visual_clip_fields(record: dict, output_dir: Path) -> dict:
         pass
 
     if is_present(avail.get("componentTree")) and record.get("visualGraph"):
+        fields["visualGraph"] = record["visualGraph"]
+        fields["visualTheme"] = theme
+        fields["securityFlags"] = record.get("securityFlags") or []
+        fields["visualAvailability"] = avail
         tree_beats = build_tree_beats(
             record["visualGraph"], stack, avail.get("componentTree") or "available",
         )
         tree_narration = _synthesize_clip_beats(tree_beats, output_dir, "tree")
-        if tree_narration:
-            fields["visualGraph"] = record["visualGraph"]
-            fields["visualTheme"] = theme
-            fields["securityFlags"] = record.get("securityFlags") or []
-            fields["visualAvailability"] = avail
-            fields["treeNarration"] = tree_narration
+        # Min hold matches TREE_MIN_SECONDS in ComponentTreeClip.
+        fields["treeNarration"] = tree_narration or _silent_clip_narration(3000)
 
     if is_present(avail.get("lifecycleFlow")) and record.get("lifecycleFlows"):
         top = select_top_lifecycle_flows(record["lifecycleFlows"], n=2)
+        fields["lifecycleFlows"] = top
+        if "visualTheme" not in fields:
+            fields["visualTheme"] = theme
         life_beats: list[dict] = []
         for flow in top:
             life_beats.extend(build_lifecycle_beats(flow, stack))
         life_narration = _synthesize_clip_beats(life_beats, output_dir, "lifecycle")
-        if life_narration:
-            fields["lifecycleFlows"] = top
-            fields["lifecycleNarration"] = life_narration
-            if "visualTheme" not in fields:
-                fields["visualTheme"] = theme
+        # Min hold matches LIFECYCLE_MIN_SECONDS.
+        fields["lifecycleNarration"] = life_narration or _silent_clip_narration(4000)
 
     if is_present(avail.get("interactiveBreakdown")) and record.get("visualGraph"):
+        if "visualGraph" not in fields:
+            fields["visualGraph"] = record["visualGraph"]
+        if "visualTheme" not in fields:
+            fields["visualTheme"] = theme
+        if "securityFlags" not in fields:
+            fields["securityFlags"] = record.get("securityFlags") or []
         breakdown_beats = script_breakdown_teaser({
             "filePath": record.get("filePath"),
             "chunkId": record.get("chunkId"),
         })
         breakdown_narration = _synthesize_clip_beats(breakdown_beats, output_dir, "breakdown")
-        # Q3: end card ships WITH audio — skip silent-only still.
-        if breakdown_narration:
-            fields["breakdownNarration"] = breakdown_narration
-            if "visualGraph" not in fields:
-                fields["visualGraph"] = record["visualGraph"]
-            if "visualTheme" not in fields:
-                fields["visualTheme"] = theme
+        # Prefer measured-beat audio (Q3/Q4); fall back to silent hold so the
+        # structure graph still appears when TTS is down.
+        fields["breakdownNarration"] = breakdown_narration or _silent_clip_narration(3000)
 
     return fields

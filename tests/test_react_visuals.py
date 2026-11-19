@@ -175,6 +175,7 @@ def test_teaser_copy_file_scoped():
     beats = script_breakdown_teaser({"filePath": "src/features/widgets/UserMenu.tsx"})
     assert "UserMenu.tsx" in beats[0]["spoken"]
     assert "checkout" not in beats[0]["spoken"].lower()
+    assert "chat" not in beats[0]["spoken"].lower()
 
 
 def test_availability_placeholder_unavailable():

@@ -43,7 +43,8 @@ export type LaidOutNode = LayoutGraphNode & {
 
 /** Fixed node chrome used by Remotion + layout math (must stay in sync). */
 export const NODE_WIDTH = 140;
-export const NODE_HEIGHT = 36;
+/** Tall enough for two-line child labels without awkward ellipsis. */
+export const NODE_HEIGHT = 44;
 /** Minimum gap between sibling box edges. */
 export const MIN_GUTTER = 16;
 /** Reserved band for narration caption at the bottom of 1280×720. */
