@@ -46,10 +46,11 @@ repo.
 ```yaml
 detection:
   markers:
-    react_or_angular: ["package.json"]
+    js_ecosystem: ["package.json"]
     python: ["requirements.txt", "pyproject.toml", "setup.py"]
     go: ["go.mod"]
     spring_boot: ["pom.xml", "build.gradle"]
+    rust: ["Cargo.toml"]
     docker: ["Dockerfile", "docker-compose.yml"]
 ```
 
@@ -62,10 +63,11 @@ table (and a grouping function); editing this YAML does nothing.
 
 | Stack key | Marker files in code |
 |---|---|
-| `react_or_angular` | `package.json` |
+| `js_ecosystem` | `package.json` (flavored to react/angular/vue/solid/qwik/javascript; `express` → backend) |
 | `python` | `requirements.txt`, `pyproject.toml`, `setup.py` |
 | `go` | `go.mod` |
 | `spring_boot` | `pom.xml`, `build.gradle`, **`build.gradle.kts`** (YAML example omits `.kts`) |
+| `rust` | `Cargo.toml` |
 | Docker (separate flag) | `Dockerfile`, `docker-compose.yml`, `docker-compose.yaml`, `compose.yml`, `compose.yaml` |
 
 See [`04-phase1-project-type-detection.md`](./04-phase1-project-type-detection.md).

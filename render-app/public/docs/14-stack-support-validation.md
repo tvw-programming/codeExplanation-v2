@@ -1,18 +1,19 @@
 # Regex extraction has hit its ceiling
 
-> **Current vs this snapshot.** This write-up is still the stack
-> picture, with three code changes to read against it:
+> **Historical audit** (pre multi-stack ship). Product picture now:
+> [`17-multi-stack-visuals.md`](./17-multi-stack-visuals.md) + root
+> `README.md`. Body below is retained as evidence for regex ceilings.
 >
 > | Claim in the body below | Status now |
 > |---|---|
-> | Angular empty-valid records; no Express backend; no Python/Spring extractors; regex ceiling; schema validation is report-only | **Still true** |
-> | Nested Fiber path = `/v1/users` (`prefix_assumed` false) | **No longer true** — `_resolve_group_prefix` composes in-file (`/api/v1/users`). Cross-file prefixes remain unresolved. Regression: `tests/test_go_extractor.py::test_nested_group_prefixes_compose_into_the_full_path` |
-> | Angular confidence 0.95 | **No longer true** — `EMPTY_EXTRACTION_CONFIDENCE = 0.3` (the empty-valid *structure* is unchanged) |
-> | Suite is 244 passing | **Stale** — `pytest -q` on 2026-11-19: **245 passed, 3 skipped**. See `documentation/10` |
-> | Flat-file chunking, side-effect `type` key, `.java` layer label | Already fixed in the "Already fixed during this research" section |
+> | Only React + Go extractors; Angular empty-valid; no Express/Python/Spring | **Obsolete** — dedicated builders + visuals shipped (`EXTRACTOR_VERSION` 8). Empty still → `visualAvailability: unavailable`, not invented graphs |
+> | Nested Fiber path = `/v1/users` | **Obsolete** — in-file prefixes compose (`/api/v1/users`). Cross-file still unresolved |
+> | Angular confidence 0.95 | **Obsolete** — empty confidence 0.3; Angular uses `angular_extractor.py` |
+> | Suite is 244 / 245 passing | **Stale** — see doc 10 (**290 passed, 3 skipped** as of 2026-11-19) |
+> | Regex ceiling; schema validation report-only; cross-file route prefixes | **Still true** |
+> | Flat-file chunking / side-effect `type` / `.java` layer | Already fixed in the research section below |
 >
-> The conclusion (parser substrate, Python `ast` first, refuse to
-> narrate unsupported frameworks) is unchanged.
+> Parser-substrate recommendations in the conclusion remain roadmap.
 
 **Verdict first: of the six stacks, two work, one is dangerously silent, and three do not work — and the two that "work" are the evidence that the current architecture cannot be extended to the other four.** React and Go both produce real content, but a measured probe of `src/extract/go_extractor.py` shows Go silently misses every generic function, every generic type, every interface method, every closure-returning middleware constructor, and reports nested Fiber group paths one level short — so the project's working belief that Go is its strongest stack does not survive contact with the code. Angular is the single worst output in the repo: it is schema-valid with every content list empty, which means a rendered video that looks finished and says nothing true. Python, Spring Boot and Express hit a placeholder branch at `src/extract/reuse_pipeline.py:80-94` with `confidence: 0` and five schema errors — bad, but loud, and therefore safer than Angular. The central conclusion is not "four extractors need writing." It is that **regex plus brace matching cannot express the facts these stacks are made of** — balanced delimiters, lexical scope, cross-file prefix composition — and that the per-file chunking model is itself the wrong unit for Go (the package is the unit), Angular (component + template + styles) and Spring (the DI graph is not the import graph). Four real defects found during this research are already fixed and under regression test; the remaining work is a parser substrate, with Python as the cheap special case because the stdlib `ast` module parses it perfectly with zero dependencies ([Python `ast` docs](https://docs.python.org/3/library/ast.html)).
 

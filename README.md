@@ -4,20 +4,27 @@ Automated pipeline that generates narrated code-explanation videos, using dynami
 
 Point it at a git URL or local path. It detects the stack from marker files, groups code into **features** (not fixed folders), extracts a per-chunk JSON record, generates a four-beat narrated script, and renders a highlighted-code video.
 
-The frontend/backend stack is **not hardcoded to one repo**, but extraction is **not equally complete** for every stack the docs mention. The honest matrix is below; the write-up is [`documentation/14-stack-support-validation.md`](documentation/14-stack-support-validation.md).
+The frontend/backend stack is **not hardcoded to one repo**. Extraction
+depth still varies by stack (regex vs `ast`, assumed routes, etc.).
+Visuals: [`documentation/17-multi-stack-visuals.md`](documentation/17-multi-stack-visuals.md).
+Historical ceilings: [`documentation/14-stack-support-validation.md`](documentation/14-stack-support-validation.md).
 
 ## Supported stacks
 
-| Stack | Detect | Chunk | Extract | Narrate | Render |
+| Stack | Detect | Chunk | Extract | Visuals | Notes |
 |---|---|---|---|---|---|
-| **React** (TS/JSX) | yes | yes | yes, regex limits (brace matching, `memo`/`forwardRef`, hook attribution) | yes | yes |
-| **Go + Fiber** | yes | yes | yes, regex limits (generics, interfaces, closure middleware still missed; nested group prefixes **do** compose in-file) | yes | yes |
-| **Angular** | yes | yes | empty-but-schema-valid records (`confidence` 0.3) | generic / empty | yes, no highlights |
-| **Python** | yes | yes (agent convention) | placeholder only | generic | yes |
-| **Spring Boot / Java** | yes | yes (resource pairing) | placeholder only | generic | yes |
-| **Express / Node** | **no** — a `package.json` without `react` / `@angular/core` is labeled `react_or_angular`, never a backend | via the frontend grouping default | placeholder | generic | yes |
+| **React** (TS/JSX) | yes | yes | yes (regex limits) | `component_tree` | `memo`/`forwardRef`/hook attribution risks |
+| **Go + Fiber** | yes | yes | yes (regex limits) | `route_tree` | In-file group prefixes compose |
+| **Angular** | yes | yes | dedicated extractor | `component_tree` | Empty/`no @Component` → unavailable (not invented) |
+| **Vue / Solid / Qwik** | yes | yes | basic | `component_tree` | Thin when mounts/signals missing |
+| **JavaScript** | yes | yes | basic | `module_graph` | Non-React/Angular/Vue/… `package.json` |
+| **Python** | yes | yes | stdlib `ast` | `route_tree` / `module_graph` | `fidelity: syntax` |
+| **Spring Boot** | yes | yes | annotation/DI regex | `di_graph` | Inject by type, not imports |
+| **Express** | yes | yes | route/middleware regex | `route_tree` | Backend; not `react_or_angular` |
+| **Rust** | yes | yes | regex (Axum/Actix/Rocket heuristics) | `route_tree` / `crate_graph` | Partial; routes assumed |
 
-How to add a stack (marker → grouping → extractor → schema → narration hedges) is sketched in doc 14.
+Narrate + Remotion render run for all of the above; unavailable visual
+segments are skipped in `FullVideo`.
 
 ## Phases
 
@@ -30,7 +37,7 @@ How to add a stack (marker → grouping → extractor → schema → narration h
 - **Phase 6**: video rendering (Remotion + **Piper** TTS with **espeak-ng** fallback + **measured-beat** highlights — not WhisperX, not Shiki).
 - **Phase 7**: pilot and validation.
 
-See `docs/json-structure-rules.md` for the field-level rules this pipeline implements, and [`documentation/`](documentation/) for phase-wise docs — including **14** (stack validation) and **15** (narration style). Those docs are also browsable from render-app after copying them into the viewer snapshot (see `documentation/README.md`).
+See `docs/json-structure-rules.md` for the field-level rules this pipeline implements, and [`documentation/`](documentation/) for phase-wise docs — including **14** (stack validation), **15** (narration style), and **17** (multi-stack visuals). Those docs are also browsable from render-app after copying them into the viewer snapshot (see `documentation/README.md`).
 
 `docs/` holds locked rules. `documentation/` is the canonical narrative. `render-app/public/docs/` is the MUI viewer snapshot and is stale unless you copy.
 
@@ -100,7 +107,7 @@ invoked as subprocesses — see `src/render/tts.py`.
 | `.cache/piper-voices/` | One-time Piper model cache |
 | `http://localhost:4173/docs-viewer/` | Docs viewer (reads `render-app/public/docs/`) |
 
-Video anatomy: **FileCard** (purpose from `fileDescription`) → purpose / connections → per-function highlight + pause → recap → next file.
+Video anatomy per chunk: **FileCard** → **ComponentTreeClip** (if available) → **LifecycleFlowClip** (if available) → **ChunkView** (code highlights) → **VisualBreakdownStill** (if available). Shared **DiagramHeader** (brand-tinted bar + file path + logo) on every segment. Details: doc 17.
 
 ## Test repo
 

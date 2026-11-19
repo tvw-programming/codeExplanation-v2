@@ -1,39 +1,33 @@
 # Phase 3 — Extraction Into the JSON Structure
 
-Status: done for the two real extractors (React TS/JSX and Go Fiber),
-with a regex ceiling documented in
-[`14-stack-support-validation.md`](./14-stack-support-validation.md).
-66 tests passed at original phase completion; see the documentation
-index for the live `pytest -q` count.
+Status: multi-stack extractors shipped (`EXTRACTOR_VERSION = 8`).
+Regex ceilings and remaining gaps:
+[`14-stack-support-validation.md`](./14-stack-support-validation.md)
+(banner) and [`17-multi-stack-visuals.md`](./17-multi-stack-visuals.md).
+Live suite count: documentation index / doc 10.
 
 Historical Alumni-web snapshot (not a live dashboard):
 `AlumniAdminGrid.tsx` → 17 handlers + 2 functions, confidence 0.5/low;
 `alumni_repository.go` → 4 structs, 11 functions, 7 real pgx calls,
 confidence 0.95/high.
 
-**Stack honesty:** Angular is routed to the React builder and produces
-**schema-valid empty records** (`confidence` 0.3 / `"low"` via
-`EMPTY_EXTRACTION_CONFIDENCE`). Python / Spring / Express take the
-placeholder branch (`confidence: 0`) and fail schema validation
-loudly. Nested Fiber group prefixes **are** composed in-file
-(`go_extractor._resolve_group_prefix`) — doc 14’s `/v1/users` example
-is stale. Generics, interfaces, and closure middleware are still
-missed.
+**Stack honesty:** each stack has a dedicated builder (or shared
+React-style mount path for Vue). Empty / low-fidelity extractions set
+`visualAvailability: unavailable` and `visualGraph: null` — graphs are
+never invented. Nested Fiber group prefixes **are** composed in-file.
+Go generics, interfaces, and closure middleware are still missed.
+Angular uses `angular_extractor.py` (not the React builder); no
+`@Component` → unavailable visuals. Python uses stdlib `ast`. Spring DI
+is by type. Express is a real backend stack.
 
 ## What this phase delivers
 
 `src/extract/extractor.py: extract_repo(root, project_type)` (and
-`reuse_pipeline.py` in the live path) runs every planned chunk through
-a stack-specific extractor (`ts_extractor.py` for React **and**
-Angular, `go_extractor.py` for Go) and assembles each into the locked
-JSON record via `json_builder.py`, then resolves `featureMapping`
-across all chunks (`feature_mapping.py`).
-
-There are exactly two extractors. Angular is not a third path — it
-shares the React builder, whose regexes match almost nothing in an
-Angular class/template. Empty content lists are valid lists, so Phase 7
-reports 0 schema problems. The confidence lie (0.95 on zero claims) is
-fixed; the empty-valid path is not. Video still renders.
+`reuse_pipeline.py` in the live path) dispatches each chunk to a
+stack-specific builder (`json_builder.py` for React/Go;
+`stack_records.py` for Angular/Vue/Solid/Qwik/JS/Python/Express/Spring/Rust),
+then `attach_visuals()`, then resolves `featureMapping`
+(`feature_mapping.py`).
 
 ## Locked rules this phase implements
 
@@ -178,14 +172,13 @@ itself, flagged, is the only option that is both complete and honest.
 | Function-context keys on `importantFunctions` | `function_context.py` | `description`, `descriptionSource`, `exported`, `calledBy`, `calls`, `params`, `raisesError`, `isAsync`, `reactHooks`, `apiCalls`, `sideEffects`, `lineCount` |
 | `outputs` | record | Always `[]` — known gap |
 
-### Angular empty-valid path
+### Angular honesty gate
 
-Dispatch at `reuse_pipeline.py` treats `chunk.stack in ("react", "angular")`
-as the frontend builder. Class methods, `@Input`, `HttpClient`, and
-templates are invisible to the TS regexes. `confidence_from_flags`
-returns `EMPTY_EXTRACTION_CONFIDENCE = 0.3` when `total_claims == 0`.
-Schema validation still passes. **Do not document Angular as a working
-extractor.**
+Angular uses `angular_extractor.py` (not the React TS builder). When no
+`@Component` / inputs are recovered, `attach_visuals` sets
+`visualAvailability: unavailable` and `visualGraph: null`. Empty content
+lists remain schema-valid; visuals are skipped in `FullVideo`, not
+invented. See [`17-multi-stack-visuals.md`](./17-multi-stack-visuals.md).
 
 ### `ts_extractor.py`: `JSX_INLINE_HANDLER_RE` and always-`assumed` inline handlers
 

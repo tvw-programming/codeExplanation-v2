@@ -62,10 +62,21 @@ Implemented by `function_context.build_function_context()`:
 `lineCount`. Plus snippet flags `secretsRedacted`, `truncated`,
 `continuationNote`.
 
-Empty Angular records still include the required identity/storage keys
-and empty content lists — schema-valid, `confidence` 0.3. Placeholder
-Python/Spring/Express records omit several required keys and fail
-validation. `outputs` is always `[]`.
+`outputs` is always `[]` (known gap). Empty Angular records remain
+schema-valid with empty content lists; visuals go `unavailable` rather
+than inventing a graph (doc 17).
+
+## Visual envelope (on the stored chunk record after `attach_visuals`)
+
+| Field | Rule | Implemented by |
+|---|---|---|
+| `fidelity` | `regex` / `syntax` / `typed` | stack builders + `pipeline.attach_visuals` |
+| `visualAvailability` | per-capability `available` / `partial` / `unavailable` + reasons | `availability.py` / `pipeline.py` |
+| `visualGraph` | structure graph or **`null`** (never invented) | `graph_builder.py` |
+| `lifecycleFlows` | developer-centric flows; may be `[]` | `lifecycle_builder.py` |
+| `visualTheme` | brand tokens + `logoPath` | `theme.py` |
+| `securityFlags` | optional path/middleware/unsafe flags | `security_flags.py` |
+| `extractorVersion` | currently `8` | `mirror_store.EXTRACTOR_VERSION` |
 
 ## Narration/render fields (produced outside the stored chunk record)
 
@@ -82,6 +93,7 @@ not on the stored chunk JSON itself:
 | `ttsEngine` | `tts.py` via the bundle | `piper:en_IN-ljspeech` or `espeak-ng:en-us` |
 | `fileOverview` | `file_overview.py` | FileCard payload (callers, layer, risks, `unavailable`) |
 | `cardNarration` | `render_pipeline._build_card_narration()` | spoken intro over the card (`card.wav`) |
+| `treeNarration` / `lifecycleNarration` / `breakdownNarration` | `render_pipeline.py` | measured-beat voiceovers for visual clips; omitted → FullVideo skips that segment |
 | `narrationSegments` | `narration_segments.py` | per-beat start/end frames from measured placements |
 
 ## Narrator script rules (not a JSON field, governs how the above is spoken)

@@ -11,7 +11,8 @@ estimated`) describe the **old** path; do not treat them as current.
 ```
 beats → tts.py (Piper | espeak-ng) → audio_assembly.py (silence + concat)
      → measured cue windows → highlight_config.py → bundle.json
-     → FileCard + ChunkView (FullVideo series) → output/video.mp4
+     → FullVideo series (FileCard → tree? → lifecycle? → ChunkView → breakdown?)
+     → output/video.mp4
 ```
 
 `src/render/render_pipeline.py: build_render_bundle()` synthesizes
@@ -99,26 +100,32 @@ the viewer sees.
 (`{id, lineRange, fromFrame, toFrame, assumed, note}`). Rendering
 belongs on the Remotion side.
 
-## FileCard and FullVideo
+## FileCard, visuals, and FullVideo
 
 `run-local.sh` renders the **`FullVideo`** composition to
-`output/video.mp4`, not a single sample chunk.
+`output/video.mp4`, not a single sample chunk. Canonical visual
+product doc: [`17-multi-stack-visuals.md`](./17-multi-stack-visuals.md).
 
 - `scripts/run_backend_pilot.py` stages every successfully rendered
   chunk under `render-app/public/chunks/<chunkId>/` and writes
   `render-app/public/chunks/manifest.json` (`{ "chunkIds": [...] }`).
   The first chunk is also copied to `public/sample-chunk/` for the
-  older demo composition.
-- `FullVideo.tsx` concatenates those chunks with Remotion `<Series>`.
-  Each file is **preceded by a FileCard** (`FileCard.tsx`) that speaks
-  the file's purpose (from `fileOverview` / `cardNarration`, which
-  come from `src/narrate/file_overview.py` and a short `card.wav`).
-- `CodeExplainerChunk` still exists as a **sample-chunk demo**
-  composition (`Root.tsx` registers both). Studio preview of one chunk
-  uses it; the shipped mp4 uses `FullVideo`.
-
-Video anatomy: FileCard → purpose / connections → per-function
-highlight + pause → recap → next file.
+  older demo composition. Per-stack manifests / `StackVideo-<stack>`
+  also exist.
+- `FullVideo.tsx` concatenates chunks with Remotion `<Series>`.
+  **Order per chunk:** FileCard → ComponentTreeClip (if available) →
+  LifecycleFlowClip (if available) → ChunkView → VisualBreakdownStill
+  (if available). Unavailable visuals are **skipped** (no placeholder
+  slides).
+- **`DiagramHeader`** (`DiagramHeader.tsx`) — shared brand-tinted bar
+  + shortened file path + stack logo on FileCard, tree, lifecycle,
+  ChunkView, and breakdown. Tokens/logos:
+  `visualTheme.ts` / `src/visual/theme.py` /
+  `render-app/public/visuals/logos/`.
+- Trees are center-packed (`treeLayout.ts`) with header/logo safe
+  zones.
+- `CodeExplainerChunk` remains a **sample-chunk demo**; the shipped
+  mp4 uses `FullVideo`.
 
 ## `run-local.sh` render flags
 

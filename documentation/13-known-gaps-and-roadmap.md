@@ -7,27 +7,25 @@ code review.
 
 ## Current stack picture
 
-**[`14-stack-support-validation.md`](./14-stack-support-validation.md)
-is the current stack picture**, with one code fix that landed after 14
-was written: nested Fiber group prefixes **are** composed in-file
-(`/api` + `/v1` + `/users` → `/api/v1/users`, not `/v1/users`).
-Angular empty-valid, no Express backend, no Python/Spring extractors,
-regex ceiling, and report-only schema validation are still true.
-Angular confidence is **0.3**, not 0.95.
+Product visuals + honesty: [`17-multi-stack-visuals.md`](./17-multi-stack-visuals.md).
+Doc 14 is a **historical** audit — read its banner first.
 
-| Stack | Detect | Chunk | Extract | Honest failure mode |
+| Stack | Detect | Chunk | Extract | Visuals honesty |
 |---|---|---|---|---|
-| React TS/JSX | yes | yes | regex, real content | wrong ranges / `memo` / hook attribution |
-| Go Fiber | yes | yes | regex, real content | generics, interfaces, closure middleware missed |
-| Angular | yes | yes | empty-valid | video looks finished, says nothing true |
-| Python | yes | yes | placeholder | loud schema fail, still narrated/rendered |
-| Spring Boot | yes | yes | placeholder | same |
-| Express / Node | **no** | via `react_or_angular` default | placeholder | not even a backend stack value |
+| React TS/JSX | yes | yes | regex | tree/lifecycle when mounts exist; regex limits remain |
+| Go Fiber | yes | yes | regex | `route_tree`; in-file prefixes compose |
+| Angular | yes | yes | dedicated | empty → unavailable (not invented) |
+| Vue / Solid / Qwik / JS | yes | yes | basic | thin trees; skip when empty |
+| Python | yes | yes | stdlib `ast` | route/module graphs; empty → unavailable |
+| Spring Boot | yes | yes | annotation/DI | `di_graph` by type |
+| Express | yes | yes | regex | `route_tree`; backend stack |
+| Rust | yes | yes | regex | partial; routes assumed; macros may miss |
 
 ## Carried-forward product gaps
 
-Keep these as roadmap: Python/Spring extractors (Python `ast` first,
-per 14), `outputs` always empty, statement-level split
+Keep these as roadmap: deeper parsers (tree-sitter / typed), package-
+level Go / Angular component-bundle chunking, cross-file route-prefix
+resolver, `outputs` always empty, statement-level split
 (`needs_further_split` unused), LLM-elaborated narration (`llm:` config
 unused), production voice quality.
 
@@ -38,28 +36,14 @@ See [`09-phase6-rendering.md`](./09-phase6-rendering.md).
 
 ## Carried-forward implementation gaps (detail)
 
-### 1. Python and Spring Boot extraction are not implemented
+### 1. Multi-stack extractors are shipped but still thin
 
-Feature *grouping* exists for both (`group_python_agent_features()`,
-`group_spring_boot_features()`), but Phase 3's `extract_repo()` only has
-real builders for React/Angular and Go — note that the Angular path is
-the React builder, which matches almost nothing in an Angular file (see
-`14-stack-support-validation.md`) — a chunk planned for either
-other stack gets an honest placeholder record (`confidence: 0`,
-`notes: "Extraction for stack '<stack>' is not yet implemented in
-Phase 3."`), which correctly **fails** Phase 7's schema validation by
-design.
-
-**Why not implemented yet:** no real repo of either stack was available
-to validate real extraction against — and this project's established
-practice (every phase doc above) is to verify extraction logic against
-genuine code before trusting it, not to ship untested heuristics for a
-stack nobody has exercised.
-
-**What closes it:** a real Python agent-based repo or Spring Boot repo
-to test against, then two new extractor modules mirroring
-`ts_extractor.py`/`go_extractor.py`'s shape (regex/heuristic, confidence-
-scored, feeding the same `json_builder.py` schema).
+Python (`ast`), Spring (DI-by-type), Express, Angular, Vue/Solid/Qwik,
+JS, and Rust builders exist (`stack_records.py`, `EXTRACTOR_VERSION` 8).
+Remaining gaps: regex ceilings, cross-file route prefixes, package-
+level Go chunking, Angular template bundles, Rust macro routes, Spring
+interface→impl resolution. Doc 14’s “placeholder only” claim is
+**obsolete**; its structural ceiling analysis still applies.
 
 ### 2. `outputs` field is never populated
 
