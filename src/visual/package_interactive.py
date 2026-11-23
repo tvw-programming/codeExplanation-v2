@@ -6,7 +6,7 @@ import json
 from pathlib import Path
 
 from .availability import is_present
-from .mermaid_export import export_mermaid
+from .mermaid_export import export_lifecycle_mermaid, export_mermaid
 from .theme import theme_for_stack
 
 
@@ -47,6 +47,12 @@ def _package_interactive_breakdown(record: dict) -> dict | None:
     payload["mermaid"] = mermaid
     if mermaid_reason:
         payload["mermaidSkipReason"] = mermaid_reason
+
+    flows = payload["lifecycleFlows"]
+    life_mermaid, life_reason = export_lifecycle_mermaid(flows)
+    payload["mermaidLifecycle"] = life_mermaid
+    if life_reason:
+        payload["mermaidLifecycleSkipReason"] = life_reason
     return payload
 
 

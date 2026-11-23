@@ -24,6 +24,11 @@ Per chunk:
 TTS for visual clips uses measured beats (`alignmentSource:
 "measured-beats"`), same as narration.
 
+**Mermaid is docs/chat only** — it does not insert FullVideo segments.
+Per-chunk `architecture.md` + `interactive.json` fields `mermaid` /
+`mermaidLifecycle` mirror the same JSON. See
+[`19-mermaid-architecture-docs.md`](./19-mermaid-architecture-docs.md).
+
 ## Honesty skips
 
 Unavailable visual segments are **omitted** — no placeholder slides.

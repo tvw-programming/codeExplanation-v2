@@ -18,6 +18,7 @@
     "@remotion/cli": "4.0.544",
     "@remotion/install-whisper-cpp": "4.0.544",
     "marked": "^12.0.2",
+    "mermaid": "^11.17.2",
     "react": "19.3.1",
     "react-dom": "19.3.1",
     "remotion": "4.0.544",

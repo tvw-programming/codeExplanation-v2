@@ -32,6 +32,7 @@ from .lifecycle_builder import (
     build_vue_lifecycle_flows,
     select_top_lifecycle_flows,
 )
+from .architecture_docs import write_architecture_markdown
 from .package_interactive import (
     package_interactive_breakdown,
     write_interactive_artifact,
@@ -349,6 +350,14 @@ def build_visual_artifacts(record: dict, visuals_root: Path | None = None) -> di
             summary["skipped"].append("interactiveBreakdown")
     else:
         summary["skipped"].append("interactiveBreakdown")
+
+    # Docs Mermaid twin (architecture.md) — skip when neither structure nor
+    # lifecycle Mermaid can be produced (Q5 / selection plan).
+    arch_path = write_architecture_markdown(record, dest)
+    if arch_path:
+        summary["written"].append(str(arch_path))
+    else:
+        summary["skipped"].append("architectureMarkdown")
     return summary
 
 

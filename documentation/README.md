@@ -19,7 +19,7 @@ the rules each phase is locked to, and — for every important function —
 ```bash
 cp documentation/README.md \
    documentation/0{1,2,3,4,5,6,7,8,9}-*.md \
-   documentation/1{0,1,2,3,4,5,7,8}-*.md \
+   documentation/1{0,1,2,3,4,5,7,8,9}-*.md \
    render-app/public/docs/
 # Keep render-app/public/docs/manifest.json in sync with the table below.
 ```
@@ -49,6 +49,7 @@ part of the viewer.
 | [`15-narration-style-guide.md`](./15-narration-style-guide.md) | Voice and tone; identifiers spoken as written |
 | [`17-multi-stack-visuals.md`](./17-multi-stack-visuals.md) | FullVideo order, honesty skips, brand chrome |
 | [`18-repo-viewer.md`](./18-repo-viewer.md) | The React repo viewer (`frontend/`) — per-stack file trees, seeking to a file's moment in its stack video |
+| [`19-mermaid-architecture-docs.md`](./19-mermaid-architecture-docs.md) | Mermaid docs/chat twin of Remotion visuals; selection + placement |
 
 **Research** (not in the viewer): [`research/README.md`](./research/README.md).
 

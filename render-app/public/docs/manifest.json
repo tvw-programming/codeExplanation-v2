@@ -26,7 +26,8 @@
       { "file": "11-json-schema-reference.md", "title": "JSON Schema Reference" },
       { "file": "12-function-rationale-index.md", "title": "Function Rationale Index" },
       { "file": "15-narration-style-guide.md", "title": "Narration Style Guide" },
-      { "file": "17-multi-stack-visuals.md", "title": "Multi-Stack Visuals" }
+      { "file": "17-multi-stack-visuals.md", "title": "Multi-Stack Visuals" },
+      { "file": "19-mermaid-architecture-docs.md", "title": "Mermaid Architecture Docs" }
     ]
   },
   {
