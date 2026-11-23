@@ -121,9 +121,16 @@ def build_angular_chunk_record(
         if mounts
         else "no confirmed template child mounts (unmatched tags skipped)"
     )
+    bundle_note = ""
+    related = chunk.related_files if isinstance(getattr(chunk, "related_files", None), (list, tuple, set)) else []
+    if comp.template_url and related:
+        from .extract import resolve_template_url_sibling
+        sib = resolve_template_url_sibling(root, chunk.file_path, comp.template_url)
+        if sib and sib in related:
+            bundle_note = f" templateUrl sibling `{sib}` bundled with class."
     record["notes"] = (
         "Angular dedicated extractor (signal input()/output() + selector→usage mounts); "
-        f"{mount_note}. Duplicate selectors skipped; attribute matches assumed."
+        f"{mount_note}.{bundle_note} Duplicate selectors skipped; attribute matches assumed."
     )
     record["fidelity"] = "regex"
     from src.visual.pipeline import attach_visuals

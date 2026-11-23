@@ -104,6 +104,32 @@ def _pick_primary(files: list[Path]) -> Path | None:
 # React / Angular
 # ---------------------------------------------------------------------------
 
+def _attach_angular_template_siblings(root: Path, files: list[str]) -> list[str]:
+    """Append clear ``templateUrl`` same-dir ``.html`` siblings for Angular."""
+    from src.extract.angular.extract import resolve_template_url_sibling, TEMPLATE_URL_RE, COMPONENT_RE
+
+    out = list(files)
+    seen = set(files)
+    for f in files:
+        if Path(f).suffix.lower() not in {".ts", ".js"}:
+            continue
+        try:
+            text = (root / f).read_text(encoding="utf-8", errors="ignore")
+        except OSError:
+            continue
+        m = COMPONENT_RE.search(text)
+        if not m:
+            continue
+        turl = TEMPLATE_URL_RE.search(m.group("body"))
+        if not turl:
+            continue
+        sib = resolve_template_url_sibling(root, f, turl.group(1))
+        if sib and sib not in seen:
+            seen.add(sib)
+            out.append(sib)
+    return out
+
+
 def group_react_or_angular_features(root: Path, src_root: Path, stack: str = "react") -> list[Feature]:
     """Group a frontend source tree into features.
 
@@ -113,10 +139,33 @@ def group_react_or_angular_features(root: Path, src_root: Path, stack: str = "re
       (all files under it, recursively).
     - Loose files directly in src_root (no subdirectory) are grouped into
       one feature named after src_root's own directory name.
+    - Angular: clear ``templateUrl`` same-dir ``.html`` siblings are attached
+      to the feature (orphan templates are never claimed).
     """
     features: list[Feature] = []
     if not src_root.is_dir():
         return features
+
+    def _finalize(name: str, abs_files: list[Path]) -> None:
+        rels = [_relpath(root, f) for f in abs_files]
+        if stack == "angular":
+            rels = _attach_angular_template_siblings(root, rels)
+        if not rels:
+            return
+        # Primary stays a source file when possible (not the .html).
+        primary_rel = None
+        for r in rels:
+            if Path(r).suffix.lower() in FRONTEND_SOURCE_EXTENSIONS:
+                primary_rel = r
+                break
+        if primary_rel is None:
+            primary_rel = rels[0]
+        features.append(Feature(
+            name=name,
+            stack=stack,
+            files=rels,
+            primary_file=primary_rel,
+        ))
 
     organizing_dir = None
     for name in FRONTEND_ORGANIZING_DIR_NAMES:
@@ -133,13 +182,7 @@ def group_react_or_angular_features(root: Path, src_root: Path, stack: str = "re
             files = sorted(_iter_files(sub, FRONTEND_SOURCE_EXTENSIONS))
             if not files:
                 continue
-            primary = _pick_primary(files)
-            features.append(Feature(
-                name=sub.name,
-                stack=stack,
-                files=[_relpath(root, f) for f in files],
-                primary_file=_relpath(root, primary) if primary else None,
-            ))
+            _finalize(sub.name, files)
 
         # Files sitting directly in the organizing directory, not in a
         # subdirectory of it — a flat src/pages/Home.tsx layout is at
@@ -158,13 +201,7 @@ def group_react_or_angular_features(root: Path, src_root: Path, stack: str = "re
             and not p.name.startswith(".")
         )
         if direct_files:
-            primary = _pick_primary(direct_files)
-            features.append(Feature(
-                name=organizing_dir.name,
-                stack=stack,
-                files=[_relpath(root, f) for f in direct_files],
-                primary_file=_relpath(root, primary) if primary else None,
-            ))
+            _finalize(organizing_dir.name, direct_files)
 
     loose_files: list[Path] = []
     for entry in sorted(src_root.iterdir()):
@@ -176,22 +213,10 @@ def group_react_or_angular_features(root: Path, src_root: Path, stack: str = "re
             files = sorted(_iter_files(entry, FRONTEND_SOURCE_EXTENSIONS))
             if not files:
                 continue
-            primary = _pick_primary(files)
-            features.append(Feature(
-                name=entry.name,
-                stack=stack,
-                files=[_relpath(root, f) for f in files],
-                primary_file=_relpath(root, primary) if primary else None,
-            ))
+            _finalize(entry.name, files)
 
     if loose_files:
-        primary = _pick_primary(loose_files)
-        features.append(Feature(
-            name=src_root.name,
-            stack=stack,
-            files=[_relpath(root, f) for f in loose_files],
-            primary_file=_relpath(root, primary) if primary else None,
-        ))
+        _finalize(src_root.name, loose_files)
 
     return features
 

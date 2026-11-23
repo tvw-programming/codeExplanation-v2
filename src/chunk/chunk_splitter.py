@@ -83,19 +83,34 @@ def plan_chunks_for_feature(feature: Feature, root: Path,
             needs_further_split=False,
         )]
 
-    # medium or large: one chunk per file in the feature.
+    # medium or large: one chunk per file — except Angular class+html
+    # templateUrl bundles stay one chunk (honesty: only clear siblings).
+    units: list[tuple[str, list[str]]]
+    if feature.stack == "angular":
+        from src.extract.angular.extract import pair_angular_template_bundles
+        units = pair_angular_template_bundles(root, feature.files)
+    else:
+        units = [(f, [f]) for f in feature.files]
+
     chunks: list[ChunkPlan] = []
-    for f in feature.files:
-        file_lines = file_line_counts[f]
+    for primary, members in units:
+        unit_lines = sum(file_line_counts.get(m, 0) for m in members)
+        related = [m for m in members if m != primary]
+        # Also surface other feature files as related (non-bundle peers).
+        for other in feature.files:
+            if other != primary and other not in related and other not in members:
+                related.append(other)
         chunks.append(ChunkPlan(
-            chunk_id=make_chunk_id(feature.name, f),
+            chunk_id=make_chunk_id(feature.name, primary),
             feature_name=feature.name,
             stack=feature.stack,
-            file_path=f,
-            related_files=[other for other in feature.files if other != f],
-            total_lines=file_lines,
-            size_class=classify_size(file_lines, small_max, medium_max),
-            needs_further_split=file_lines > small_max,
+            file_path=primary,
+            related_files=related,
+            total_lines=unit_lines,
+            size_class=classify_size(unit_lines, small_max, medium_max),
+            # Bundle stays one chunk; flag oversized primary (.ts) for
+            # statement-level split without detaching a proven template.
+            needs_further_split=file_line_counts.get(primary, 0) > small_max,
         ))
     return chunks
 

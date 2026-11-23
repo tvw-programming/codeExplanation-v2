@@ -11,7 +11,7 @@ from src.storage.mirror_store import EXTRACTOR_VERSION
 
 
 def test_extractor_version_bumped_for_go_fiber_honesty():
-    assert EXTRACTOR_VERSION == 19
+    assert EXTRACTOR_VERSION == 20
 
 
 def test_generic_function_is_extracted():
@@ -137,8 +137,8 @@ app.Add(cfg.Methods, "/skip", skipped)
     assert not any(r.path == "/skip" for r in routes)
 
 
-def test_route_closure_groups_are_skipped():
-    """app.Route(prefix, func(r){...}) cannot be scoped safely by regex — skip."""
+def test_route_closure_literal_composes_when_brace_scoped():
+    """Literal Route() + brace-scoped param registrations compose honestly."""
     text = """
 app := fiber.New()
 app.Route("/api", func(r fiber.Router) {
@@ -146,13 +146,45 @@ app.Route("/api", func(r fiber.Router) {
 })
 """
     routes = go.extract_routes(text, uses_fiber=True)
-    # Inner r.Get is relative to an unresolved router param → assumed incomplete,
-    # OR skipped entirely if ROUTE_REGISTER only fires. Either way we must not
-    # invent /api/users as a confident path.
-    for r in routes:
-        if r.path.endswith("/users"):
-            assert r.assumed is True
-            assert "incomplete" in (r.note or "")
+    users = [r for r in routes if r.path.endswith("/users")]
+    assert len(users) == 1
+    assert users[0].path == "/api/users"
+    assert users[0].path_resolved is True
+    assert "brace-scoped Route" in (users[0].note or "")
+    # Protection heuristic still forces assumed=True on Fiber routes.
+    assert users[0].assumed is True
+
+
+def test_route_nonliteral_prefix_skipped():
+    text = """
+app := fiber.New()
+app.Route(basePath, func(r fiber.Router) {
+	r.Get("/users", listUsers)
+})
+"""
+    routes = go.extract_routes(text, uses_fiber=True)
+    # Non-literal Route prefix is not matched — do not invent /users under app.
+    assert not any(r.path.endswith("/users") and r.path_resolved for r in routes)
+
+
+def test_explicit_interface_assertion_recorded_not_invented():
+    text = """
+type UserRepo interface {
+	FindByID(id string) (*User, error)
+}
+
+type userRepo struct{}
+
+var _ UserRepo = (*userRepo)(nil)
+"""
+    asserts = go.extract_interface_assertions(text)
+    assert len(asserts) == 1
+    assert asserts[0].interface == "UserRepo"
+    assert asserts[0].concrete == "userRepo"
+    assert asserts[0].form == "pointer_nil"
+    assert asserts[0].assumed is False
+    # Still no invent from method-set alone when assertion absent.
+    assert go.extract_interface_assertions("type userRepo struct{}") == []
 
 
 def test_record_includes_interfaces_and_factories():
@@ -191,7 +223,7 @@ func Map[T any](xs []T) []T { return xs }
         record = build_backend_go_chunk_record(
             tdp, chunk, {"type": "go", "framework": "fiber"}, None, True,
         )
-    assert record["extractorVersion"] == 19
+    assert record["extractorVersion"] == 20
     kinds = {m["kind"] for m in record["dataModels"]}
     assert "interface" in kinds
     assert "struct" in kinds

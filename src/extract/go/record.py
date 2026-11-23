@@ -38,6 +38,7 @@ def build_backend_go_chunk_record(
     imports = go.extract_imports(text, module_path)
     structs = go.extract_structs(text)
     interfaces = go.extract_interfaces(text)
+    iface_assertions = go.extract_interface_assertions(text)
     functions = go.extract_functions(text)
     side_effects = go.extract_side_effects(text)
     routes = go.extract_routes(text, uses_fiber)
@@ -198,7 +199,13 @@ def build_backend_go_chunk_record(
         )
     if any(m.get("kind") == "interface" for m in data_models_out):
         notes.append(
-            "Interface types list method signatures only; implementors are not inferred."
+            "Interface types list method signatures only; implementors are not "
+            "inferred from method sets."
+        )
+    if iface_assertions:
+        notes.append(
+            "interfaceAssertions come only from explicit var _ Iface = (*T)(nil) "
+            "/ &T{} lines — never guessed Impl edges."
         )
     if middleware_factories_out:
         notes.append(
@@ -236,6 +243,16 @@ def build_backend_go_chunk_record(
         "middleware": middleware_out,
         "middlewareFactories": middleware_factories_out,
         "routeGroups": route_groups_out,
+        "interfaceAssertions": [
+            {
+                "interface": a.interface,
+                "concrete": a.concrete,
+                "form": a.form,
+                "line": a.line,
+                "assumed": a.assumed,
+            }
+            for a in iface_assertions
+        ],
         "usesFiber": uses_fiber,
         "confidence": confidence,
         "confidenceLevel": confidence_level(confidence),

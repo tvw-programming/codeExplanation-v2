@@ -7,14 +7,18 @@ Honesty (Fiber enrichments):
 - Generics: type params on funcs/structs/interfaces are captured; no
   invented constraints beyond the literal text.
 - Interfaces: method *names/signatures* only — never invent which
-  concrete type satisfies an interface (no Impl edges).
+  concrete type satisfies an interface from the method set alone.
+- Explicit ``var _ Iface = (*Type)(nil)`` / ``&Type{}`` assertions are
+  recorded as proven satisfaction (no guessed Impl edges).
 - Closure middleware factories: funcs returning fiber.Handler are
   listed as factories; application sites stay assumed when only the
   definition is visible.
 - All()/Add(): All → one method=ALL node; Add only when method strings
   are literals — otherwise skip (never invent verbs).
-- app.Route(prefix, func(r){...}) is skipped (regex cannot scope the
-  closure parameter safely).
+- app.Route("literal", func(param){...}): only when the prefix is a
+  string literal AND the closure body can be brace-scoped; routes on
+  ``param`` inside that body compose onto the parent. Non-literal
+  prefixes / unbalanced bodies are skipped.
 """
 
 from __future__ import annotations
@@ -79,6 +83,22 @@ ROUTE_ADD_RE = re.compile(
     r"(?P<var>\w+)\.Add\(\s*"
     r"(?P<methods>\[\](?:string|any)\s*\{[^}]*\}|\[[^\]]*\])\s*,\s*"
     r"(?P<quote>['\"])(?P<path>[^'\"]*)(?P=quote)\s*,\s*(?P<handler>[\w.]+)"
+)
+
+# Route("literal", func(param Type){ ... }) — body scoped by brace match.
+ROUTE_CLOSURE_RE = re.compile(
+    r"(?P<parent>\w+)\.Route\(\s*(?P<quote>['\"])(?P<prefix>[^'\"]*)(?P=quote)\s*,\s*"
+    r"func\s*\(\s*(?P<param>\w+)\s+[^)]*\)\s*\{"
+)
+
+# Compile-time interface satisfaction: var _ Iface = (*Type)(nil) | &Type{}
+INTERFACE_ASSERT_RE = re.compile(
+    r"var\s+_\s+(?P<iface>[\w.]+)\s*=\s*"
+    r"(?:"
+    r"\(\s*\*\s*(?P<ptr>\w+)\s*(?:\[[^\]]*\])?\s*\)\s*\(\s*nil\s*\)"
+    r"|"
+    r"&\s*(?P<addr>\w+)\s*(?:\[[^\]]*\])?\s*\{\s*\}"
+    r")"
 )
 
 SIDE_EFFECT_PATTERNS = [
@@ -179,11 +199,21 @@ class ExtractedMiddleware:
     source: str  # "use" | "group"
 
 
+@dataclass
+class ExtractedInterfaceAssertion:
+    """Explicit ``var _ Iface = (*T)(nil)`` proof — never method-set inference."""
+    interface: str
+    concrete: str
+    form: str  # "pointer_nil" | "addr_composite"
+    line: int
+    assumed: bool = False
+
+
 def _line_of(text: str, offset: int) -> int:
     return text.count("\n", 0, offset) + 1
 
 
-def _find_matching_brace_end_line(text: str, open_brace_offset: int) -> int:
+def _find_matching_brace_end_offset(text: str, open_brace_offset: int) -> int | None:
     depth = 0
     i = open_brace_offset
     n = len(text)
@@ -194,9 +224,16 @@ def _find_matching_brace_end_line(text: str, open_brace_offset: int) -> int:
         elif c == "}":
             depth -= 1
             if depth == 0:
-                return _line_of(text, i)
+                return i
         i += 1
-    return _line_of(text, n - 1)
+    return None
+
+
+def _find_matching_brace_end_line(text: str, open_brace_offset: int) -> int:
+    end = _find_matching_brace_end_offset(text, open_brace_offset)
+    if end is None:
+        return _line_of(text, max(0, len(text) - 1))
+    return _line_of(text, end)
 
 
 def _find_matching_paren_end(text: str, open_paren_offset: int) -> int | None:
@@ -313,6 +350,24 @@ def extract_interfaces(text: str) -> list[ExtractedGoInterface]:
             line_range=(start_line, end_line),
             snippet=snippet,
             type_params=type_params,
+        ))
+    return out
+
+
+def extract_interface_assertions(text: str) -> list[ExtractedInterfaceAssertion]:
+    """Only ``var _ Iface = (*T)(nil)`` / ``&T{}`` — never method-set matching."""
+    out: list[ExtractedInterfaceAssertion] = []
+    for m in INTERFACE_ASSERT_RE.finditer(text):
+        concrete = m.group("ptr") or m.group("addr")
+        if not concrete:
+            continue
+        form = "pointer_nil" if m.group("ptr") else "addr_composite"
+        out.append(ExtractedInterfaceAssertion(
+            interface=m.group("iface"),
+            concrete=concrete,
+            form=form,
+            line=_line_of(text, m.start()),
+            assumed=False,
         ))
     return out
 
@@ -555,6 +610,19 @@ def _build_fiber_prefix_graph(text: str) -> tuple[PrefixGraph, dict[str, tuple[s
             expression=expr,
         )
 
+    # Literal Route("prefix", func(param){...}) sites — synthetic child so
+    # path composition and middleware ancestor walks share one graph.
+    for m in ROUTE_CLOSURE_RE.finditer(text):
+        brace_open = m.end() - 1
+        if _find_matching_brace_end_offset(text, brace_open) is None:
+            continue
+        parent, prefix = m.group("parent"), m.group("prefix")
+        synth = f"{parent}.Route@{_line_of(text, m.start())}"
+        group_parents[synth] = (parent, prefix)
+        graph.add_child_edge(
+            synth, parent, prefix, declared_at=_line_of(text, m.start()),
+        )
+
     return graph, group_parents
 
 
@@ -596,7 +664,9 @@ def extract_routes(text: str, uses_fiber: bool) -> list[ExtractedRoute]:
 
     All() emits one method=ALL node (Fiber registers every verb). Add()
     emits one node per *literal* method string; non-literal method slices
-    are skipped. app.Route(...) closure groups are skipped.
+    are skipped. app.Route("literal", func(param){...}) is included only
+    when the closure body brace-scopes cleanly; non-literal / unbalanced
+    Route sites are skipped.
     """
     graph, group_parents = _build_fiber_prefix_graph(text)
 
@@ -663,8 +733,87 @@ def extract_routes(text: str, uses_fiber: bool) -> list[ExtractedRoute]:
             prefix_chain=chain_as_strings(res.chain),
         )
 
+    # Offsets covered by brace-scoped Route() bodies — skip double-counting
+    # bare param.Get hits that also appear in the whole-file scan.
+    route_body_ranges: list[tuple[int, int]] = []
+
+    def _inside_route_body(offset: int) -> bool:
+        return any(start <= offset < end for start, end in route_body_ranges)
+
     routes: list[ExtractedRoute] = []
+
+    for m in ROUTE_CLOSURE_RE.finditer(text):
+        parent = m.group("parent")
+        prefix = m.group("prefix")
+        param = m.group("param")
+        brace_open = m.end() - 1
+        brace_end = _find_matching_brace_end_offset(text, brace_open)
+        if brace_end is None:
+            continue  # unbalanced — skip rather than invent
+        body_start = brace_open + 1
+        body = text[body_start:brace_end]
+        route_body_ranges.append((body_start, brace_end))
+        synth = f"{parent}.Route@{_line_of(text, m.start())}"
+        # Synth edge already registered in _build_fiber_prefix_graph when
+        # the body brace-scopes; re-add is idempotent for the same edge.
+        if synth not in group_parents:
+            group_parents[synth] = (parent, prefix)
+            graph.add_child_edge(
+                synth, parent, prefix, declared_at=_line_of(text, m.start()),
+            )
+        route_note = (
+            "Path composed from brace-scoped Route(\"literal\", func(param){...}) "
+            "body; only registrations on the closure parameter are included."
+        )
+        for rm in ROUTE_REGISTER_RE.finditer(body):
+            if rm.group("var") != param:
+                continue
+            routes.append(_make_route(
+                var=synth,
+                method=rm.group("method").upper(),
+                path_suffix=rm.group("path"),
+                handler=rm.group("handler"),
+                offset=body_start + rm.start(),
+                extra_notes=[route_note],
+            ))
+        for rm in ROUTE_ALL_RE.finditer(body):
+            if rm.group("var") != param:
+                continue
+            routes.append(_make_route(
+                var=synth,
+                method="ALL",
+                path_suffix=rm.group("path"),
+                handler=rm.group("handler"),
+                offset=body_start + rm.start(),
+                extra_notes=[
+                    route_note,
+                    "Fiber All() registers every HTTP method at this exact path; "
+                    "emitted as one ALL node rather than inventing per-verb edges.",
+                ],
+            ))
+        for rm in ROUTE_ADD_RE.finditer(body):
+            if rm.group("var") != param:
+                continue
+            methods = _parse_add_method_literals(rm.group("methods"))
+            if methods is None:
+                continue
+            for method in methods:
+                routes.append(_make_route(
+                    var=synth,
+                    method=method,
+                    path_suffix=rm.group("path"),
+                    handler=rm.group("handler"),
+                    offset=body_start + rm.start(),
+                    extra_notes=[
+                        route_note,
+                        "Method taken from a string literal in Add([]string{...}); "
+                        "non-literal Add method slices are skipped.",
+                    ],
+                ))
+
     for m in ROUTE_REGISTER_RE.finditer(text):
+        if _inside_route_body(m.start()):
+            continue
         routes.append(_make_route(
             var=m.group("var"),
             method=m.group("method").upper(),
@@ -674,6 +823,8 @@ def extract_routes(text: str, uses_fiber: bool) -> list[ExtractedRoute]:
         ))
 
     for m in ROUTE_ALL_RE.finditer(text):
+        if _inside_route_body(m.start()):
+            continue
         routes.append(_make_route(
             var=m.group("var"),
             method="ALL",
@@ -687,6 +838,8 @@ def extract_routes(text: str, uses_fiber: bool) -> list[ExtractedRoute]:
         ))
 
     for m in ROUTE_ADD_RE.finditer(text):
+        if _inside_route_body(m.start()):
+            continue
         methods = _parse_add_method_literals(m.group("methods"))
         if methods is None:
             # Non-literal method list — skip rather than invent verbs.

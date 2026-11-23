@@ -11,7 +11,7 @@ chunks): run 1 → `{reused: 0, reanalyzed: 22}`; run 2 with no changes →
    `<output_root>/<filePath>.json`.
 2. **Content-hash + extractor-version reuse** (`needs_reanalysis()`):
    skip re-extraction only when the file bytes **and**
-   `extractorVersion` match. `EXTRACTOR_VERSION = 19` in
+   `extractorVersion` match. `EXTRACTOR_VERSION = 20` in
    `mirror_store.py` forces re-analysis when extractors change even if
    source bytes did not. Hash match is no longer enough.
 3. **Best-effort PR lookup** (`pull_request_lookup.py`): fills the
