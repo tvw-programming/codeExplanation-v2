@@ -83,10 +83,10 @@ def build_rust_chunk_record(
     record["confidenceLevel"] = confidence_level(conf)
     record["notes"] = (
         "Rust regex extract; literal Axum/Actix/Rocket routes emit real handlers. "
-        "In-file .nest composes; cross-file .nest(prefix, mod::fn()) joins via "
-        "PrefixGraph only on unique literal module resolution (else assumed/skip). "
-        "Unresolved nest targets invent no children. Macro-generated routes may "
-        "be missing (partial)."
+        "In-file .nest composes; cross-file .nest(prefix, mod::fn()) and unique "
+        "use-imported nest targets join via PrefixGraph only on unique literal "
+        "module resolution (else assumed/skip). Unresolved nest targets invent "
+        "no children. Macro-generated routes may be missing (partial)."
     )
     record["fidelity"] = "regex"
     from src.visual.pipeline import attach_visuals

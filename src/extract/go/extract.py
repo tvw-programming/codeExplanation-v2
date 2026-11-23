@@ -8,8 +8,8 @@ Honesty (Fiber enrichments):
   invented constraints beyond the literal text.
 - Interfaces: method *names/signatures* only — never invent which
   concrete type satisfies an interface from the method set alone.
-- Explicit ``var _ Iface = (*Type)(nil)`` / ``&Type{}`` assertions are
-  recorded as proven satisfaction (no guessed Impl edges).
+- Explicit ``var _ Iface = (*Type)(nil)`` / ``&Type{}`` / ``Type{}``
+  assertions are recorded as proven satisfaction (no guessed Impl edges).
 - Closure middleware factories: funcs returning fiber.Handler are
   listed as factories; application sites stay assumed when only the
   definition is visible.
@@ -91,13 +91,16 @@ ROUTE_CLOSURE_RE = re.compile(
     r"func\s*\(\s*(?P<param>\w+)\s+[^)]*\)\s*\{"
 )
 
-# Compile-time interface satisfaction: var _ Iface = (*Type)(nil) | &Type{}
+# Compile-time interface satisfaction — explicit forms only (never method-set):
+#   var _ Iface = (*Type)(nil) | &Type{} | Type{}
 INTERFACE_ASSERT_RE = re.compile(
     r"var\s+_\s+(?P<iface>[\w.]+)\s*=\s*"
     r"(?:"
     r"\(\s*\*\s*(?P<ptr>\w+)\s*(?:\[[^\]]*\])?\s*\)\s*\(\s*nil\s*\)"
     r"|"
     r"&\s*(?P<addr>\w+)\s*(?:\[[^\]]*\])?\s*\{\s*\}"
+    r"|"
+    r"(?P<val>\w+)\s*(?:\[[^\]]*\])?\s*\{\s*\}"
     r")"
 )
 
@@ -201,10 +204,13 @@ class ExtractedMiddleware:
 
 @dataclass
 class ExtractedInterfaceAssertion:
-    """Explicit ``var _ Iface = (*T)(nil)`` proof — never method-set inference."""
+    """Explicit ``var _ Iface = (*T)(nil)`` / ``&T{}`` / ``T{}`` proof.
+
+    Never method-set inference.
+    """
     interface: str
     concrete: str
-    form: str  # "pointer_nil" | "addr_composite"
+    form: str  # "pointer_nil" | "addr_composite" | "value_composite"
     line: int
     assumed: bool = False
 
@@ -355,13 +361,17 @@ def extract_interfaces(text: str) -> list[ExtractedGoInterface]:
 
 
 def extract_interface_assertions(text: str) -> list[ExtractedInterfaceAssertion]:
-    """Only ``var _ Iface = (*T)(nil)`` / ``&T{}`` — never method-set matching."""
+    """Only explicit ``var _ Iface = …`` forms — never method-set matching."""
     out: list[ExtractedInterfaceAssertion] = []
     for m in INTERFACE_ASSERT_RE.finditer(text):
-        concrete = m.group("ptr") or m.group("addr")
-        if not concrete:
+        if m.group("ptr"):
+            concrete, form = m.group("ptr"), "pointer_nil"
+        elif m.group("addr"):
+            concrete, form = m.group("addr"), "addr_composite"
+        elif m.group("val"):
+            concrete, form = m.group("val"), "value_composite"
+        else:
             continue
-        form = "pointer_nil" if m.group("ptr") else "addr_composite"
         out.append(ExtractedInterfaceAssertion(
             interface=m.group("iface"),
             concrete=concrete,
@@ -666,7 +676,8 @@ def extract_routes(text: str, uses_fiber: bool) -> list[ExtractedRoute]:
     emits one node per *literal* method string; non-literal method slices
     are skipped. app.Route("literal", func(param){...}) is included only
     when the closure body brace-scopes cleanly; non-literal / unbalanced
-    Route sites are skipped.
+    Route sites are skipped (unbalanced also poisons the closure param so
+    whole-file scan cannot invent bare registrations from the open body).
     """
     graph, group_parents = _build_fiber_prefix_graph(text)
 
@@ -736,9 +747,15 @@ def extract_routes(text: str, uses_fiber: bool) -> list[ExtractedRoute]:
     # Offsets covered by brace-scoped Route() bodies — skip double-counting
     # bare param.Get hits that also appear in the whole-file scan.
     route_body_ranges: list[tuple[int, int]] = []
+    # Unbalanced Route(): poison the closure param from the open brace onward
+    # so whole-file scan cannot invent bare /users under that param name.
+    unbalanced_route_params: list[tuple[str, int]] = []
 
     def _inside_route_body(offset: int) -> bool:
         return any(start <= offset < end for start, end in route_body_ranges)
+
+    def _poisoned_unbalanced_param(var: str, offset: int) -> bool:
+        return any(var == param and offset > start for param, start in unbalanced_route_params)
 
     routes: list[ExtractedRoute] = []
 
@@ -749,7 +766,9 @@ def extract_routes(text: str, uses_fiber: bool) -> list[ExtractedRoute]:
         brace_open = m.end() - 1
         brace_end = _find_matching_brace_end_offset(text, brace_open)
         if brace_end is None:
-            continue  # unbalanced — skip rather than invent
+            # Prefer miss over inventing prefix or promoting param.Get hits.
+            unbalanced_route_params.append((param, brace_open))
+            continue
         body_start = brace_open + 1
         body = text[body_start:brace_end]
         route_body_ranges.append((body_start, brace_end))
@@ -812,7 +831,7 @@ def extract_routes(text: str, uses_fiber: bool) -> list[ExtractedRoute]:
                 ))
 
     for m in ROUTE_REGISTER_RE.finditer(text):
-        if _inside_route_body(m.start()):
+        if _inside_route_body(m.start()) or _poisoned_unbalanced_param(m.group("var"), m.start()):
             continue
         routes.append(_make_route(
             var=m.group("var"),
@@ -823,7 +842,7 @@ def extract_routes(text: str, uses_fiber: bool) -> list[ExtractedRoute]:
         ))
 
     for m in ROUTE_ALL_RE.finditer(text):
-        if _inside_route_body(m.start()):
+        if _inside_route_body(m.start()) or _poisoned_unbalanced_param(m.group("var"), m.start()):
             continue
         routes.append(_make_route(
             var=m.group("var"),
@@ -838,7 +857,7 @@ def extract_routes(text: str, uses_fiber: bool) -> list[ExtractedRoute]:
         ))
 
     for m in ROUTE_ADD_RE.finditer(text):
-        if _inside_route_body(m.start()):
+        if _inside_route_body(m.start()) or _poisoned_unbalanced_param(m.group("var"), m.start()):
             continue
         methods = _parse_add_method_literals(m.group("methods"))
         if methods is None:

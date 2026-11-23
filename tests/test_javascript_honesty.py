@@ -13,7 +13,7 @@ FIX = Path(__file__).resolve().parent / "fixtures"
 
 
 def test_extractor_version_22_js():
-    assert EXTRACTOR_VERSION == 22
+    assert EXTRACTOR_VERSION == 23
 
 
 def test_literal_named_and_default_exports():
@@ -71,7 +71,7 @@ def test_js_fixture_record_graph():
         ChunkPlan("main", "app", "javascript", "main.js", 20, "small"),
         {"frontend": "javascript", "backend": []},
     )
-    assert rec["extractorVersion"] == 22
+    assert rec["extractorVersion"] == 23
     export_names = {e["name"] for e in rec["moduleExports"]}
     assert "boot" in export_names
     assert rec["visualGraph"] is not None

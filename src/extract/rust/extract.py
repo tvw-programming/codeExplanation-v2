@@ -10,6 +10,9 @@ Honesty rules (never invent edges):
   routes are visible (let-bound or inline).
 - Cross-file ``.nest("/prefix", mod::fn())`` joins via shared ``PrefixGraph``
   only on unique literal module resolution (same bar as Express require).
+  ``use``-imported nest targets (``use crate::api::router; … nest(…, router())``
+  or ``use crate::api; … nest(…, api::router())``) join only when the expanded
+  path uniquely resolves the same way — never invent from method sets / guesses.
   Unresolved / ambiguous / external-crate targets → no invented children.
 - ``pathResolved False ⇒ assumed True``.
 - Trait Impl unresolved / macros that hide routes → partial (miss, not invent).
@@ -29,7 +32,10 @@ from ..route_prefix import (
 
 
 MOD_RE = re.compile(r"^\s*(?:pub(?:\([^)]*\))?\s+)?mod\s+(?P<name>\w+)\s*;", re.MULTILINE)
-USE_RE = re.compile(r"^\s*(?:pub\s+)?use\s+(?P<path>[\w:]+)(?:\s+as\s+\w+)?\s*;", re.MULTILINE)
+USE_RE = re.compile(
+    r"^\s*(?:pub\s+)?use\s+(?P<path>[\w:]+)(?:\s+as\s+(?P<alias>\w+))?\s*;",
+    re.MULTILINE,
+)
 FN_RE = re.compile(
     r"^\s*(?:pub(?:\([^)]*\))?\s+)?(?:async\s+)?fn\s+(?P<name>\w+)\s*(?:<[^>]*>)?\s*\(",
     re.MULTILINE,
@@ -53,6 +59,10 @@ NEST_VAR_RE = re.compile(
 NEST_PATH_CALL_RE = re.compile(
     r"""\.nest\s*\(\s*["'](?P<prefix>[^"']+)["']\s*,\s*"""
     r"""(?P<path>(?:crate::)?[\w]+(?:::[\w]+)+)\s*\(\s*\)\s*\)"""
+)
+# .nest("/api", router()) — bare call; join only via unique use-import path.
+NEST_USE_CALL_RE = re.compile(
+    r"""\.nest\s*\(\s*["'](?P<prefix>[^"']+)["']\s*,\s*(?P<name>\w+)\s*\(\s*\)\s*\)"""
 )
 NEST_INLINE_HEAD_RE = re.compile(
     r"""\.nest\s*\(\s*["'](?P<prefix>[^"']+)["']\s*,\s*Router\s*::\s*new\s*\(\s*\)"""
@@ -366,16 +376,77 @@ def _find_crate_root_for(file_path: str, crate_roots: list[str]) -> str | None:
     return best
 
 
+def _collect_use_path_bindings(text: str) -> dict[str, str]:
+    """Map local name → ``use`` path for simple ``use a::b::c [as alias];``.
+
+    Conflicting bindings for the same local name are dropped (never last-wins).
+    Brace-group / glob uses are out of scope (USE_RE does not match them).
+    """
+    bindings: dict[str, str] = {}
+    conflicts: set[str] = set()
+    for m in USE_RE.finditer(text):
+        path = m.group("path")
+        parts = [p for p in path.split("::") if p]
+        if not parts:
+            continue
+        local = m.group("alias") or parts[-1]
+        if local in conflicts:
+            continue
+        if local in bindings and bindings[local] != path:
+            conflicts.add(local)
+            bindings.pop(local, None)
+            continue
+        bindings[local] = path
+    return bindings
+
+
+def _expand_path_via_use(path: str, use_bindings: dict[str, str]) -> str | None:
+    """Rewrite ``api::router`` via ``use crate::api`` → ``crate::api::router``.
+
+    Returns None when the first segment is not a use binding (caller keeps path).
+    """
+    parts = [p for p in path.split("::") if p]
+    if not parts or parts[0] == "crate":
+        return None
+    bound = use_bindings.get(parts[0])
+    if bound is None:
+        return None
+    if len(parts) == 1:
+        return bound
+    return bound + "::" + "::".join(parts[1:])
+
+
 def _resolve_path_call_target(
     from_file: str,
     path: str,
     index: RustRouteIndex,
+    *,
+    use_bindings: dict[str, str] | None = None,
 ) -> tuple[str, str] | None:
     """Resolve ``api::router`` / ``crate::api::router`` to unique (file, fn).
 
-    Honesty: only via ``mod`` declarations (or crate root). External crates
+    Honesty: only via ``mod`` declarations, unique file candidates, or a
+    unique ``use`` rewrite that expands to the same walk. External crates
     and ambiguous modules → None (never invent).
     """
+    # Prefer literal / mod walk first; fall back to use expansion only when
+    # that fails (same unique-resolve bar as Express require).
+    direct = _resolve_path_call_target_raw(from_file, path, index)
+    if direct is not None:
+        return direct
+    if use_bindings:
+        expanded = _expand_path_via_use(path, use_bindings)
+        if expanded and expanded != path:
+            return _resolve_path_call_target_raw(from_file, expanded, index)
+    return None
+
+
+def _resolve_path_call_target_raw(
+    from_file: str,
+    path: str,
+    index: RustRouteIndex,
+) -> tuple[str, str] | None:
+    """Resolve a fully expanded ``crate::…`` / ``mod::…`` path call target."""
     parts = [p for p in path.split("::") if p]
     if len(parts) < 2:
         return None
@@ -511,9 +582,45 @@ def build_rust_route_index(
             )
             index.mounted_routers.add(child_sym)
 
+        use_bindings = _collect_use_path_bindings(text)
+
         # Cross-file path-call nests: .nest("/api", api::router())
+        # (also via unique use rewrite: use crate::api; … api::router())
         for m in NEST_PATH_CALL_RE.finditer(text):
-            child = _resolve_path_call_target(rel, m.group("path"), index)
+            child = _resolve_path_call_target(
+                rel, m.group("path"), index, use_bindings=use_bindings,
+            )
+            if child is None:
+                continue
+            parent_var = _parent_router_near_nest(text, m.start(), let_spans)
+            if parent_var is None:
+                parent_sym = (rel, f"<nest_parent@{_line_of(text, m.start())}>")
+                index.graph.add_root(parent_sym, declared_at=_line_of(text, m.start()))
+            else:
+                parent_sym = (rel, parent_var)
+            index.graph.add_mount(
+                parent_sym,
+                child,
+                m.group("prefix"),
+                declared_at=_line_of(text, m.start()),
+            )
+            index.mounted_routers.add(child)
+
+        # Bare use-imported call: use crate::api::router; … .nest("/api", router())
+        # Skip sites already matched as path-calls (those contain `::`).
+        path_call_spans = {(m.start(), m.end()) for m in NEST_PATH_CALL_RE.finditer(text)}
+        for m in NEST_USE_CALL_RE.finditer(text):
+            if any(s <= m.start() < e for s, e in path_call_spans):
+                continue
+            name = m.group("name")
+            # Local let-bound routers use NEST_VAR_RE (no call parens); a bare
+            # call of a let name is not a use-import join.
+            if name in let_spans:
+                continue
+            use_path = use_bindings.get(name)
+            if use_path is None:
+                continue
+            child = _resolve_path_call_target_raw(rel, use_path, index)
             if child is None:
                 continue
             parent_var = _parent_router_near_nest(text, m.start(), let_spans)

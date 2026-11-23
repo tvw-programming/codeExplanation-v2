@@ -25,7 +25,7 @@ FIXTURES = Path(__file__).resolve().parent / "fixtures"
 
 
 def test_extractor_version_is_21():
-    assert EXTRACTOR_VERSION == 22
+    assert EXTRACTOR_VERSION == 23
 
 
 def test_express_cross_file_require_mount_composes():
@@ -165,7 +165,7 @@ def test_express_builder_emits_path_resolved():
         ChunkPlan("users", "API", "express", "routes/users.js", 20, "small"),
         {"frontend": None, "backend": ["express"]},
     )
-    assert rec["extractorVersion"] == 22
+    assert rec["extractorVersion"] == 23
     assert is_present(rec["visualAvailability"]["componentTree"])
     users = next(r for r in rec["routes"] if r["path"] == "/api/users" and r["method"] == "GET")
     assert users["pathResolved"] is True
@@ -248,7 +248,7 @@ def test_flask_builder_notes_cross_file(tmp_path: Path):
         ChunkPlan("api", "API", "python", "blueprints/api.py", 20, "small"),
         {"frontend": None, "backend": ["python"]},
     )
-    assert rec["extractorVersion"] == 22
+    assert rec["extractorVersion"] == 23
     health = next(r for r in rec["routes"] if r["path"] == "/v1/health")
     assert health["pathResolved"] is True
     assert "register_blueprint" in rec["notes"]

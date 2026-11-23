@@ -11,7 +11,7 @@ from src.visual.availability import is_present
 
 
 def test_extractor_version_is_21():
-    assert EXTRACTOR_VERSION == 22
+    assert EXTRACTOR_VERSION == 23
 
 
 def test_django_path_literal_order_and_unknown_method():
@@ -158,7 +158,7 @@ def test_django_builder_feeds_route_tree(tmp_path: Path):
         ChunkPlan("urls", "API", "python", "urls.py", 20, "small"),
         {"frontend": None, "backend": ["python"]},
     )
-    assert record["extractorVersion"] == 22
+    assert record["extractorVersion"] == 23
     assert is_present(record["visualAvailability"]["componentTree"])
     assert record["visualGraph"]["kind"] == "route_tree"
     paths = {r["path"] for r in record["routes"]}

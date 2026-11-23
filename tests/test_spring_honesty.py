@@ -14,7 +14,7 @@ FIX = Path(__file__).resolve().parent / "fixtures"
 
 
 def test_extractor_version_is_21():
-    assert EXTRACTOR_VERSION == 22
+    assert EXTRACTOR_VERSION == 23
 
 
 def test_bare_request_mapping_is_all_not_get():
@@ -201,7 +201,7 @@ def test_fixture_controller_builds_di_graph(tmp_path: Path):
     record = build_spring_chunk_record(
         tmp_path, chunk, {"frontend": None, "backend": ["spring_boot"]},
     )
-    assert record["extractorVersion"] == 22
+    assert record["extractorVersion"] == 23
     assert record["springTypes"]
     assert record["springTypes"][0]["kind"] == "class"
     assert is_present(record["visualAvailability"]["componentTree"])
@@ -212,3 +212,67 @@ def test_fixture_controller_builds_di_graph(tmp_path: Path):
     assert any("UserService" in (e["to"] or "") for e in inject)
     # Still never an imports-as-inject edge kind for DI
     assert not any(e["kind"] == "imports" for e in graph["edges"])
+
+
+def test_component_scan_and_import_never_invent_beans():
+    """@ComponentScan / @Import literals alone must not invent types or Impl."""
+    src = """
+package com.example;
+import com.example.OrderServiceImpl;
+import com.example.config.OrderConfig;
+
+@SpringBootApplication
+@Import(OrderConfig.class)
+@ComponentScan("com.example.service")
+@ComponentScan(basePackages = {"com.example.repo"})
+public class App {
+}
+"""
+    types, routes = extract_spring(src)
+    assert types == []
+    assert routes == []
+    assert "OrderServiceImpl" not in src or not any(
+        "Impl" in t.name for t in types
+    )
+
+
+def test_implements_alone_never_binds_typed_impl():
+    """``implements Iface`` without an explicit inject of Impl → no Impl invent."""
+    src = """
+package com.example;
+
+public interface OrderService {
+    void place();
+}
+
+@Service
+public class OrderServiceImpl implements OrderService {
+    public void place() {}
+}
+"""
+    types, routes = extract_spring(src)
+    assert routes == []
+    names = {t.name for t in types}
+    # Stereotype on the class is recorded; interface without stereotype is not
+    # a SpringType, and no injectee/Impl edge is invented from implements.
+    assert "OrderServiceImpl" in names
+    impl = next(t for t in types if t.name == "OrderServiceImpl")
+    assert impl.injectees == []
+    assert not any(t.name.endswith("Impl") and t.kind == "interface" for t in types)
+
+
+def test_autowired_interface_field_does_not_invent_impl_node():
+    """Typed interface injectee stays the interface — never synthesize *Impl."""
+    src = """
+@RestController
+public class OrderController {
+    @Autowired
+    private OrderService orderService;
+}
+"""
+    types, _ = extract_spring(src)
+    assert len(types) == 1
+    assert types[0].injectees == [
+        {"type": "OrderService", "field": "orderService", "via": "field", "assumed": False}
+    ]
+    assert not any("Impl" in i["type"] for i in types[0].injectees)

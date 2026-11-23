@@ -33,7 +33,9 @@ Flask `register_blueprint` + Express `require()` mounts) landed via shared
 honesty + same-dir template bundles (`EXTRACTOR_VERSION` 20); Rust
 cross-file `.nest` + relative Angular `templateUrl` (`EXTRACTOR_VERSION`
 21); Vue/Solid/Qwik mount/signal honesty + JS literal exports/DOM mounts
-+ Mermaid docs honesty chrome (`EXTRACTOR_VERSION` 22); unresolved mounts
++ Mermaid docs honesty chrome (`EXTRACTOR_VERSION` 22); Spring invent
+skip-locks + Go `var _` value form / unbalanced `Route` poison + Rust
+unique `use`-imported nest (`EXTRACTOR_VERSION` 23); unresolved mounts
 stay assumed.
 
 whisper.cpp-blocked-so-all-cues-assumed and the Chromium-sandbox
@@ -46,19 +48,21 @@ See [`09-phase6-rendering.md`](./09-phase6-rendering.md).
 ### 1. Multi-stack extractors are shipped but still thin
 
 Python (`ast`), Spring (DI-by-type), Express, Angular, Vue/Solid/Qwik,
-JS, Rust, React, and Go builders exist (`EXTRACTOR_VERSION` 22). All
+JS, Rust, React, and Go builders exist (`EXTRACTOR_VERSION` 23). All
 stacks use `src/extract/<stack>/{extract,record}.py`; flat modules are
 shims; `stack_records.py` re-exports. Shared
 `src/extract/route_prefix.py` resolves FastAPI `include_router`, Flask
 `register_blueprint`, Django `include()`, Express
 `app.use(prefix, require('./…'))`, and Rust `.nest(prefix, mod::fn())`
-across files on unique literal matches only; Go Fiber groups use the
-same resolver. Spring cross-file mounts onto PrefixGraph remain deferred
-(no safe literal mount analogue without inventing bean edges). Remaining
-gaps: regex ceilings, package-level Go chunking, Spring typed
-interface→impl beyond explicit asserts, cross-file Django view methods,
-Go non-literal / unbalanced `Route()` (still skipped), method-set Impl
-inference (never). Spring honesty enrichments landed
+(+ unique `use`-imported nest targets in 23) across files on unique
+literal matches only; Go Fiber groups use the same resolver. Spring
+cross-file mounts onto PrefixGraph remain deferred (no safe literal
+mount analogue without inventing bean edges); `@Import` /
+`@ComponentScan` / `implements` alone never invent beans/Impl (skip-locked
+in 23). Remaining gaps: regex ceilings, package-level Go chunking,
+Spring typed interface→impl beyond explicit inject evidence, cross-file
+Django view methods, Go non-literal `Route()` (still skipped), method-set
+Impl inference (never). Spring honesty enrichments landed
 (`EXTRACTOR_VERSION` 12): bare `@RequestMapping` → `ALL`; multi
 `method=` / path arrays; `${}`/`#{}` assumed; setter/`@Inject` DI;
 multi-ctor assumed; Spring Data repo interfaces without proxy Impl.
@@ -73,14 +77,16 @@ project selector index → template child mounts landed
 `../` / nested `templateUrl` when uniquely resolved in 21. Go Fiber
 generics, interface method sets (no invent), `fiber.Handler` factories,
 and `All()` / literal `Add()` landed (`EXTRACTOR_VERSION` 13);
-brace-scoped literal `Route()` + explicit `var _` assertions in 20.
+brace-scoped literal `Route()` + explicit `var _` assertions in 20;
+`var _ Iface = T{}` + unbalanced `Route` param poison in 23.
 React JSX brace ranges, memo/forwardRef bind names, and hook owner
 attribution landed (`EXTRACTOR_VERSION` 20). Rust honesty enrichments
 landed (`EXTRACTOR_VERSION` 18: real handlers, qualified
 `axum::routing::*`, chained MethodRouter methods, in-file `.nest`
 compose; Express-style `.get("/path")` ignored); cross-file `.nest`
 onto PrefixGraph in 21 (unique literal module resolve; unresolved/
-ambiguous invents no children). Doc 14’s “placeholder only” claim is
+ambiguous invents no children); unique `use`-imported nest targets in
+23. Doc 14’s “placeholder only” claim is
 **obsolete**; its structural ceiling analysis still applies.
 
 ### 2. `outputs` field is never populated

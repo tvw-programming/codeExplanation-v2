@@ -21,7 +21,7 @@ FIXTURES = Path(__file__).resolve().parent / "fixtures"
 
 
 def test_extractor_version_22():
-    assert EXTRACTOR_VERSION == 22
+    assert EXTRACTOR_VERSION == 23
 
 
 def test_cross_file_nest_mod_fn_composes():
@@ -178,9 +178,111 @@ def test_builder_emits_path_resolved():
         ChunkPlan("api", "API", "rust", "api.rs", 20, "small"),
         {"frontend": None, "backend": ["rust"]},
     )
-    assert rec["extractorVersion"] == 22
+    assert rec["extractorVersion"] == 23
     assert is_present(rec["visualAvailability"]["componentTree"])
     items = next(r for r in rec["routes"] if r["path"] == "/api/items" and r["method"] == "GET")
     assert items["pathResolved"] is True
     assert items["assumed"] is False
     assert items["prefixChain"]
+
+
+def test_use_imported_fn_nest_composes(tmp_path: Path):
+    """``use crate::api::router; .nest(..., router())`` joins when unique."""
+    (tmp_path / "main.rs").write_text(
+        "mod api;\n"
+        "use crate::api::router;\n"
+        "let app = Router::new()\n"
+        '    .nest("/api", router());\n',
+        encoding="utf-8",
+    )
+    (tmp_path / "api.rs").write_text(
+        "pub fn router() -> Router {\n"
+        '    Router::new().route("/items", get(list_items))\n'
+        "}\n",
+        encoding="utf-8",
+    )
+    index = build_rust_route_index(tmp_path)
+    facts = extract_rust(
+        (tmp_path / "api.rs").read_text(encoding="utf-8"),
+        file_path="api.rs",
+        route_index=index,
+    )
+    assert any(
+        r["path"] == "/api/items" and r["assumed"] is False and r["pathResolved"] is True
+        for r in facts.routes
+    )
+
+
+def test_use_imported_module_path_nest_composes(tmp_path: Path):
+    """``use crate::api; .nest(..., api::router())`` via unique use rewrite."""
+    (tmp_path / "main.rs").write_text(
+        "mod api;\n"
+        "use crate::api;\n"
+        "let app = Router::new()\n"
+        '    .nest("/v1", api::router());\n',
+        encoding="utf-8",
+    )
+    (tmp_path / "api.rs").write_text(
+        "pub fn router() -> Router {\n"
+        '    Router::new().route("/ping", get(ping))\n'
+        "}\n",
+        encoding="utf-8",
+    )
+    index = build_rust_route_index(tmp_path)
+    facts = extract_rust(
+        (tmp_path / "api.rs").read_text(encoding="utf-8"),
+        file_path="api.rs",
+        route_index=index,
+    )
+    assert any(
+        r["path"] == "/v1/ping" and r["pathResolved"] is True
+        for r in facts.routes
+    )
+
+
+def test_use_imported_nest_unresolved_external_skipped(tmp_path: Path):
+    """External ``use foreign::router`` nest call invents no children."""
+    (tmp_path / "main.rs").write_text(
+        "use foreign_crate::router;\n"
+        "let app = Router::new()\n"
+        '    .nest("/ext", router())\n'
+        '    .route("/ok", get(ok));\n',
+        encoding="utf-8",
+    )
+    index = build_rust_route_index(tmp_path)
+    assert index.mounted_routers == set()
+    facts = extract_rust(
+        (tmp_path / "main.rs").read_text(encoding="utf-8"),
+        file_path="main.rs",
+        route_index=index,
+    )
+    assert any(r["path"] == "/ok" for r in facts.routes)
+    assert not any(r["path"].startswith("/ext") for r in facts.routes)
+
+
+def test_conflicting_use_bindings_never_last_wins(tmp_path: Path):
+    """Two ``use`` lines binding the same local name → skip, do not invent."""
+    (tmp_path / "api.rs").write_text(
+        "pub fn router() -> Router {\n"
+        '    Router::new().route("/items", get(list_items))\n'
+        "}\n",
+        encoding="utf-8",
+    )
+    (tmp_path / "other.rs").write_text(
+        "pub fn router() -> Router {\n"
+        '    Router::new().route("/other", get(o))\n'
+        "}\n",
+        encoding="utf-8",
+    )
+    (tmp_path / "main.rs").write_text(
+        "mod api;\n"
+        "mod other;\n"
+        "use crate::api::router;\n"
+        "use crate::other::router;\n"
+        "let app = Router::new()\n"
+        '    .nest("/api", router());\n',
+        encoding="utf-8",
+    )
+    index = build_rust_route_index(tmp_path)
+    assert ("api.rs", "router") not in index.mounted_routers
+    assert ("other.rs", "router") not in index.mounted_routers
