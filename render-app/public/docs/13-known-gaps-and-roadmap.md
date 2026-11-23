@@ -19,7 +19,7 @@ Doc 14 is a **historical** audit — read its banner first.
 | Python | yes | yes | `extract/python/` (`ast`) | APIRouter/Blueprint + cross-file `include_router`/`include()`; Django `path()` + in-file view/CBV methods; empty → unavailable |
 | Spring Boot | yes | yes | `extract/spring/` | `di_graph` by type + Lombok/setter/@Inject; bare `@RequestMapping` → ALL; no Impl-from-imports |
 | Express | yes | yes | `extract/express/` | `route_tree`; nested literal mounts; path arrays; regex→assumed; backend stack |
-| Rust | yes | yes | `extract/rust/` | partial; method from attrs; routes assumed |
+| Rust | yes | yes | `extract/rust/` | handlers + in-file `.nest` compose; unresolved nest skips; macros partial |
 
 ## Carried-forward product gaps
 
@@ -41,7 +41,7 @@ See [`09-phase6-rendering.md`](./09-phase6-rendering.md).
 ### 1. Multi-stack extractors are shipped but still thin
 
 Python (`ast`), Spring (DI-by-type), Express, Angular, Vue/Solid/Qwik,
-JS, Rust, React, and Go builders exist (`EXTRACTOR_VERSION` 17). All
+JS, Rust, React, and Go builders exist (`EXTRACTOR_VERSION` 18). All
 stacks use `src/extract/<stack>/{extract,record}.py`; flat modules are
 shims; `stack_records.py` re-exports. Shared
 `src/extract/route_prefix.py` resolves FastAPI `include_router` and
@@ -63,7 +63,7 @@ regex→assumed, and per-route METHOD middleware landed
 (`EXTRACTOR_VERSION` 14). Angular project selector index → template
 child mounts landed (`EXTRACTOR_VERSION` 10). Go Fiber generics,
 interface method sets (no Impl), `fiber.Handler` factories, and
-`All()` / literal `Add()` landed (`EXTRACTOR_VERSION` 13). Doc 14’s
+`All()` / literal `Add()` landed (`EXTRACTOR_VERSION` 13). Rust honesty enrichments landed (`EXTRACTOR_VERSION` 18: real handlers, qualified `axum::routing::*`, chained MethodRouter methods, in-file `.nest` compose; unresolved nest invents no children; Express-style `.get("/path")` ignored).  Doc 14’s
 “placeholder only” claim is **obsolete**; its structural ceiling
 analysis still applies.
 
