@@ -1,7 +1,7 @@
 # Multi-stack visuals
 
 Shipped: React (#3), Go Fiber (#4), remaining stacks (#5), brand header
-chrome + center-packed trees (#6). `EXTRACTOR_VERSION = 8`.
+chrome + center-packed trees (#6). `EXTRACTOR_VERSION = 9`.
 
 Attach: `src/visual/pipeline.py: attach_visuals()`. Render:
 `render-app/src/FullVideo.tsx`. Layout: `treeLayout.ts`. Header:
@@ -69,28 +69,30 @@ and lifecycle → FileCard + ChunkView only.
 
 ## Stack matrix (visuals)
 
-| Stack | Extractor | Typical graph | Honesty note |
+| Stack | Extractor package | Typical graph | Honesty note |
 |---|---|---|---|
-| React | `ts_extractor` | `component_tree` | Regex limits remain |
-| Go Fiber | `go_extractor` | `route_tree` | In-file group prefixes compose |
-| Angular | `angular_extractor` | `component_tree` | Dedicated path; empty → unavailable |
-| Vue / Solid / Qwik | basic extractors | `component_tree` | Thin when mounts/signals missing |
+| React | `ts_extractor` (flat; migrate later) | `component_tree` | Regex limits remain |
+| Go Fiber | `go_extractor` (flat; migrate later) | `route_tree` | In-file group prefixes compose |
+| Angular | `src/extract/angular/` | `component_tree` | Decorator + signal I/O; empty → unavailable |
+| Vue / Solid / Qwik | basic extractors (flat) | `component_tree` | Thin when mounts/signals missing |
 | JavaScript | `javascript_extractor` | `module_graph` | Import/export edges |
-| Python | `python_extractor` (`ast`) | `route_tree` / `module_graph` | `fidelity: syntax` |
-| Express | `express_extractor` | `route_tree` | Backend stack; not `react_or_angular` |
-| Spring Boot | `spring_extractor` | `di_graph` | Inject by type, never imports-as-inject |
-| Rust | `rust_extractor` | `route_tree` / `crate_graph` | Regex; routes assumed; macros may miss |
+| Python | `src/extract/python/` (`ast`) | `route_tree` / `module_graph` | In-file `APIRouter(prefix=)` composes |
+| Express | `src/extract/express/` | `route_tree` | Incl. `route().get/post` chains |
+| Spring Boot | `src/extract/spring/` | `di_graph` | By type + Lombok; never imports-as-inject |
+| Rust | `src/extract/rust/` | `route_tree` / `crate_graph` | Method from attrs/`get`/`post`; assumed |
 
 **Mermaid twin (docs/chat):** same stacks → flowchart / sequence kinds and
 skip reasons in
 [`20-mermaid-stack-matrix.md`](./20-mermaid-stack-matrix.md).
 
-Dispatch: `extractor.py` / `reuse_pipeline.py` → `stack_records.py` →
-`attach_visuals()`.
+**Layout:** hardened stacks use `src/extract/<stack>/{extract,record}.py`.
+`stack_records.py` re-exports. Dispatch: `extractor.py` /
+`reuse_pipeline.py` → per-stack `record.py` → `attach_visuals()`.
 
 ## Tests
 
 `tests/test_react_visuals.py`, `tests/test_go_fiber_visuals.py`,
-`tests/test_multi_stack_visuals.py`, `tests/test_visual_theme_tokens.py`,
-`tests/test_tree_layout_check.py`. Suite count:
+`tests/test_multi_stack_visuals.py`, `tests/test_extractor_hardening.py`,
+`tests/test_visual_theme_tokens.py`, `tests/test_tree_layout_check.py`.
+Suite count:
 [`10-phase7-pilot-and-validation.md`](./10-phase7-pilot-and-validation.md).

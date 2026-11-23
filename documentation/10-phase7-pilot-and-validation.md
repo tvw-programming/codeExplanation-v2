@@ -3,7 +3,7 @@
 Status: done. 12 new tests at original phase completion (10
 `schema_check`, 2 `run_pilot`). **Do not treat 147 / 168 as live.**
 
-**Tests (2026-11-19):** `pytest -q` → **290 passed, 3 skipped**. Re-run
+**Tests (2026-11-23):** `pytest -q` → **334 passed, 4 skipped**. Re-run
 locally; pin a new dated count here when it changes.
 
 Phases 0–7 run end-to-end. Multi-stack extractors + visuals are

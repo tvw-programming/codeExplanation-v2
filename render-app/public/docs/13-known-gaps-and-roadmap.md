@@ -14,12 +14,12 @@ Doc 14 is a **historical** audit — read its banner first.
 |---|---|---|---|---|
 | React TS/JSX | yes | yes | regex | tree/lifecycle when mounts exist; regex limits remain |
 | Go Fiber | yes | yes | regex | `route_tree`; in-file prefixes compose |
-| Angular | yes | yes | dedicated | empty → unavailable (not invented) |
-| Vue / Solid / Qwik / JS | yes | yes | basic | thin trees; skip when empty |
-| Python | yes | yes | stdlib `ast` | route/module graphs; empty → unavailable |
-| Spring Boot | yes | yes | annotation/DI | `di_graph` by type |
-| Express | yes | yes | regex | `route_tree`; backend stack |
-| Rust | yes | yes | regex | partial; routes assumed; macros may miss |
+| Angular | yes | yes | `extract/angular/` | signal + decorator I/O; empty → unavailable |
+| Vue / Solid / Qwik / JS | yes | yes | basic (flat) | thin trees; skip when empty |
+| Python | yes | yes | `extract/python/` (`ast`) | in-file APIRouter prefix; empty → unavailable |
+| Spring Boot | yes | yes | `extract/spring/` | `di_graph` by type + Lombok RequiredArgsConstructor |
+| Express | yes | yes | `extract/express/` | `route_tree` incl. route chains; backend stack |
+| Rust | yes | yes | `extract/rust/` | partial; method from attrs; routes assumed |
 
 ## Carried-forward product gaps
 
@@ -39,11 +39,13 @@ See [`09-phase6-rendering.md`](./09-phase6-rendering.md).
 ### 1. Multi-stack extractors are shipped but still thin
 
 Python (`ast`), Spring (DI-by-type), Express, Angular, Vue/Solid/Qwik,
-JS, and Rust builders exist (`stack_records.py`, `EXTRACTOR_VERSION` 8).
+JS, and Rust builders exist (`EXTRACTOR_VERSION` 9). Hardened stacks use
+`src/extract/<stack>/{extract,record}.py`; `stack_records.py` re-exports.
 Remaining gaps: regex ceilings, cross-file route prefixes, package-
-level Go chunking, Angular template bundles, Rust macro routes, Spring
-interface→impl resolution. Doc 14’s “placeholder only” claim is
-**obsolete**; its structural ceiling analysis still applies.
+level Go chunking, Angular selector index / template bundles, Django
+`path()`, React/Go package migrate, Spring interface→impl resolution.
+Doc 14’s “placeholder only” claim is **obsolete**; its structural
+ceiling analysis still applies.
 
 ### 2. `outputs` field is never populated
 
