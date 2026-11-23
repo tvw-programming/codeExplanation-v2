@@ -11,7 +11,7 @@ from src.visual.availability import is_present
 
 
 def test_extractor_version_is_21():
-    assert EXTRACTOR_VERSION == 21
+    assert EXTRACTOR_VERSION == 22
 
 
 def test_django_require_post_same_file():
@@ -230,7 +230,7 @@ def test_builder_notes_and_version(tmp_path: Path):
         ChunkPlan("urls", "API", "python", "urls.py", 20, "small"),
         {"frontend": None, "backend": ["python"]},
     )
-    assert record["extractorVersion"] == 21
+    assert record["extractorVersion"] == 22
     assert is_present(record["visualAvailability"]["componentTree"])
     create = next(r for r in record["routes"] if r["path"] == "/create/")
     assert create["method"] == "POST"

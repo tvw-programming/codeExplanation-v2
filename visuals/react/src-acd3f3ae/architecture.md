@@ -4,6 +4,14 @@
 
 > Simplified Mermaid export of the same `visualGraph` / `lifecycleFlows` shown in Remotion. Layout is not pixel-identical to video.
 
+> **Fidelity note:** regex extract — assumed edges may be dashed; empty → no fence.
+
+## Honesty
+
+- Solid arrows (`-->`) = non-assumed edges from the extractor.
+- Dashed arrows (`-.->`) or sequence `Note … assumed` = hedged facts.
+- Unavailable / empty / too_large → no Mermaid fence (never invent).
+
 ## Availability
 
 - componentTree: `partial`

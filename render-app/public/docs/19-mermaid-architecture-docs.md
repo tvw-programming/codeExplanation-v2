@@ -33,6 +33,13 @@ lifecycle detail). Live Mermaid.js is **not** loaded in Remotion.
 Unavailable / empty / too_large → no fence (Q5). Assumed edges → `-.->`
 or sequence `Note … assumed`. Never invent edges.
 
+**Honesty chrome (docs):** each `architecture.md` includes a short
+Fidelity note (`regex` / `syntax`) plus an Honesty legend for solid vs
+dashed edges. `interactive.json` may carry `mermaidHonesty` (assumed
+arrow / note conventions, skip-when list, node cap) — metadata only,
+not a second SoT. Docs viewer keeps invalid Mermaid fences as source
+text with a skip reason (no invented SVG).
+
 ## Docs viewer
 
 `render-app/docs-viewer-src` renders ` ```mermaid ` fences via Mermaid.js

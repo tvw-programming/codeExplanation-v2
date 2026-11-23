@@ -26,6 +26,11 @@ def write_architecture_markdown(record: dict, dest_dir: Path) -> Path | None:
     fidelity = record.get("fidelity") or "unknown"
     avail = record.get("visualAvailability") or {}
 
+    fidelity_note = {
+        "regex": "regex extract — assumed edges may be dashed; empty → no fence",
+        "syntax": "syntax/`ast` extract — prefer skip over invent for unresolved joins",
+    }.get(str(fidelity), "extractor fidelity as recorded on the chunk")
+
     lines: list[str] = [
         f"# Architecture — `{file_path or chunk_id}`",
         "",
@@ -33,6 +38,14 @@ def write_architecture_markdown(record: dict, dest_dir: Path) -> Path | None:
         "",
         "> Simplified Mermaid export of the same `visualGraph` / `lifecycleFlows` "
         "shown in Remotion. Layout is not pixel-identical to video.",
+        "",
+        f"> **Fidelity note:** {fidelity_note}.",
+        "",
+        "## Honesty",
+        "",
+        "- Solid arrows (`-->`) = non-assumed edges from the extractor.",
+        "- Dashed arrows (`-.->`) or sequence `Note … assumed` = hedged facts.",
+        "- Unavailable / empty / too_large → no Mermaid fence (never invent).",
         "",
         "## Availability",
         "",
@@ -80,7 +93,8 @@ def write_architecture_markdown(record: dict, dest_dir: Path) -> Path | None:
             "```",
             "",
         ])
-    elif lifecycle_skip and plan["lifecycle"].get("skipReason"):
+    elif lifecycle_skip:
+        # Always surface the exporter skip reason when no fence shipped.
         lines.extend([
             "## Lifecycle",
             "",

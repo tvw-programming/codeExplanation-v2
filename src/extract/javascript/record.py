@@ -19,8 +19,15 @@ def build_javascript_chunk_record(root: Path, chunk: ChunkPlan, project_type_dic
     record["frameworkOrLibrary"] = []
     record["moduleImports"] = facts.imports
     record["moduleExports"] = facts.exports
+    # Literal DOM mount targets — not JSX; graph builder may surface as meta.
+    record["domMounts"] = facts.mounts
     record["eventHandlers"] = [
-        {"name": l["handler"], "lineRange": [l["line"], l["line"]], "assumed": l["assumed"], "event": l["event"]}
+        {
+            "name": l["handler"],
+            "lineRange": [l["line"], l["line"]],
+            "assumed": l["assumed"],
+            "event": l["event"],
+        }
         for l in facts.listeners
     ]
     record["securityHints"] = [
@@ -33,10 +40,13 @@ def build_javascript_chunk_record(root: Path, chunk: ChunkPlan, project_type_dic
         }
         for s in facts.sinks
     ]
-    conf = 0.5 if facts.imports or facts.listeners else 0.3
+    conf = 0.5 if facts.imports or facts.listeners or facts.exports or facts.mounts else 0.3
     record["confidence"] = conf
     record["confidenceLevel"] = confidence_level(conf)
-    record["notes"] = "Vanilla JS module/DOM extract."
+    record["notes"] = (
+        "Vanilla JS module/DOM extract; literal exports + getElementById/"
+        "querySelector mounts only; dynamic import(expr) skipped."
+    )
     record["fidelity"] = "regex"
     from src.visual.pipeline import attach_visuals
     return attach_visuals(record, stack="javascript")

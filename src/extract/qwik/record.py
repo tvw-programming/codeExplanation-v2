@@ -21,14 +21,41 @@ def build_qwik_chunk_record(root: Path, chunk: ChunkPlan, project_type_dict: dic
     record["jsxMounts"] = facts.mounts
     record["qwikBoundaries"] = facts.boundaries
     record["signals"] = facts.signals
+    record["effects"] = facts.effects
+    record["hooks"] = [
+        {
+            "name": s["kind"],
+            "kind": s["kind"],
+            "line": s["line"],
+            "owner": s.get("owner") or stem,
+            "assumed": s.get("assumed", True),
+        }
+        for s in facts.signals
+    ] + [
+        {
+            "name": e["kind"],
+            "kind": e["kind"],
+            "line": e["line"],
+            "owner": e.get("owner") or stem,
+            "assumed": e.get("assumed", True),
+        }
+        for e in facts.effects
+    ]
     record["eventHandlers"] = [
-        {"name": b.get("name") or b["kind"], "lineRange": [b["line"], b["line"]], "assumed": b["assumed"]}
+        {
+            "name": b.get("name") or b["kind"],
+            "lineRange": [b["line"], b["line"]],
+            "assumed": b["assumed"],
+        }
         for b in facts.boundaries if b["kind"] == "handler$"
     ]
     conf = 0.5 if facts.mounts or facts.boundaries else 0.3
     record["confidence"] = conf
     record["confidenceLevel"] = confidence_level(conf)
-    record["notes"] = "Qwik regex extract; $ boundaries from source form only."
+    record["notes"] = (
+        "Qwik regex extract; component$ bind names when proven; "
+        "$ boundaries from source form only."
+    )
     record["fidelity"] = "regex"
     from src.visual.pipeline import attach_visuals
     return attach_visuals(record, stack="qwik")

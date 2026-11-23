@@ -88,5 +88,17 @@
   },
   "mermaid": "flowchart TD\n  component_AlumniDraft[\"AlumniDraft\"]\n  component_profileRules[\"profileRules\"]\n  component_profileRules --> component_AlumniDraft\n  component_profileRules --> component_AlumniDraft\n  component_profileRules --> component_AlumniDraft",
   "mermaidLifecycle": null,
-  "mermaidLifecycleSkipReason": "empty"
+  "mermaidLifecycleSkipReason": "empty",
+  "mermaidHonesty": {
+    "assumedEdges": "-.->",
+    "assumedLifecycle": "Note … assumed",
+    "skipWhen": [
+      "unavailable",
+      "empty",
+      "too_large",
+      "no_graph"
+    ],
+    "fidelity": "regex",
+    "nodeCap": 40
+  }
 }
