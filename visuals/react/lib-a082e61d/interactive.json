@@ -64,5 +64,7 @@
     "logoAssetId": "react-logo-ondark",
     "logoPath": "visuals/logos/react.svg"
   },
-  "mermaid": "flowchart TD\n  component_User[\"User\"]\n  component_firebase[\"firebase\"]\n  component_firebase --> component_User"
+  "mermaid": "flowchart TD\n  component_User[\"User\"]\n  component_firebase[\"firebase\"]\n  component_firebase --> component_User",
+  "mermaidLifecycle": null,
+  "mermaidLifecycleSkipReason": "empty"
 }

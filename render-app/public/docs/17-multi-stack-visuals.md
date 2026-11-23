@@ -81,6 +81,10 @@ and lifecycle → FileCard + ChunkView only.
 | Spring Boot | `spring_extractor` | `di_graph` | Inject by type, never imports-as-inject |
 | Rust | `rust_extractor` | `route_tree` / `crate_graph` | Regex; routes assumed; macros may miss |
 
+**Mermaid twin (docs/chat):** same stacks → flowchart / sequence kinds and
+skip reasons in
+[`20-mermaid-stack-matrix.md`](./20-mermaid-stack-matrix.md).
+
 Dispatch: `extractor.py` / `reuse_pipeline.py` → `stack_records.py` →
 `attach_visuals()`.
 

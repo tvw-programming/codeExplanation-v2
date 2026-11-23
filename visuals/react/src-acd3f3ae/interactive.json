@@ -244,5 +244,7 @@
     "logoAssetId": "react-logo-ondark",
     "logoPath": "visuals/logos/react.svg"
   },
-  "mermaid": "flowchart TD\n  component_App[\"App\"]\n  component_CssBaseline[\"CssBaseline\"]\n  component_QueryClientProvider[\"QueryClientProvider\"]\n  component_StrictMode[\"StrictMode\"]\n  component_ThemeProvider[\"ThemeProvider\"]\n  component_main[\"main\"]\n  provider_QueryClientProvider[\"QueryClientProvider\"]\n  provider_ThemeProvider[\"ThemeProvider\"]\n  component_main --> component_App\n  component_main --> component_CssBaseline\n  component_main --> component_QueryClientProvider\n  component_main --> component_StrictMode\n  component_main --> component_ThemeProvider\n  provider_QueryClientProvider -.-> component_main\n  provider_ThemeProvider -.-> component_main"
+  "mermaid": "flowchart TD\n  component_App[\"App\"]\n  component_CssBaseline[\"CssBaseline\"]\n  component_QueryClientProvider[\"QueryClientProvider\"]\n  component_StrictMode[\"StrictMode\"]\n  component_ThemeProvider[\"ThemeProvider\"]\n  component_main[\"main\"]\n  provider_QueryClientProvider[\"QueryClientProvider\"]\n  provider_ThemeProvider[\"ThemeProvider\"]\n  component_main --> component_App\n  component_main --> component_CssBaseline\n  component_main --> component_QueryClientProvider\n  component_main --> component_StrictMode\n  component_main --> component_ThemeProvider\n  provider_QueryClientProvider -.-> component_main\n  provider_ThemeProvider -.-> component_main",
+  "mermaidLifecycle": null,
+  "mermaidLifecycleSkipReason": "empty"
 }

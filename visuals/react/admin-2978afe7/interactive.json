@@ -97,5 +97,7 @@
     "logoAssetId": "react-logo-ondark",
     "logoPath": "visuals/logos/react.svg"
   },
-  "mermaid": "flowchart TD\n  component_AlumniDraft[\"AlumniDraft\"]\n  component_Blob[\"Blob\"]\n  component_excelWorkbook[\"excelWorkbook\"]\n  component_excelWorkbook --> component_AlumniDraft\n  component_excelWorkbook --> component_AlumniDraft\n  component_excelWorkbook --> component_Blob"
+  "mermaid": "flowchart TD\n  component_AlumniDraft[\"AlumniDraft\"]\n  component_Blob[\"Blob\"]\n  component_excelWorkbook[\"excelWorkbook\"]\n  component_excelWorkbook --> component_AlumniDraft\n  component_excelWorkbook --> component_AlumniDraft\n  component_excelWorkbook --> component_Blob",
+  "mermaidLifecycle": null,
+  "mermaidLifecycleSkipReason": "empty"
 }
