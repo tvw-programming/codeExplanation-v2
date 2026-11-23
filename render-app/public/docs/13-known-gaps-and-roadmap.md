@@ -26,7 +26,8 @@ Doc 14 is a **historical** audit — read its banner first.
 Keep these as roadmap: deeper parsers beyond optional tree-sitter spans
 (Go/TSX/Java/Rust/Express declaration overlays + Vue SFC dual-parse
 honesty under `CEV_TREE_SITTER`, `EXTRACTOR_VERSION` 25; Spring
-bean-index / Go method-set Impl deferred — never invent; typed/compiler
+bean-index / Go method-set Impl invent still deferred — hard
+skip-locked with temptation fixtures (VERSION stays 25); typed/compiler
 APIs later), package-level Go chunking, `outputs` always empty,
 statement-level split (`needs_further_split` unused), LLM-elaborated
 narration (`llm:` config unused), production voice quality. Cross-file
@@ -68,11 +69,12 @@ overlay into records in 25 (routes/mounts/mw stay regex + PrefixGraph).
 Spring cross-file mounts onto PrefixGraph remain deferred (no safe
 literal mount analogue without inventing bean edges); `@Import` /
 `@ComponentScan` / `implements` alone never invent beans/Impl
-(skip-locked in 23; bean-index still deferred). Remaining gaps: regex
-ceilings, package-level Go chunking, Spring typed interface→impl beyond
-explicit inject evidence, cross-file Django view methods, Go
-non-literal `Route()` (still skipped), method-set Impl inference
-(never). Spring honesty enrichments landed
+(skip-locked in 23; bean-index / typed-Impl invent hard skip-locked
+with temptation fixtures — feature still deferred, VERSION stays 25).
+Remaining gaps: regex ceilings, package-level Go chunking, Spring
+typed interface→impl beyond explicit inject evidence, cross-file
+Django view methods, Go non-literal `Route()` (still skipped),
+method-set Impl inference (never; hard skip-locked). Spring honesty enrichments landed
 (`EXTRACTOR_VERSION` 12): bare `@RequestMapping` → `ALL`; multi
 `method=` / path arrays; `${}`/`#{}` assumed; setter/`@Inject` DI;
 multi-ctor assumed; Spring Data repo interfaces without proxy Impl.
