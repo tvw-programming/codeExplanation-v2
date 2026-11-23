@@ -3,6 +3,11 @@
 Regex-based static analysis — see common.py's module docstring for the
 scope decision. Record assembly lives in record.py.
 
+Tree-sitter substrate spike: optional probe in ``tree_sitter_probe.py``
+(``CEV_TREE_SITTER=1``). Record facts below still come from regex only —
+query-backed spans/edges require an EXTRACTOR_VERSION bump. Parse fail /
+missing deps / flag off → fall back; never invent edges from a partial tree.
+
 Honesty (Fiber enrichments):
 - Generics: type params on funcs/structs/interfaces are captured; no
   invented constraints beyond the literal text.
@@ -883,3 +888,20 @@ def extract_route_groups(text: str) -> tuple[dict[str, tuple[str, str | None]], 
     """Return (group_parents var→(parent, prefix|None), fiber app root vars)."""
     graph, group_parents = _build_fiber_prefix_graph(text)
     return group_parents, set(graph.roots)
+
+
+def tree_sitter_decl_names_or_fallback(text: str) -> list[str] | None:
+    """Optional tree-sitter plug-in point for Go declarations.
+
+    Returns ``None`` when the feature flag is off, the substrate is
+    missing, or the parse is catastrophic — callers must keep the regex
+    path. A successful list is names proven by clean nodes only; it is
+    **not** yet consumed by ``extract_functions`` / record builders
+    (deferred until EXTRACTOR_VERSION ≥ 24). Never invents route/Impl edges.
+    """
+    from .tree_sitter_probe import probe_go_declarations
+
+    decls = probe_go_declarations(text)
+    if decls is None:
+        return None
+    return [d.name for d in decls]
