@@ -26,8 +26,8 @@ too_large → no fence (Q5). Never invent edges.
 | **Java** (non-Spring) | JVM markers without spring-boot | Same DI path when edges exist | Same | Empty → unavailable |
 | **Rust** | `Cargo.toml` | `flowchart TD` route / crate graph | Sequence when flows exist | Regex ceilings; macros may miss; methods from attrs/`get`/`post` |
 
-Dispatch: `src/detect/project_type.py` → `src/extract/<stack>/` (or flat
-legacy for React/Go/Vue/…) → `src/visual/pipeline.py` `attach_visuals()` →
+Dispatch: `src/detect/project_type.py` → `src/extract/<stack>/` →
+`src/visual/pipeline.py` `attach_visuals()` →
 `export_mermaid` / `export_lifecycle_mermaid` →
 `architecture.md` + `interactive.json`.
 
