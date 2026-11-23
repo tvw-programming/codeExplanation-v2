@@ -41,7 +41,7 @@ from src.extract.common import content_hash
 #       routeGroups / usesFiber on backend Go records.
 #   8 - Multi-stack visuals: Python ast, Express detect+routes, Spring DI,
 #       Angular dedicated extractor, Vue/Solid/Qwik/JS/Rust extract+graphs.
-EXTRACTOR_VERSION = 8
+EXTRACTOR_VERSION = 9
 
 
 def output_path_for(output_root: Path, file_path: str) -> Path:
