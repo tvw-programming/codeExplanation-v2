@@ -52,7 +52,9 @@ def build_python_chunk_record(root: Path, chunk: ChunkPlan, project_type_dict: d
     record["confidenceLevel"] = confidence_level(conf)
     record["notes"] = (
         "Python via stdlib ast; in-file APIRouter(prefix=) literals compose; "
-        "cross-file include_router prefixes stay assumed."
+        "cross-file include_router prefixes stay assumed. "
+        "Django urlpatterns path()/re_path()/url() literals only; method UNKNOWN; "
+        "include() mounts assumed and not joined across files."
     )
     record["fidelity"] = "syntax"
     from src.visual.pipeline import attach_visuals

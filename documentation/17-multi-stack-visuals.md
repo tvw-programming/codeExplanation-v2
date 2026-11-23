@@ -1,7 +1,7 @@
 # Multi-stack visuals
 
 Shipped: React (#3), Go Fiber (#4), remaining stacks (#5), brand header
-chrome + center-packed trees (#6). `EXTRACTOR_VERSION = 10`.
+chrome + center-packed trees (#6). `EXTRACTOR_VERSION = 11`.
 
 Attach: `src/visual/pipeline.py: attach_visuals()`. Render:
 `render-app/src/FullVideo.tsx`. Layout: `treeLayout.ts`. Header:
@@ -76,7 +76,7 @@ and lifecycle → FileCard + ChunkView only.
 | Angular | `src/extract/angular/` | `component_tree` | Selector index → template mounts; signal/decorator I/O; unmatched tags skipped; empty → unavailable |
 | Vue / Solid / Qwik | `src/extract/{vue,solid,qwik}/` | `component_tree` | Thin when mounts/signals missing |
 | JavaScript | `src/extract/javascript/` | `module_graph` | Import/export edges |
-| Python | `src/extract/python/` (`ast`) | `route_tree` / `module_graph` | In-file `APIRouter(prefix=)` composes |
+| Python | `src/extract/python/` (`ast`) | `route_tree` / `module_graph` | In-file `APIRouter(prefix=)` composes; Django `path()` literals (method `UNKNOWN`; `include()` assumed, not joined) |
 | Express | `src/extract/express/` | `route_tree` | Incl. `route().get/post` chains |
 | Spring Boot | `src/extract/spring/` | `di_graph` | By type + Lombok; never imports-as-inject |
 | Rust | `src/extract/rust/` | `route_tree` / `crate_graph` | Method from attrs/`get`/`post`; assumed |

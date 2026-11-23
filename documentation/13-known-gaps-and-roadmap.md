@@ -16,7 +16,7 @@ Doc 14 is a **historical** audit — read its banner first.
 | Go Fiber | yes | yes | `extract/go/` (regex) | `route_tree`; in-file prefixes compose |
 | Angular | yes | yes | `extract/angular/` | selector→usage mounts + signal/decorator I/O; empty → unavailable |
 | Vue / Solid / Qwik / JS | yes | yes | `extract/{vue,solid,qwik,javascript}/` | thin trees; skip when empty |
-| Python | yes | yes | `extract/python/` (`ast`) | in-file APIRouter prefix; empty → unavailable |
+| Python | yes | yes | `extract/python/` (`ast`) | in-file APIRouter prefix; Django `path()` literals (method UNKNOWN); empty → unavailable |
 | Spring Boot | yes | yes | `extract/spring/` | `di_graph` by type + Lombok RequiredArgsConstructor |
 | Express | yes | yes | `extract/express/` | `route_tree` incl. route chains; backend stack |
 | Rust | yes | yes | `extract/rust/` | partial; method from attrs; routes assumed |
@@ -39,12 +39,14 @@ See [`09-phase6-rendering.md`](./09-phase6-rendering.md).
 ### 1. Multi-stack extractors are shipped but still thin
 
 Python (`ast`), Spring (DI-by-type), Express, Angular, Vue/Solid/Qwik,
-JS, Rust, React, and Go builders exist (`EXTRACTOR_VERSION` 10). All
+JS, Rust, React, and Go builders exist (`EXTRACTOR_VERSION` 11). All
 stacks use `src/extract/<stack>/{extract,record}.py`; flat modules are
 shims; `stack_records.py` re-exports. Remaining gaps: regex ceilings,
 cross-file route prefixes, package-level Go chunking, Angular
-template-bundle chunking (class+html as one chunk unit), Django
-`path()`, Spring interface→impl resolution. Angular project selector
+template-bundle chunking (class+html as one chunk unit), Spring
+interface→impl resolution. Django `urlpatterns` `path()`/`re_path()`/
+`url()` literals landed (`EXTRACTOR_VERSION` 11; method `UNKNOWN`;
+`include()` mounts assumed, not joined). Angular project selector
 index → template child mounts landed (`EXTRACTOR_VERSION` 10). Doc 14’s
 “placeholder only” claim is **obsolete**; its structural ceiling
 analysis still applies.

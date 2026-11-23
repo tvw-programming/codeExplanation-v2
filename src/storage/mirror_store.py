@@ -46,7 +46,9 @@ from src.extract.common import content_hash
 #       signal I/O, Rust methods); React/Go/FE layout migrate.
 #  10 - Angular project selector index → template child mount edges
 #       (unmatched tags skipped; duplicates skipped; attribute assumed).
-EXTRACTOR_VERSION = 10
+#  11 - Django urlpatterns path()/re_path()/url() literals; include()
+#       mounts assumed (not joined cross-file); method UNKNOWN.
+EXTRACTOR_VERSION = 11
 
 
 def output_path_for(output_root: Path, file_path: str) -> Path:
