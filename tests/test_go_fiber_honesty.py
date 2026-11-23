@@ -11,7 +11,7 @@ from src.storage.mirror_store import EXTRACTOR_VERSION
 
 
 def test_extractor_version_bumped_for_go_fiber_honesty():
-    assert EXTRACTOR_VERSION == 24
+    assert EXTRACTOR_VERSION == 25
 
 
 def test_generic_function_is_extracted():
@@ -202,7 +202,11 @@ var _ Closer = &fileHandle{}
 
 
 def test_method_set_match_alone_never_invents_assertion():
-    """Matching methods without ``var _`` must not create Impl edges."""
+    """Matching methods without ``var _`` must not create Impl edges.
+
+    Skip-lock (method-set Impl refused): same method names as an interface
+    are not evidence. Only explicit ``var _ Iface = …`` assertions ship.
+    """
     text = """
 type UserRepo interface {
 	FindByID(id string) (*User, error)
@@ -213,6 +217,9 @@ func (u *userRepo) FindByID(id string) (*User, error) { return nil, nil }
     assert go.extract_interface_assertions(text) == []
     ifaces = go.extract_interfaces(text)
     assert ifaces and ifaces[0].name == "UserRepo"
+    # No invent helper for method-set satisfaction.
+    assert not hasattr(go, "infer_impl_from_method_set")
+    assert not hasattr(go, "method_set_satisfies")
 
 
 def test_unbalanced_route_body_skipped():
@@ -263,7 +270,7 @@ func Map[T any](xs []T) []T { return xs }
         record = build_backend_go_chunk_record(
             tdp, chunk, {"type": "go", "framework": "fiber"}, None, True,
         )
-    assert record["extractorVersion"] == 24
+    assert record["extractorVersion"] == 25
     kinds = {m["kind"] for m in record["dataModels"]}
     assert "interface" in kinds
     assert "struct" in kinds

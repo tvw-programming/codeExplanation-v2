@@ -44,6 +44,8 @@ def regen_one(path: Path) -> dict:
         "skipWhen": ["unavailable", "empty", "too_large", "no_graph"],
         "fidelity": payload.get("fidelity"),
         "nodeCap": 40,
+        "sourceOfTruth": ["visualGraph", "lifecycleFlows"],
+        "neverInvent": True,
     }
 
     path.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")

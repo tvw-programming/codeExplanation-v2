@@ -17,10 +17,11 @@ Honesty rules (never invent edges):
 - ``pathResolved False ⇒ assumed True``.
 - Trait Impl unresolved / macros that hide routes → partial (miss, not invent).
 
-Optional tree-sitter probe (``CEV_TREE_SITTER=1``): declaration names via
-``tree_sitter_probe`` / ``tree_sitter_decl_names_or_fallback``. Records stay
-regex + PrefixGraph — query-backed nest/route spans deferred until macro
-and trait-Impl parity tests (see feasibility matrix).
+Optional tree-sitter (``CEV_TREE_SITTER=1``): ``extract_rust`` overlays
+clean probe **function** line ranges onto regex ``fn`` facts when names
+match 1:1; flag off / parse fail / name mismatch → full regex. Never
+invents ``.nest`` joins, route edges, or trait Impl satisfaction.
+Query-backed nest/route spans stay deferred (macro / trait-Impl gates).
 """
 
 from __future__ import annotations
@@ -654,7 +655,7 @@ def extract_rust(
     """Extract Rust facts. With ``route_index``, cross-file nests compose."""
     modules = [{"name": m.group("name"), "line": _line_of(text, m.start())} for m in MOD_RE.finditer(text)]
     uses = [{"path": m.group("path"), "line": _line_of(text, m.start())} for m in USE_RE.finditer(text)]
-    functions = [{"name": m.group("name"), "line": _line_of(text, m.start())} for m in FN_RE.finditer(text)]
+    functions = _extract_rust_functions(text)
 
     project_scoped = route_index is not None
     # Build / merge a local view of lets for this file.
@@ -865,14 +866,49 @@ def extract_rust(
     )
 
 
+def _extract_rust_functions(text: str) -> list[dict]:
+    """Regex ``fn`` facts, optionally overlaid with tree-sitter line ranges.
+
+    Overlay only when probe function names match the regex list 1:1.
+    Struct / enum / trait / impl probe kinds are ignored here — they are
+    not regex facts and must not invent record symbols. Nest/route edges
+    stay on the PrefixGraph path unchanged.
+    """
+    functions = [
+        {
+            "name": m.group("name"),
+            "line": _line_of(text, m.start()),
+            "line_range": (_line_of(text, m.start()), _line_of(text, m.start())),
+        }
+        for m in FN_RE.finditer(text)
+    ]
+    from .tree_sitter_probe import probe_rust_declarations
+
+    decls = probe_rust_declarations(text)
+    if decls is None:
+        return functions
+    ts_fns = [d for d in decls if d.kind == "function"]
+    if [d.name for d in ts_fns] != [f["name"] for f in functions]:
+        return functions
+    overlaid: list[dict] = []
+    for fn, d in zip(functions, ts_fns):
+        start, end = d.line_range
+        overlaid.append({
+            "name": fn["name"],
+            "line": start,
+            "line_range": (start, end),
+        })
+    return overlaid
+
+
 def tree_sitter_decl_names_or_fallback(text: str) -> list[str] | None:
     """Optional tree-sitter plug-in point for Rust declarations.
 
     Returns ``None`` when the feature flag is off, the substrate is
     missing, or the parse is catastrophic — callers must keep the regex
-    path. Successful lists are proven clean-node names only; they are
-    **not** consumed by record builders yet (macros / trait Impl invent
-    risk — deferred). Never invents ``.nest`` or route edges.
+    path. ``extract_rust`` overlays matching function line ranges under
+    ``CEV_TREE_SITTER`` (EXTRACTOR_VERSION 25). Never invents ``.nest``
+    or route edges.
     """
     from .tree_sitter_probe import probe_rust_declarations
 

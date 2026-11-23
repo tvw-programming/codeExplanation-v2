@@ -12,10 +12,12 @@ Honesty rules (never invent edges or full URLs):
   missing / package ``require('express')`` → skip inventing children.
 - Roots are ``express()`` bindings only — no conventional ``app`` guess.
 
-Optional tree-sitter probe (``CEV_TREE_SITTER=1``): JS declaration names via
-``tree_sitter_probe`` / ``tree_sitter_decl_names_or_fallback``. Records stay
-regex + PrefixGraph — call-tree middleware arity deferred until parity
-tests (see feasibility matrix). Never invents mounts from partial trees.
+Optional tree-sitter (``CEV_TREE_SITTER=1``): ``extract_express_functions``
+overlays clean probe function / const-fn line ranges onto regex decl
+facts when names match 1:1; flag off / fail / mismatch → full regex.
+Routes, mounts, and middleware stay on the regex + PrefixGraph path —
+never invented from a successful parse. Call-tree ``.use`` arity
+classification stays deferred.
 """
 
 from __future__ import annotations
@@ -102,6 +104,19 @@ MW_USE_RE = re.compile(
 
 _STRING_LIT_RE = re.compile(r"""^(?P<quote>['"`])(?P<body>(?:\\.|(?!(?P=quote)).)*)(?P=quote)$""")
 _REGEX_LIT_RE = re.compile(r"^/(?P<body>(?:\\.|\[(?:\\.|[^\]])*\]|[^/])+)/(?P<flags>[gimsuy]*)")
+
+# Named function / const-fn decls for optional tree-sitter span overlay.
+# Matches the probe's function + const_fn kinds only (not class/method) so a
+# stray `class` in the file does not force a full mismatch fallback.
+FN_DECL_RE = re.compile(
+    r"""^\s*(?:async\s+)?function\s+(?P<name>\w+)\s*\(""",
+    re.MULTILINE,
+)
+CONST_FN_RE = re.compile(
+    r"""^\s*(?:const|let|var)\s+(?P<name>\w+)\s*=\s*(?:async\s+)?"""
+    r"""(?:function\b|\([^)]*\)\s*=>|[A-Za-z_]\w*\s*=>)""",
+    re.MULTILINE,
+)
 
 _SKIP_DIR_NAMES = frozenset({
     ".git", ".hg", ".svn", "node_modules", "dist", "build", ".next", "coverage",
@@ -872,14 +887,57 @@ def extract_express(
     return routes, middleware, mounts
 
 
+def extract_express_functions(text: str) -> list[dict]:
+    """Named function / const-fn facts; optional tree-sitter line-range overlay.
+
+    Routes, mounts, and middleware are **not** derived here. Overlay only
+    when probe function/const_fn names match the regex list 1:1; otherwise
+    keep regex spans. Class / method probe kinds are ignored so they cannot
+    invent record symbols or force dishonest half-overlays.
+    """
+    # Document order: interleave by source offset (not kind-then-kind).
+    hits: list[tuple[int, str]] = []
+    for m in FN_DECL_RE.finditer(text):
+        hits.append((m.start(), m.group("name")))
+    for m in CONST_FN_RE.finditer(text):
+        hits.append((m.start(), m.group("name")))
+    hits.sort(key=lambda h: h[0])
+    functions = [
+        {
+            "name": name,
+            "line": _line_of(text, start),
+            "line_range": (_line_of(text, start), _line_of(text, start)),
+        }
+        for start, name in hits
+    ]
+
+    from .tree_sitter_probe import probe_js_declarations
+
+    decls = probe_js_declarations(text)
+    if decls is None:
+        return functions
+    ts_fns = [d for d in decls if d.kind in ("function", "const_fn")]
+    if [d.name for d in ts_fns] != [f["name"] for f in functions]:
+        return functions
+    overlaid: list[dict] = []
+    for fn, d in zip(functions, ts_fns):
+        start, end = d.line_range
+        overlaid.append({
+            "name": fn["name"],
+            "line": start,
+            "line_range": (start, end),
+        })
+    return overlaid
+
+
 def tree_sitter_decl_names_or_fallback(text: str) -> list[str] | None:
     """Optional tree-sitter plug-in point for Express/JS declarations.
 
     Returns ``None`` when the feature flag is off, the substrate is
     missing, or the parse is catastrophic — callers must keep the regex
-    path. Successful lists are proven clean-node names only; they are
-    **not** consumed by record builders yet (middleware arity parity
-    deferred). Never invents mounts or route edges.
+    path. ``extract_express_functions`` overlays matching function /
+    const-fn line ranges under ``CEV_TREE_SITTER`` (EXTRACTOR_VERSION 25).
+    Never invents mounts, routes, or middleware.
     """
     from .tree_sitter_probe import probe_js_declarations
 

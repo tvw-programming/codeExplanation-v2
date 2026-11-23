@@ -31,7 +31,12 @@ def build_rust_chunk_record(
     record["rustModules"] = facts.modules
     record["rustUses"] = facts.uses
     record["importantFunctions"] = [
-        {"name": f["name"], "lineRange": [f["line"], f["line"]], "calls": [], "sideEffects": []}
+        {
+            "name": f["name"],
+            "lineRange": list(f.get("line_range") or (f["line"], f["line"])),
+            "calls": [],
+            "sideEffects": [],
+        }
         for f in facts.functions
     ]
     routes_out = []
@@ -82,11 +87,13 @@ def build_rust_chunk_record(
     record["confidence"] = conf
     record["confidenceLevel"] = confidence_level(conf)
     record["notes"] = (
-        "Rust regex extract; literal Axum/Actix/Rocket routes emit real handlers. "
-        "In-file .nest composes; cross-file .nest(prefix, mod::fn()) and unique "
-        "use-imported nest targets join via PrefixGraph only on unique literal "
-        "module resolution (else assumed/skip). Unresolved nest targets invent "
-        "no children. Macro-generated routes may be missing (partial)."
+        "Rust regex extract; optional tree-sitter fn line-range overlay under "
+        "CEV_TREE_SITTER (regex fallback on mismatch). Literal Axum/Actix/Rocket "
+        "routes emit real handlers. In-file .nest composes; cross-file "
+        ".nest(prefix, mod::fn()) and unique use-imported nest targets join via "
+        "PrefixGraph only on unique literal module resolution (else assumed/skip). "
+        "Unresolved nest targets invent no children. Macro-generated routes may "
+        "be missing (partial)."
     )
     record["fidelity"] = "regex"
     from src.visual.pipeline import attach_visuals

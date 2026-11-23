@@ -1,12 +1,13 @@
-"""Optional Rust tree-sitter probe (probe-only — not record-authoritative).
+"""Optional Rust tree-sitter probe for declaration spans.
 
 When ``CEV_TREE_SITTER=1`` and ``tree-sitter`` + ``tree-sitter-rust`` are
 installed, this module parses Rust and lists **proven** fn / struct /
 trait / impl / enum names from clean nodes.
 
-Record assembly stays on the regex + PrefixGraph path. Query-backed nest
-/ route spans are deferred until parity tests prove no invent risk on
-macros and unresolved trait Impl (see feasibility matrix).
+``extract_rust`` overlays matching **function** line ranges onto regex
+``fn`` facts when names match 1:1 (EXTRACTOR_VERSION 25). Nest / route /
+trait-Impl edges stay on the regex + PrefixGraph path — never invented
+from a successful parse.
 
 Honesty
 -------

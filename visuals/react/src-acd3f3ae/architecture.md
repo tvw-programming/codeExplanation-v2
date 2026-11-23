@@ -6,11 +6,14 @@
 
 > **Fidelity note:** regex extract — assumed edges may be dashed; empty → no fence.
 
+> **Source of truth:** fences below are exported from this chunk's `visualGraph` / `lifecycleFlows` only — never invented for docs.
+
 ## Honesty
 
 - Solid arrows (`-->`) = non-assumed edges from the extractor.
 - Dashed arrows (`-.->`) or sequence `Note … assumed` = hedged facts.
 - Unavailable / empty / too_large → no Mermaid fence (never invent).
+- Docs/chat Mermaid is a twin of Remotion's graph — not a second topology.
 
 ## Availability
 

@@ -1,12 +1,14 @@
-"""Optional Express / JavaScript tree-sitter probe (probe-only).
+"""Optional Express / JavaScript tree-sitter probe for declaration spans.
 
 When ``CEV_TREE_SITTER=1`` and ``tree-sitter`` + ``tree-sitter-javascript``
 are installed, this module parses JS and lists **proven** function /
-const-fn / method names from clean nodes.
+const-fn / method / class names from clean nodes.
 
-Record assembly stays on the regex + PrefixGraph path. Call-tree
-middleware arity / ``.use`` classification is deferred until parity tests
-prove no invent risk (see feasibility matrix).
+``extract_express_functions`` overlays matching function / const-fn line
+ranges onto regex decl facts when names match 1:1 (EXTRACTOR_VERSION 25).
+Routes, mounts, and middleware stay on the regex + PrefixGraph path —
+never invented from a successful parse. Call-tree ``.use`` arity
+classification stays deferred.
 
 Honesty
 -------

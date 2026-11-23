@@ -36,7 +36,7 @@ from src.parse.tree_sitter_support import (  # noqa: E402
 
 
 def test_extractor_version_is_24_for_tree_sitter_wiring():
-    assert EXTRACTOR_VERSION == 24
+    assert EXTRACTOR_VERSION == 25
 
 
 def test_runtime_api_is_querycursor_era():
@@ -484,7 +484,7 @@ def test_vue_dual_parse_empty_script_falls_back(monkeypatch):
     assert {c["child"] for c in facts.components} == {"OrphanMount"}
 
 
-# --- Rust + Express probes (probe-only; records stay regex) ---
+# --- Rust + Express wired function span overlays (no mount/route invent) ---
 
 
 def test_rust_probe_flag_and_decls(monkeypatch):
@@ -502,6 +502,56 @@ def test_rust_probe_flag_and_decls(monkeypatch):
     names = {d.name for d in decls}
     assert {"hello", "S", "m"} <= names
     assert "hello" in rust_names(src)
+
+
+def test_rust_wired_fn_spans_when_flag_on(monkeypatch):
+    """Flag-on overlays function line_range; never invents nest/route facts."""
+    pytest.importorskip("tree_sitter_rust")
+    from src.extract.rust.extract import extract_rust
+    from src.extract.rust.tree_sitter_probe import probe_rust_declarations
+
+    src = "pub fn hello() {\n    let x = 1;\n}\n"
+    monkeypatch.delenv("CEV_TREE_SITTER", raising=False)
+    off = extract_rust(src)
+    monkeypatch.setenv("CEV_TREE_SITTER", "1")
+    on = extract_rust(src)
+    assert [f["name"] for f in off.functions] == [f["name"] for f in on.functions] == ["hello"]
+    decls = probe_rust_declarations(src)
+    assert decls is not None
+    fn_decl = next(d for d in decls if d.kind == "function" and d.name == "hello")
+    assert on.functions[0]["line_range"] == fn_decl.line_range
+    assert off.functions[0]["line_range"][0] == off.functions[0]["line"]
+    # Routes / nests stay empty — span overlay must not invent them.
+    assert on.routes == []
+    assert off.routes == []
+
+
+def test_rust_name_mismatch_falls_back_to_regex(monkeypatch):
+    pytest.importorskip("tree_sitter_rust")
+    from src.extract.rust.extract import extract_rust
+    import src.extract.rust.tree_sitter_probe as probe_mod
+    from src.extract.rust.tree_sitter_probe import RustDeclSpan
+
+    src = "pub fn hello() {\n    let x = 1;\n}\n"
+    monkeypatch.delenv("CEV_TREE_SITTER", raising=False)
+    off = extract_rust(src)
+    real = probe_mod.probe_rust_declarations
+
+    def _wrong(text):
+        decls = real(text)
+        if not decls:
+            return decls
+        return [
+            RustDeclSpan(kind=d.kind, name="other", line_range=d.line_range)
+            if d.kind == "function" and d.name == "hello"
+            else d
+            for d in decls
+        ]
+
+    monkeypatch.setattr(probe_mod, "probe_rust_declarations", _wrong)
+    monkeypatch.setenv("CEV_TREE_SITTER", "1")
+    on = extract_rust(src)
+    assert [f["line_range"] for f in on.functions] == [f["line_range"] for f in off.functions]
 
 
 def test_rust_grammar_loads():
@@ -524,6 +574,57 @@ def test_express_js_probe_flag_and_decls(monkeypatch):
     assert decls is not None
     assert {d.name for d in decls} >= {"foo", "bar"}
     assert js_names(src) is not None
+
+
+def test_express_wired_fn_spans_when_flag_on(monkeypatch):
+    """Flag-on overlays function/const_fn spans; never invents mounts/routes/mw."""
+    pytest.importorskip("tree_sitter_javascript")
+    from src.extract.express.extract import extract_express, extract_express_functions
+    from src.extract.express.tree_sitter_probe import probe_js_declarations
+
+    src = "const foo = () => {\n  return 1;\n};\nfunction bar() {\n  return 2;\n}\n"
+    monkeypatch.delenv("CEV_TREE_SITTER", raising=False)
+    off = extract_express_functions(src)
+    monkeypatch.setenv("CEV_TREE_SITTER", "1")
+    on = extract_express_functions(src)
+    assert [f["name"] for f in off] == [f["name"] for f in on] == ["foo", "bar"]
+    decls = probe_js_declarations(src)
+    assert decls is not None
+    ts_fns = [d for d in decls if d.kind in ("function", "const_fn")]
+    assert [d.name for d in ts_fns] == ["foo", "bar"]
+    assert on[0]["line_range"] == ts_fns[0].line_range
+    assert on[1]["line_range"] == ts_fns[1].line_range
+    # Mount/route/mw path untouched by the function overlay.
+    routes, mw, mounts = extract_express(src)
+    assert routes == []
+    assert mounts == {}
+    assert mw == [] or all(m.name for m in mw)  # no invented router mounts
+
+
+def test_express_name_mismatch_falls_back_to_regex(monkeypatch):
+    pytest.importorskip("tree_sitter_javascript")
+    from src.extract.express.extract import extract_express_functions
+    import src.extract.express.tree_sitter_probe as probe_mod
+    from src.extract.express.tree_sitter_probe import JsDeclSpan
+
+    src = "function bar() {\n  return 2;\n}\n"
+    monkeypatch.delenv("CEV_TREE_SITTER", raising=False)
+    off = extract_express_functions(src)
+    real = probe_mod.probe_js_declarations
+
+    def _wrong(text):
+        decls = real(text)
+        if not decls:
+            return decls
+        return [
+            JsDeclSpan(kind=d.kind, name="other", line_range=d.line_range) if i == 0 else d
+            for i, d in enumerate(decls)
+        ]
+
+    monkeypatch.setattr(probe_mod, "probe_js_declarations", _wrong)
+    monkeypatch.setenv("CEV_TREE_SITTER", "1")
+    on = extract_express_functions(src)
+    assert [f["line_range"] for f in on] == [f["line_range"] for f in off]
 
 
 def test_express_js_catastrophic_falls_back(monkeypatch):
