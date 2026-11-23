@@ -18,7 +18,7 @@ Doc 14 is a **historical** audit — read its banner first.
 | Vue / Solid / Qwik / JS | yes | yes | `extract/{vue,solid,qwik,javascript}/` | thin trees; skip when empty |
 | Python | yes | yes | `extract/python/` (`ast`) | in-file APIRouter prefix; Django `path()` literals (method UNKNOWN); empty → unavailable |
 | Spring Boot | yes | yes | `extract/spring/` | `di_graph` by type + Lombok/setter/@Inject; bare `@RequestMapping` → ALL; no Impl-from-imports |
-| Express | yes | yes | `extract/express/` | `route_tree` incl. route chains; backend stack |
+| Express | yes | yes | `extract/express/` | `route_tree`; nested literal mounts; path arrays; regex→assumed; backend stack |
 | Rust | yes | yes | `extract/rust/` | partial; method from attrs; routes assumed |
 
 ## Carried-forward product gaps
@@ -39,7 +39,7 @@ See [`09-phase6-rendering.md`](./09-phase6-rendering.md).
 ### 1. Multi-stack extractors are shipped but still thin
 
 Python (`ast`), Spring (DI-by-type), Express, Angular, Vue/Solid/Qwik,
-JS, Rust, React, and Go builders exist (`EXTRACTOR_VERSION` 13). All
+JS, Rust, React, and Go builders exist (`EXTRACTOR_VERSION` 14). All
 stacks use `src/extract/<stack>/{extract,record}.py`; flat modules are
 shims; `stack_records.py` re-exports. Remaining gaps: regex ceilings,
 cross-file route prefixes, package-level Go chunking, Angular
@@ -51,12 +51,14 @@ Spring honesty enrichments landed (`EXTRACTOR_VERSION` 12): bare
 assumed; setter/`@Inject` DI; multi-ctor assumed; Spring Data repo
 interfaces without proxy Impl. Django `urlpatterns` `path()`/`re_path()`/
 `url()` literals landed (`EXTRACTOR_VERSION` 11; method `UNKNOWN`;
-`include()` mounts assumed, not joined). Angular project selector
-index → template child mounts landed (`EXTRACTOR_VERSION` 10). Go Fiber
-generics, interface method sets (no Impl), `fiber.Handler` factories,
-and `All()` / literal `Add()` landed (`EXTRACTOR_VERSION` 13). Doc 14’s
-“placeholder only” claim is **obsolete**; its structural ceiling
-analysis still applies.
+`include()` mounts assumed, not joined). Express nested literal mounts,
+path arrays, regex→assumed, and per-route METHOD middleware landed
+(`EXTRACTOR_VERSION` 14); cross-file prefixes still deferred. Angular
+project selector index → template child mounts landed
+(`EXTRACTOR_VERSION` 10). Go Fiber generics, interface method sets
+(no Impl), `fiber.Handler` factories, and `All()` / literal `Add()`
+landed (`EXTRACTOR_VERSION` 13). Doc 14’s “placeholder only” claim is
+**obsolete**; its structural ceiling analysis still applies.
 
 ### 2. `outputs` field is never populated
 
