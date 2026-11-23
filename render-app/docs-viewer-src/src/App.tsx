@@ -11,11 +11,49 @@ import FolderIcon from "@mui/icons-material/Folder";
 import DescriptionIcon from "@mui/icons-material/Description";
 import { SimpleTreeView } from "@mui/x-tree-view/SimpleTreeView";
 import { TreeItem } from "@mui/x-tree-view/TreeItem";
-import { marked } from "marked";
+import { marked, type Tokens } from "marked";
 import type { DocGroup } from "./types";
 
 const DOCS_BASE = "../docs/";
 const FILE_ITEM_PREFIX = "file:";
+
+let mermaidReady: Promise<typeof import("mermaid")> | null = null;
+
+function loadMermaid() {
+  if (!mermaidReady) {
+    mermaidReady = import("mermaid").then((mod) => {
+      mod.default.initialize({
+        startOnLoad: false,
+        theme: "dark",
+        securityLevel: "strict",
+      });
+      return mod;
+    });
+  }
+  return mermaidReady;
+}
+
+const mermaidRenderer = {
+  code({ text, lang }: Tokens.Code): string {
+    if (lang === "mermaid") {
+      // Escape so untrusted fences cannot break out of the pre; Mermaid
+      // reads textContent of .mermaid nodes after we set innerHTML.
+      const escaped = text
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+      return `<pre class="mermaid">${escaped}</pre>`;
+    }
+    const language = lang || "";
+    const escaped = text
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
+    return `<pre><code class="language-${language}">${escaped}</code></pre>`;
+  },
+};
+
+marked.use({ renderer: mermaidRenderer });
 
 function slugFor(file: string): string {
   return file.replace(/\.md$/i, "");
@@ -79,6 +117,23 @@ export default function App() {
       .catch((err) => setContentError(String(err.message || err)))
       .finally(() => setLoadingDoc(false));
   }, [selectedFile]);
+
+  // Render Mermaid fences after the markdown HTML is mounted.
+  // Escaped entities in the HTML string become real text via innerHTML,
+  // which Mermaid reads from each pre.mermaid node. Loaded on demand so
+  // Remotion's video bundle never pays for Mermaid.
+  useEffect(() => {
+    if (loadingDoc || !html) return;
+    const host = document.querySelector("main div[data-docs-body]");
+    if (!host) return;
+    const nodes = host.querySelectorAll("pre.mermaid");
+    if (nodes.length === 0) return;
+    void loadMermaid()
+      .then((mod) => mod.default.run({ nodes }))
+      .catch(() => {
+        /* invalid fences stay as pre text — do not blank the page */
+      });
+  }, [html, loadingDoc]);
 
   const filteredGroups = useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -232,6 +287,13 @@ export default function App() {
               borderColor: "divider",
             },
             "& pre code": { bgcolor: "transparent", p: 0 },
+            "& pre.mermaid": {
+              bgcolor: "#12151f",
+              display: "flex",
+              justifyContent: "center",
+              p: 2,
+            },
+            "& pre.mermaid svg": { maxWidth: "100%", height: "auto" },
             "& table": {
               width: "100%",
               borderCollapse: "collapse",
@@ -267,7 +329,7 @@ export default function App() {
           {contentError && <Alert severity="error">Could not load doc: {contentError}</Alert>}
           {!loadingDoc && !contentError && (
             // eslint-disable-next-line react/no-danger
-            <div dangerouslySetInnerHTML={{ __html: html }} />
+            <div data-docs-body dangerouslySetInnerHTML={{ __html: html }} />
           )}
         </Box>
       </Box>
