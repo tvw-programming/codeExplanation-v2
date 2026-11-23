@@ -12,10 +12,10 @@ Doc 14 is a **historical** audit — read its banner first.
 
 | Stack | Detect | Chunk | Extract | Visuals honesty |
 |---|---|---|---|---|
-| React TS/JSX | yes | yes | regex | tree/lifecycle when mounts exist; regex limits remain |
-| Go Fiber | yes | yes | regex | `route_tree`; in-file prefixes compose |
+| React TS/JSX | yes | yes | `extract/react/` (regex) | tree/lifecycle when mounts exist; regex limits remain |
+| Go Fiber | yes | yes | `extract/go/` (regex) | `route_tree`; in-file prefixes compose |
 | Angular | yes | yes | `extract/angular/` | signal + decorator I/O; empty → unavailable |
-| Vue / Solid / Qwik / JS | yes | yes | basic (flat) | thin trees; skip when empty |
+| Vue / Solid / Qwik / JS | yes | yes | `extract/{vue,solid,qwik,javascript}/` | thin trees; skip when empty |
 | Python | yes | yes | `extract/python/` (`ast`) | in-file APIRouter prefix; empty → unavailable |
 | Spring Boot | yes | yes | `extract/spring/` | `di_graph` by type + Lombok RequiredArgsConstructor |
 | Express | yes | yes | `extract/express/` | `route_tree` incl. route chains; backend stack |
@@ -39,21 +39,22 @@ See [`09-phase6-rendering.md`](./09-phase6-rendering.md).
 ### 1. Multi-stack extractors are shipped but still thin
 
 Python (`ast`), Spring (DI-by-type), Express, Angular, Vue/Solid/Qwik,
-JS, and Rust builders exist (`EXTRACTOR_VERSION` 9). Hardened stacks use
-`src/extract/<stack>/{extract,record}.py`; `stack_records.py` re-exports.
-Remaining gaps: regex ceilings, cross-file route prefixes, package-
-level Go chunking, Angular selector index / template bundles, Django
-`path()`, React/Go package migrate, Spring interface→impl resolution.
-Doc 14’s “placeholder only” claim is **obsolete**; its structural
-ceiling analysis still applies.
+JS, Rust, React, and Go builders exist (`EXTRACTOR_VERSION` 9). All
+stacks use `src/extract/<stack>/{extract,record}.py`; flat modules are
+shims; `stack_records.py` re-exports. Remaining gaps: regex ceilings,
+cross-file route prefixes, package-level Go chunking, Angular selector
+index / template bundles, Django `path()`, Spring interface→impl
+resolution. Doc 14’s “placeholder only” claim is **obsolete**; its
+structural ceiling analysis still applies.
 
 ### 2. `outputs` field is never populated
 
 The schema has an `outputs` field (callbacks/events for React/Angular,
 return values for Python, response bodies for Go Fiber/Spring Boot),
-but `json_builder.py` currently always emits `"outputs": []`.
+but Go/`go/record.py` still emits `"outputs": []` (React fills callback
+outputs from JSX prop mounts when present).
 
-**What closes it:** extending `ts_extractor.py`/`go_extractor.py` to
+**What closes it:** extending `react/extract.py` / `go/extract.py` to
 infer return types/emitted events, following the same
 assumed-when-uncertain pattern used everywhere else.
 

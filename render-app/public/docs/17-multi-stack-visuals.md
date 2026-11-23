@@ -71,11 +71,11 @@ and lifecycle → FileCard + ChunkView only.
 
 | Stack | Extractor package | Typical graph | Honesty note |
 |---|---|---|---|
-| React | `ts_extractor` (flat; migrate later) | `component_tree` | Regex limits remain |
-| Go Fiber | `go_extractor` (flat; migrate later) | `route_tree` | In-file group prefixes compose |
+| React | `src/extract/react/` | `component_tree` | Regex limits remain |
+| Go Fiber | `src/extract/go/` | `route_tree` | In-file group prefixes compose |
 | Angular | `src/extract/angular/` | `component_tree` | Decorator + signal I/O; empty → unavailable |
-| Vue / Solid / Qwik | basic extractors (flat) | `component_tree` | Thin when mounts/signals missing |
-| JavaScript | `javascript_extractor` | `module_graph` | Import/export edges |
+| Vue / Solid / Qwik | `src/extract/{vue,solid,qwik}/` | `component_tree` | Thin when mounts/signals missing |
+| JavaScript | `src/extract/javascript/` | `module_graph` | Import/export edges |
 | Python | `src/extract/python/` (`ast`) | `route_tree` / `module_graph` | In-file `APIRouter(prefix=)` composes |
 | Express | `src/extract/express/` | `route_tree` | Incl. `route().get/post` chains |
 | Spring Boot | `src/extract/spring/` | `di_graph` | By type + Lombok; never imports-as-inject |
@@ -85,9 +85,10 @@ and lifecycle → FileCard + ChunkView only.
 skip reasons in
 [`20-mermaid-stack-matrix.md`](./20-mermaid-stack-matrix.md).
 
-**Layout:** hardened stacks use `src/extract/<stack>/{extract,record}.py`.
-`stack_records.py` re-exports. Dispatch: `extractor.py` /
-`reuse_pipeline.py` → per-stack `record.py` → `attach_visuals()`.
+**Layout:** all stacks use `src/extract/<stack>/{extract,record}.py`.
+Flat `*_extractor.py` / `json_builder.py` are shims. `stack_records.py`
+re-exports. Dispatch: `extractor.py` / `reuse_pipeline.py` → per-stack
+`record.py` → `attach_visuals()`.
 
 ## Tests
 
