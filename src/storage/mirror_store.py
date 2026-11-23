@@ -58,7 +58,10 @@ from src.extract.common import content_hash
 #       regex routes assumed (no URL invent); per-route METHOD middleware;
 #       use(prefix, non-router) is path-scoped middleware not a mount;
 #       non-literal mount prefixes assumed.
-EXTRACTOR_VERSION = 14
+#  15 - Python honesty: in-file Django view/CBV HTTP methods; Flask
+#       Blueprint(url_prefix=); in-file include_router/register_blueprint
+#       literal mounts; non-literal mounts → assumed.
+EXTRACTOR_VERSION = 15
 
 
 def output_path_for(output_root: Path, file_path: str) -> Path:

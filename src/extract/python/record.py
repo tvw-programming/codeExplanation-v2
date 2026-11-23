@@ -51,9 +51,11 @@ def build_python_chunk_record(root: Path, chunk: ChunkPlan, project_type_dict: d
     record["confidence"] = conf
     record["confidenceLevel"] = confidence_level(conf)
     record["notes"] = (
-        "Python via stdlib ast; in-file APIRouter(prefix=) literals compose; "
-        "cross-file include_router prefixes stay assumed. "
-        "Django urlpatterns path()/re_path()/url() literals only; method UNKNOWN; "
+        "Python via stdlib ast; in-file APIRouter(prefix=)/Blueprint(url_prefix=) "
+        "and include_router/register_blueprint literal mounts compose; "
+        "cross-file mounts stay unresolved/assumed. "
+        "Django urlpatterns path()/re_path()/url() literals; method UNKNOWN unless "
+        "the view/CBV is defined in-file with require_*/api_view or HTTP verb methods; "
         "include() mounts assumed and not joined across files."
     )
     record["fidelity"] = "syntax"
