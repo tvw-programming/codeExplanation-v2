@@ -54,7 +54,11 @@ from src.extract.common import content_hash
 #  13 - Go Fiber honesty: generics on funcs/structs/interfaces;
 #       interface method sets (no Impl edges); fiber.Handler factories;
 #       All()/literal Add() routes; Route() closures still skipped.
-EXTRACTOR_VERSION = 13
+#  14 - Express honesty: nested literal mounts compose; path arrays;
+#       regex routes assumed (no URL invent); per-route METHOD middleware;
+#       use(prefix, non-router) is path-scoped middleware not a mount;
+#       non-literal mount prefixes assumed.
+EXTRACTOR_VERSION = 14
 
 
 def output_path_for(output_root: Path, file_path: str) -> Path:
