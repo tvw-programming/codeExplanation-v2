@@ -13,10 +13,12 @@ a `PipelineConfig` dataclass. Missing top-level sections (`source`,
 rather than defaulting silently — config correctness is checked once, at
 startup, not discovered mid-run.
 
-`detection`, `llm`, `audio`, and `video` are loaded into
+`detection`, `llm`, and `audio` are loaded into
 `PipelineConfig.detection` / `PipelineConfig.raw` and **are not read**
-by the live pipeline. They stay in the example file so the intended
-shape is documented; comments in the YAML mark each unused key.
+by the live pipeline. `video.phaseStyle` **is** read at startup and
+embedded on Remotion manifests at staging time. `video.fps` /
+`video.resolution` remain unused (Remotion hardcodes 30 fps and
+1280×720).
 
 ### `source`
 
@@ -118,7 +120,7 @@ project's non-negotiable rule that secret scanning runs before any
 snippet reaches a chunk file. See
 [`03-phase0-scaffolding-and-security.md`](./03-phase0-scaffolding-and-security.md).
 
-### `llm` / `audio` / `video` (unused at runtime)
+### `llm` / `audio` (unused at runtime)
 
 ```yaml
 llm:
@@ -127,10 +129,6 @@ llm:
 
 audio:
   tts_provider: null   # unused; live path is Piper then espeak-ng
-
-video:
-  fps: 30
-  resolution: "1280x720"
 ```
 
 These sections are stored on `PipelineConfig.raw` and **never read**.
@@ -141,9 +139,26 @@ These sections are stored on `PipelineConfig.raw` and **never read**.
 - `audio.tts_provider` is unused. Live engines are **Piper**
   (`piper:en_IN-ljspeech`) then **espeak-ng** (`espeak-ng:en-us`). Which
   one actually ran is recorded on the render bundle as `ttsEngine`.
-- `video.fps` / `video.resolution` are unused. Remotion compositions
-  hardcode **30 fps** and **1280×720** (`FullVideo.tsx`, `ChunkView.tsx`).
-  `highlight_config.py` defaults `fps=30` independently.
+
+### `video` (`phaseStyle` live; fps/resolution unused)
+
+```yaml
+video:
+  fps: 30
+  resolution: "1280x720"
+  phaseStyle:
+    fileCard: classic            # classic | fancy
+    componentTree: classic
+    lifecycle: classic
+    chunkView: classic
+    visualBreakdown: classic
+    architectureDocs: classic
+```
+
+| Field | Meaning |
+|---|---|
+| `fps` / `resolution` | Unused. Remotion hardcodes **30 fps** and **1280×720**; `highlight_config.py` defaults `fps=30`. |
+| `phaseStyle` | Loaded by `src/config/phase_style.py` into `PipelineConfig.phase_style`. **Every key defaults to `classic`** when omitted. Values must be `classic` or `fancy` only; unknown keys fail closed. Staging (`scripts/run_backend_pilot.py`) embeds the resolved map on `render-app/public/chunks/manifest.json` and per-stack manifests. `FullVideo` / `StackVideo` pass each key into the matching clip; `classic` keeps today's layout; `fancy` is reserved for later L1–L4 matrix work. |
 
 ## Piper voice cache
 

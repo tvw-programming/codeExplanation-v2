@@ -2,6 +2,7 @@ import { AbsoluteFill, Audio, staticFile, useCurrentFrame } from "remotion";
 import Box from "@mui/material/Box";
 import { DiagramHeader } from "./DiagramHeader";
 import { VisualGraphDiagram } from "./VisualGraphDiagram";
+import type { PhaseStyleMode } from "./phaseStyle";
 import {
   CEV_BG_VIDEO,
   CEV_FG_PRIMARY,
@@ -82,7 +83,8 @@ export const ComponentTreeClip: React.FC<{
   securityFlags?: SecurityFlag[];
   narration?: ClipNarration | null;
   filePath?: string | null;
-}> = ({ chunkDir, visualGraph, visualTheme, securityFlags = [], narration, filePath }) => {
+  phaseStyle?: PhaseStyleMode;
+}> = ({ chunkDir, visualGraph, visualTheme, securityFlags = [], narration, filePath, phaseStyle: _phaseStyle = "classic" }) => {
   const frame = useCurrentFrame();
   const theme =
     visualTheme ||

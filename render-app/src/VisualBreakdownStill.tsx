@@ -2,6 +2,7 @@ import { AbsoluteFill, Audio, staticFile } from "remotion";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import type { ClipNarration, SecurityFlag, VisualGraph } from "./ComponentTreeClip";
+import type { PhaseStyleMode } from "./phaseStyle";
 import { DiagramHeader } from "./DiagramHeader";
 import { VisualGraphDiagram, edgeSummaryLabel } from "./VisualGraphDiagram";
 import {
@@ -33,7 +34,8 @@ export const VisualBreakdownStill: React.FC<{
   narration: ClipNarration;
   filePath?: string | null;
   securityFlags?: SecurityFlag[];
-}> = ({ chunkDir, visualGraph, visualTheme, narration, filePath, securityFlags = [] }) => {
+  phaseStyle?: PhaseStyleMode;
+}> = ({ chunkDir, visualGraph, visualTheme, narration, filePath, securityFlags = [], phaseStyle: _phaseStyle = "classic" }) => {
   const isRouteTree = visualGraph.kind === "route_tree";
   const theme = visualTheme || themeForStack(isRouteTree ? "go" : "react");
   const root = (visualGraph.nodes || []).find((n) => n.id === visualGraph.rootId);

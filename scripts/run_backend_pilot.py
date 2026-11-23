@@ -31,6 +31,10 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO_ROOT))
 
 from src.config.load_config import load_config, ConfigError  # noqa: E402
+from src.config.phase_style import (  # noqa: E402
+    combined_manifest_payload,
+    stack_manifest_payload,
+)
 from src.detect.source_resolver import resolve_source, SourceResolutionError  # noqa: E402
 from src.pilot.project_manifest import write_project_manifest  # noqa: E402
 from src.pilot.run_pilot import run_pilot  # noqa: E402
@@ -137,7 +141,12 @@ def _prioritize_visual_chunks(stack_dir: Path, chunk_ids: list[str]) -> list[str
     return with_visuals + without
 
 
-def _stage_all_chunks(report: dict, resolved_root: Path, output_root: Path) -> dict[str, list[str]]:
+def _stage_all_chunks(
+    report: dict,
+    resolved_root: Path,
+    output_root: Path,
+    phase_style: dict[str, str],
+) -> dict[str, list[str]]:
     """Stages EVERY successfully-rendered chunk into
     render-app/public/chunks/<stack>/<chunkId>/, grouped by the stack
     each chunk belongs to, and writes one manifest.json per stack at
@@ -202,7 +211,10 @@ def _stage_all_chunks(report: dict, resolved_root: Path, output_root: Path) -> d
                 flush=True,
             )
         (stack_dir / "manifest.json").write_text(
-            json.dumps({"stack": stack, "chunkIds": ordered}, indent=2),
+            json.dumps(
+                stack_manifest_payload(stack, ordered, phase_style),
+                indent=2,
+            ),
             encoding="utf-8",
         )
 
@@ -220,14 +232,14 @@ def _stage_all_chunks(report: dict, resolved_root: Path, output_root: Path) -> d
                 if not dest.is_dir():
                     _stage_one_chunk(chunk_id, dest, resolved_root, output_root)
 
+        stacks_map = {
+            stack: chunk_ids for stack, chunk_ids in staged_by_stack.items()
+        }
         (CHUNKS_DIR / "manifest.json").write_text(
-            json.dumps({
-                "chunkIds": all_staged,
-                "stacks": {
-                    stack: chunk_ids
-                    for stack, chunk_ids in staged_by_stack.items()
-                },
-            }, indent=2),
+            json.dumps(
+                combined_manifest_payload(all_staged, stacks_map, phase_style),
+                indent=2,
+            ),
             encoding="utf-8",
         )
 
@@ -297,7 +309,12 @@ def main() -> int:
 
     if render:
         status.update(phase="staging")
-        staged_by_stack = _stage_all_chunks(report, resolved.local_root, output_root)
+        staged_by_stack = _stage_all_chunks(
+            report,
+            resolved.local_root,
+            output_root,
+            config.phase_style,
+        )
         total_staged = sum(len(ids) for ids in staged_by_stack.values())
         if staged_by_stack:
             stacks_summary = ", ".join(

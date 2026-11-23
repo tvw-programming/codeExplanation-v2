@@ -17,6 +17,11 @@ import { LifecycleFlowClip, type LifecycleFlow } from "./LifecycleFlowClip";
 import { VisualBreakdownStill } from "./VisualBreakdownStill";
 import type { VisualTheme } from "./visualTheme";
 import {
+  DEFAULT_PHASE_STYLE,
+  resolvePhaseStyleFromManifest,
+  type ResolvedPhaseStyle,
+} from "./phaseStyle";
+import {
   FPS,
   cardFramesFor,
   chapterFramesFor,
@@ -43,11 +48,16 @@ import {
 
 // ---------- manifest types ----------
 
-type StackManifest = { stack: string; chunkIds: string[] };
+type StackManifest = {
+  stack: string;
+  chunkIds: string[];
+  phaseStyle?: Partial<ResolvedPhaseStyle>;
+};
 
 type CombinedManifest = {
   chunkIds: string[];
   stacks?: Record<string, string[]>;
+  phaseStyle?: Partial<ResolvedPhaseStyle>;
 };
 
 type ChunkVisuals = {
@@ -133,6 +143,7 @@ type VideoProps = {
   /** Directory prefix where chunk subdirs live (e.g. "chunks" or
    *  "chunks/react"). Used to build the staticFile path for each chunk. */
   chunkDirPrefix?: string;
+  phaseStyle?: ResolvedPhaseStyle;
 };
 
 const VideoBody: React.FC<VideoProps> = ({
@@ -143,6 +154,7 @@ const VideoBody: React.FC<VideoProps> = ({
   cardDurations = [],
   visuals = [],
   chunkDirPrefix = "chunks",
+  phaseStyle = DEFAULT_PHASE_STYLE,
 }) => {
   if (chunkIds.length === 0) {
     return null;
@@ -168,6 +180,7 @@ const VideoBody: React.FC<VideoProps> = ({
                   position={{ index: i + 1, total: chunkIds.length }}
                   sectionSeconds={chunkFrames / FPS}
                   visualTheme={v?.visualTheme}
+                  phaseStyle={phaseStyle.fileCard}
                 />
               ) : null}
             </Series.Sequence>,
@@ -184,6 +197,7 @@ const VideoBody: React.FC<VideoProps> = ({
                   securityFlags={v.securityFlags}
                   narration={v.treeNarration}
                   filePath={overview?.filePath}
+                  phaseStyle={phaseStyle.componentTree}
                 />
               </Series.Sequence>,
             );
@@ -199,6 +213,7 @@ const VideoBody: React.FC<VideoProps> = ({
                   securityFlags={v.securityFlags}
                   narration={v.lifecycleNarration}
                   filePath={overview?.filePath}
+                  phaseStyle={phaseStyle.lifecycle}
                 />
               </Series.Sequence>,
             );
@@ -210,6 +225,7 @@ const VideoBody: React.FC<VideoProps> = ({
                 chunkDir={dir}
                 visualTheme={v?.visualTheme}
                 filePath={overview?.filePath}
+                phaseStyle={phaseStyle.chunkView}
               />
             </Series.Sequence>,
           );
@@ -224,6 +240,7 @@ const VideoBody: React.FC<VideoProps> = ({
                   narration={v.breakdownNarration}
                   filePath={overview?.filePath}
                   securityFlags={v.securityFlags}
+                  phaseStyle={phaseStyle.visualBreakdown}
                 />
               </Series.Sequence>,
             );
@@ -258,6 +275,7 @@ function makeStackCalculateMetadata(
       const chunkDirPrefix = `chunks/${stack}`;
       const { durations, overviews, cardNarrations, cardDurations, visuals, totalFrames } =
         await loadChunks(manifest.chunkIds, chunkDirPrefix);
+      const resolvedPhaseStyle = resolvePhaseStyleFromManifest(manifest.phaseStyle);
 
       return {
         durationInFrames: Math.max(1, totalFrames),
@@ -269,6 +287,7 @@ function makeStackCalculateMetadata(
           cardDurations,
           visuals,
           chunkDirPrefix,
+          phaseStyle: resolvedPhaseStyle,
         },
       };
     } catch {
@@ -283,6 +302,7 @@ function makeStackCalculateMetadata(
           cardDurations: [],
           visuals: [],
           chunkDirPrefix: `chunks/${stack}`,
+          phaseStyle: DEFAULT_PHASE_STYLE,
         },
       };
     }
@@ -328,6 +348,7 @@ export const StackVideoCompositions: React.FC = () => {
             cardDurations: [],
             visuals: [],
             chunkDirPrefix: `chunks/${stack}`,
+            phaseStyle: DEFAULT_PHASE_STYLE,
           } as VideoProps}
         />
       ))}
@@ -348,6 +369,7 @@ const calculateMetadata: CalculateMetadataFunction<VideoProps> = async () => {
   const manifest = await fetchCombinedManifest();
   const { durations, overviews, cardNarrations, cardDurations, visuals, totalFrames } =
     await loadChunks(manifest.chunkIds, "chunks");
+  const resolvedPhaseStyle = resolvePhaseStyleFromManifest(manifest.phaseStyle);
 
   return {
     durationInFrames: Math.max(1, totalFrames),
@@ -359,6 +381,7 @@ const calculateMetadata: CalculateMetadataFunction<VideoProps> = async () => {
       cardDurations,
       visuals,
       chunkDirPrefix: "chunks",
+      phaseStyle: resolvedPhaseStyle,
     },
   };
 };
@@ -381,6 +404,7 @@ export const FullVideoComposition: React.FC = () => {
         cardDurations: [],
         visuals: [],
         chunkDirPrefix: "chunks",
+        phaseStyle: DEFAULT_PHASE_STYLE,
       } as VideoProps}
     />
   );
