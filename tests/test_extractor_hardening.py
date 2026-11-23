@@ -15,7 +15,7 @@ from src.visual.availability import is_present
 
 
 def test_extractor_version_is_21():
-    assert EXTRACTOR_VERSION == 24
+    assert EXTRACTOR_VERSION == 25
 
 
 def test_python_apirouter_prefix_composes():
@@ -128,7 +128,7 @@ def test_hardened_builders_feed_visual_graphs(tmp_path: Path):
         tmp_path, ChunkPlan("app", "API", "python", "app.py", 20, "small"),
         {"frontend": None, "backend": ["python"]},
     )
-    assert py["extractorVersion"] == 24
+    assert py["extractorVersion"] == 25
     assert is_present(py["visualAvailability"]["componentTree"])
     assert any(r["path"] == "/api/users" for r in py["routes"])
 

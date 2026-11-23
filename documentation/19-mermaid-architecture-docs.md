@@ -34,16 +34,19 @@ Unavailable / empty / too_large → no fence (Q5). Assumed edges → `-.->`
 or sequence `Note … assumed`. Never invent edges.
 
 **Honesty chrome (docs):** each `architecture.md` includes a short
-Fidelity note (`regex` / `syntax`) plus an Honesty legend for solid vs
-dashed edges. `interactive.json` may carry `mermaidHonesty` (assumed
-arrow / note conventions, skip-when list, node cap) — metadata only,
-not a second SoT. Docs viewer keeps invalid Mermaid fences as source
-text with a skip reason (no invented SVG).
+Fidelity note (`regex` / `syntax`), an explicit **Source of truth**
+callout (`visualGraph` / `lifecycleFlows` only), plus an Honesty legend
+for solid vs dashed edges. `interactive.json` may carry `mermaidHonesty`
+(assumed arrow / note conventions, skip-when list, node cap,
+`sourceOfTruth`, `neverInvent`) — metadata only, not a second SoT. Docs
+viewer renders each Mermaid fence independently and keeps invalid fences
+as source text with a skip reason (no invented SVG).
 
 ## Docs viewer
 
 `render-app/docs-viewer-src` renders ` ```mermaid ` fences via Mermaid.js
-after `marked`. Product narrative lives under `documentation/`; per-chunk
+after `marked` (per-fence try/catch so one bad fence cannot blank
+siblings). Product narrative lives under `documentation/`; per-chunk
 `architecture.md` is regenerated with visuals.
 
 ## Selection rules (short)

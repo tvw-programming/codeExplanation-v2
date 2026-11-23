@@ -24,24 +24,25 @@ Doc 14 is a **historical** audit — read its banner first.
 ## Carried-forward product gaps
 
 Keep these as roadmap: deeper parsers beyond optional tree-sitter spans
-(Go/TSX/Java declaration overlays + Vue SFC dual-parse honesty under
-`CEV_TREE_SITTER`, `EXTRACTOR_VERSION` 24; Rust/Express still probe-only;
-Spring bean-index / Go method-set Impl deferred — never invent;
-typed/compiler APIs later), package-level Go chunking, `outputs` always
-empty, statement-level split (`needs_further_split` unused),
-LLM-elaborated narration (`llm:` config unused), production voice
-quality. Cross-file route-prefix resolution (FastAPI `include_router` +
-Django `include()` + Flask `register_blueprint` + Express `require()`
-mounts) landed via shared `route_prefix.PrefixGraph`
-(`EXTRACTOR_VERSION` 17–19); React/Go/Angular honesty + same-dir
-template bundles (`EXTRACTOR_VERSION` 20); Rust cross-file `.nest` +
-relative Angular `templateUrl` (`EXTRACTOR_VERSION` 21); Vue/Solid/Qwik
-mount/signal honesty + JS literal exports/DOM mounts + Mermaid docs
-honesty chrome (`EXTRACTOR_VERSION` 22); Spring invent skip-locks + Go
-`var _` value form / unbalanced `Route` poison + Rust unique
-`use`-imported nest (`EXTRACTOR_VERSION` 23); optional tree-sitter
-span overlays + Vue dual-parse + Rust/Express probes
-(`EXTRACTOR_VERSION` 24); unresolved mounts stay assumed.
+(Go/TSX/Java/Rust/Express declaration overlays + Vue SFC dual-parse
+honesty under `CEV_TREE_SITTER`, `EXTRACTOR_VERSION` 25; Spring
+bean-index / Go method-set Impl deferred — never invent; typed/compiler
+APIs later), package-level Go chunking, `outputs` always empty,
+statement-level split (`needs_further_split` unused), LLM-elaborated
+narration (`llm:` config unused), production voice quality. Cross-file
+route-prefix resolution (FastAPI `include_router` + Django `include()` +
+Flask `register_blueprint` + Express `require()` mounts) landed via
+shared `route_prefix.PrefixGraph` (`EXTRACTOR_VERSION` 17–19);
+React/Go/Angular honesty + same-dir template bundles
+(`EXTRACTOR_VERSION` 20); Rust cross-file `.nest` + relative Angular
+`templateUrl` (`EXTRACTOR_VERSION` 21); Vue/Solid/Qwik mount/signal
+honesty + JS literal exports/DOM mounts + Mermaid docs honesty chrome
+(`EXTRACTOR_VERSION` 22); Spring invent skip-locks + Go `var _` value
+form / unbalanced `Route` poison + Rust unique `use`-imported nest
+(`EXTRACTOR_VERSION` 23); Go/TSX/Java spans + Vue dual-parse +
+Rust/Express probes (`EXTRACTOR_VERSION` 24); Rust/Express function
+span overlays into records + Mermaid SoT chrome
+(`EXTRACTOR_VERSION` 25); unresolved mounts stay assumed.
 
 whisper.cpp-blocked-so-all-cues-assumed and the Chromium-sandbox
 download are **environment notes**, not the live production story.
@@ -53,7 +54,7 @@ See [`09-phase6-rendering.md`](./09-phase6-rendering.md).
 ### 1. Multi-stack extractors are shipped but still thin
 
 Python (`ast`), Spring (DI-by-type), Express, Angular, Vue/Solid/Qwik,
-JS, Rust, React, and Go builders exist (`EXTRACTOR_VERSION` 24). All
+JS, Rust, React, and Go builders exist (`EXTRACTOR_VERSION` 25). All
 stacks use `src/extract/<stack>/{extract,record}.py`; flat modules are
 shims; `stack_records.py` re-exports. Shared
 `src/extract/route_prefix.py` resolves FastAPI `include_router`, Flask
@@ -62,9 +63,10 @@ shims; `stack_records.py` re-exports. Shared
 (+ unique `use`-imported nest targets in 23) across files on unique
 literal matches only; Go Fiber groups use the same resolver. Optional
 tree-sitter (`CEV_TREE_SITTER`) overlays Go/TSX/Java declaration spans
-and Vue SFC mount honesty in 24; Rust/Express probes remain unused by
-records. Spring cross-file mounts onto PrefixGraph remain deferred (no
-safe literal mount analogue without inventing bean edges); `@Import` /
+and Vue SFC mount honesty in 24; Rust/Express function / const-fn spans
+overlay into records in 25 (routes/mounts/mw stay regex + PrefixGraph).
+Spring cross-file mounts onto PrefixGraph remain deferred (no safe
+literal mount analogue without inventing bean edges); `@Import` /
 `@ComponentScan` / `implements` alone never invent beans/Impl
 (skip-locked in 23; bean-index still deferred). Remaining gaps: regex
 ceilings, package-level Go chunking, Spring typed interface→impl beyond

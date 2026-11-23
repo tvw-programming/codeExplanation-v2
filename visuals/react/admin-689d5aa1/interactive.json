@@ -1424,6 +1424,11 @@
       "no_graph"
     ],
     "fidelity": "regex",
-    "nodeCap": 40
+    "nodeCap": 40,
+    "sourceOfTruth": [
+      "visualGraph",
+      "lifecycleFlows"
+    ],
+    "neverInvent": true
   }
 }

@@ -1,7 +1,7 @@
 # Multi-stack visuals
 
 Shipped: React (#3), Go Fiber (#4), remaining stacks (#5), brand header
-chrome + center-packed trees (#6). `EXTRACTOR_VERSION = 24`.
+chrome + center-packed trees (#6). `EXTRACTOR_VERSION = 25`.
 
 Attach: `src/visual/pipeline.py: attach_visuals()`. Render:
 `render-app/src/FullVideo.tsx`. Layout: `treeLayout.ts`. Header:

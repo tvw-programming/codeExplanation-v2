@@ -32,12 +32,14 @@ Dispatch: `src/detect/project_type.py` → `src/extract/<stack>/` →
 `architecture.md` + `interactive.json`.
 
 Hardening notes + layout: Project store
-`docs/extractor-hardening-plan.md`. `EXTRACTOR_VERSION` **24**.
+`docs/extractor-hardening-plan.md`. `EXTRACTOR_VERSION` **25**.
 Sample Mermaid under `visuals/` is regenerated from checked-in
 `visualGraph` / `lifecycleFlows` only (`scripts/regen_mermaid_artifacts.py`)
 — never by inventing edges. Per-chunk `architecture.md` ships honesty
-chrome (fidelity note, `-->` vs `-.->` legend); `interactive.json` may
-include `mermaidHonesty` metadata for docs/chat consumers.
+chrome (fidelity note, SoT callout, `-->` vs `-.->` legend);
+`interactive.json` may include `mermaidHonesty` metadata
+(`sourceOfTruth`, `neverInvent`, skip-when, node cap) for docs/chat
+consumers.
 
 ## Honesty / confidence in diagrams
 

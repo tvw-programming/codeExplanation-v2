@@ -29,8 +29,18 @@ def build_express_chunk_record(
     routes, middleware, mounts = ex.extract_express(
         text, file_path=chunk.file_path, route_index=index,
     )
+    functions = ex.extract_express_functions(text)
     record = base_record(root, chunk, project_type_dict, lines)
     record["frameworkOrLibrary"] = ["express"]
+    record["importantFunctions"] = [
+        {
+            "name": f["name"],
+            "lineRange": list(f.get("line_range") or (f["line"], f["line"])),
+            "calls": [],
+            "sideEffects": [],
+        }
+        for f in functions
+    ]
     routes_out = []
     for r in routes:
         entry = {
@@ -92,10 +102,13 @@ def build_express_chunk_record(
     record["confidence"] = conf
     record["confidenceLevel"] = confidence_level(conf)
     record["notes"] = (
-        "Express routes via shared PrefixGraph; nested literal mounts compose; "
-        "cross-file app.use(prefix, require('./…')) joins only on unique literal "
-        "module resolution (else assumed/skip); path arrays; regex→assumed; "
-        "use(prefix, non-router) is path-scoped middleware, not a mount."
+        "Express routes via shared PrefixGraph; optional tree-sitter function / "
+        "const-fn line-range overlay under CEV_TREE_SITTER (regex fallback on "
+        "mismatch). Nested literal mounts compose; cross-file "
+        "app.use(prefix, require('./…')) joins only on unique literal module "
+        "resolution (else assumed/skip); path arrays; regex→assumed; "
+        "use(prefix, non-router) is path-scoped middleware, not a mount. "
+        "Never invents mounts/routes/mw from a successful parse."
     )
     record["fidelity"] = "regex"
     from src.visual.pipeline import attach_visuals

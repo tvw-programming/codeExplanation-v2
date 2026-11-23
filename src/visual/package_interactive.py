@@ -61,6 +61,8 @@ def _package_interactive_breakdown(record: dict) -> dict | None:
         "skipWhen": ["unavailable", "empty", "too_large", "no_graph"],
         "fidelity": record.get("fidelity"),
         "nodeCap": 40,
+        "sourceOfTruth": ["visualGraph", "lifecycleFlows"],
+        "neverInvent": True,
     }
     return payload
 

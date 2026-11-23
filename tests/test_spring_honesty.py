@@ -14,7 +14,7 @@ FIX = Path(__file__).resolve().parent / "fixtures"
 
 
 def test_extractor_version_is_21():
-    assert EXTRACTOR_VERSION == 24
+    assert EXTRACTOR_VERSION == 25
 
 
 def test_bare_request_mapping_is_all_not_get():
@@ -201,7 +201,7 @@ def test_fixture_controller_builds_di_graph(tmp_path: Path):
     record = build_spring_chunk_record(
         tmp_path, chunk, {"frontend": None, "backend": ["spring_boot"]},
     )
-    assert record["extractorVersion"] == 24
+    assert record["extractorVersion"] == 25
     assert record["springTypes"]
     assert record["springTypes"][0]["kind"] == "class"
     assert is_present(record["visualAvailability"]["componentTree"])
@@ -215,7 +215,11 @@ def test_fixture_controller_builds_di_graph(tmp_path: Path):
 
 
 def test_component_scan_and_import_never_invent_beans():
-    """@ComponentScan / @Import literals alone must not invent types or Impl."""
+    """@ComponentScan / @Import literals alone must not invent types or Impl.
+
+    Skip-lock (bean-index refused): package/class literals are not evidence
+    for a Spring bean graph. Extract stays unchanged — never invent.
+    """
     src = """
 package com.example;
 import com.example.OrderServiceImpl;
@@ -234,6 +238,21 @@ public class App {
     assert "OrderServiceImpl" not in src or not any(
         "Impl" in t.name for t in types
     )
+
+
+def test_bean_index_from_import_scan_still_refused():
+    """Documented refusal: no bean-index / typed-Impl invent path ships."""
+    src = """
+@Import(FooConfig.class)
+@ComponentScan(basePackages = "com.example")
+public class Boot {}
+"""
+    types, routes = extract_spring(src)
+    assert types == [] and routes == []
+    # Stereotype + inject evidence required; annotations alone never seed DI.
+    assert not any(hasattr(extract_spring, name) for name in (
+        "build_bean_index", "resolve_bean_impl", "index_component_scan",
+    ))
 
 
 def test_implements_alone_never_binds_typed_impl():

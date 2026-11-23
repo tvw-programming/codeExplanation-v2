@@ -87,7 +87,12 @@ from src.extract.common import content_hash
 #       Vue SFC dual-parse script+template honesty (unmatched mounts
 #       skipped); Rust+Express probes (probe-only); Spring bean-index /
 #       Go method-set Impl still deferred (never invent).
-EXTRACTOR_VERSION = 24
+#  25 - Wire Rust + Express tree-sitter function/const-fn line-range
+#       overlays into extract/records (CEV_TREE_SITTER + regex fallback);
+#       never invent mounts/routes/mw; Spring bean-index / Go method-set
+#       Impl still refused (skip-locks); Mermaid honesty chrome polish +
+#       sample regen from visualGraph only.
+EXTRACTOR_VERSION = 25
 
 
 def output_path_for(output_root: Path, file_path: str) -> Path:

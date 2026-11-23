@@ -123,11 +123,17 @@ def test_architecture_md_and_interactive_lifecycle_fields(tmp_path: Path):
     assert "Structure" in body or "Lifecycle" in body
     assert "## Honesty" in body
     assert "Fidelity note" in body
+    assert "Source of truth" in body
+    assert "visualGraph" in body
     assert "-.->" in body
     payload = package_interactive_breakdown(record)
     assert payload is not None
     assert payload.get("mermaidHonesty", {}).get("assumedEdges") == "-.->"
     assert payload["mermaidHonesty"].get("fidelity") == "regex"
+    assert payload["mermaidHonesty"].get("sourceOfTruth") == [
+        "visualGraph", "lifecycleFlows",
+    ]
+    assert payload["mermaidHonesty"].get("neverInvent") is True
 
     # Unavailable → no architecture.md
     empty = attach_visuals({
