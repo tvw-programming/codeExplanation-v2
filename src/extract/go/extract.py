@@ -23,6 +23,7 @@ import re
 from dataclasses import dataclass
 
 from ..common import trim_snippet, CodeSnippet
+from ..route_prefix import PrefixGraph, chain_as_strings, full_route_path
 
 IMPORT_BLOCK_RE = re.compile(r"import\s*\(\s*(?P<body>.*?)\s*\)", re.DOTALL)
 IMPORT_LINE_RE = re.compile(r'"(?P<path>[^"]+)"')
@@ -49,6 +50,11 @@ FUNC_START_RE = re.compile(
 # to "/api/v1" if we know v1 came from api.
 ROUTE_GROUP_RE = re.compile(
     r"(?P<var>\w+)\s*:=\s*(?P<parent>\w+)\.Group\(\s*(?P<quote>['\"])(?P<prefix>[^'\"]*)(?P=quote)"
+)
+
+# Non-literal Group prefix: `api := app.Group(basePath)` — segment unknown.
+ROUTE_GROUP_NONLITERAL_RE = re.compile(
+    r"(?P<var>\w+)\s*:=\s*(?P<parent>\w+)\.Group\(\s*(?P<expr>[A-Za-z_][\w.]*)\s*[,)]"
 )
 
 # `app := fiber.New()` — the root of a prefix chain, carrying no prefix
@@ -156,6 +162,8 @@ class ExtractedRoute:
     note: str | None
     router_var: str = ""       # Fiber router/group variable the route registered on
     line: int | None = None
+    path_resolved: bool | None = None
+    prefix_chain: list[str] | None = None
 
 
 @dataclass
@@ -486,7 +494,7 @@ def extract_middleware(text: str) -> list[ExtractedMiddleware]:
 
 def middleware_chain_for_router(
     router_var: str,
-    group_parents: dict[str, tuple[str, str]],
+    group_parents: dict[str, tuple[str, str | None]],
     middleware: list[ExtractedMiddleware],
     roots: set[str],
 ) -> list[ExtractedMiddleware]:
@@ -513,33 +521,41 @@ def middleware_chain_for_router(
     return ordered
 
 
-def _resolve_group_prefix(
-    var: str,
-    group_parents: dict[str, tuple[str, str]],
-    roots: set[str],
-) -> tuple[str, bool]:
-    """Walk a group's parent chain to its root and join the segments.
+def _build_fiber_prefix_graph(text: str) -> tuple[PrefixGraph, dict[str, tuple[str, str | None]]]:
+    """Build a PrefixGraph from Fiber Group / New assignments in one file.
 
-    Returns (full_prefix, fully_resolved). fully_resolved is False when
-    the chain runs into a variable this file never defines — a router
-    passed in as a parameter, say, where the prefix is decided at the
-    call site in another file. The caller marks those paths assumed
-    rather than reporting a confidently wrong URL.
+    Returns (graph, group_parents) where group_parents maps var →
+    (parent, literal_prefix_or_None) for middleware ancestor walks and
+    record serialization. Roots are ONLY variables assigned via
+    ``fiber.New()`` — the conventional name ``app`` is NOT assumed, so a
+    router parameter named ``app`` is never treated as a resolved root.
     """
-    segments: list[str] = []
-    seen: set[str] = set()
-    current = var
+    graph = PrefixGraph()
+    group_parents: dict[str, tuple[str, str | None]] = {}
 
-    while current in group_parents:
-        if current in seen:  # defensive: a cycle can't happen in valid Go
-            return "".join(reversed(segments)), False
-        seen.add(current)
-        parent, prefix = group_parents[current]
-        segments.append(prefix.rstrip("/"))
-        current = parent
+    for m in FIBER_APP_RE.finditer(text):
+        graph.add_root(m.group("var"), declared_at=_line_of(text, m.start()))
 
-    full = "".join(reversed(segments))
-    return full, current in roots
+    for m in ROUTE_GROUP_RE.finditer(text):
+        var, parent, prefix = m.group("var"), m.group("parent"), m.group("prefix")
+        group_parents[var] = (parent, prefix)
+        graph.add_child_edge(
+            var, parent, prefix, declared_at=_line_of(text, m.start()),
+        )
+
+    for m in ROUTE_GROUP_NONLITERAL_RE.finditer(text):
+        var = m.group("var")
+        if var in group_parents:
+            continue  # literal match already recorded
+        parent, expr = m.group("parent"), m.group("expr").strip()
+        group_parents[var] = (parent, None)
+        graph.add_child_edge(
+            var, parent, None,
+            declared_at=_line_of(text, m.start()),
+            expression=expr,
+        )
+
+    return graph, group_parents
 
 
 def _parse_add_method_literals(methods_expr: str) -> list[str] | None:
@@ -570,40 +586,21 @@ def _parse_add_method_literals(methods_expr: str) -> list[str] | None:
 def extract_routes(text: str, uses_fiber: bool) -> list[ExtractedRoute]:
     """Resolve Fiber route groups and registrations into full paths.
 
+    Prefix composition goes through the shared ``route_prefix`` resolver.
     Protection is a heuristic, and a narrow one on purpose: it looks only
     at `.Use(...)` calls made on the SAME variable as the route
     registration, and only counts a call whose argument looks
-    auth-related (contains "auth" or "jwt"). It does NOT scan the whole
-    file for the word "auth" — a first version of this did, and it
-    produced a false positive on this exact repo: main.go's comments and
-    variable names ("AUTH_MODE", "authMode") explain that auth is
-    deliberately DISABLED for this dev gateway, but a whole-file
-    substring match read that as evidence auth was present. Always
-    marked assumed=True regardless of the result, since this is still
-    file-local and not real call-graph analysis.
+    auth-related (contains "auth" or "jwt"). Always marked assumed=True
+    regardless of the result, since this is still file-local and not real
+    call-graph analysis.
 
     All() emits one method=ALL node (Fiber registers every verb). Add()
     emits one node per *literal* method string; non-literal method slices
     are skipped. app.Route(...) closure groups are skipped.
     """
-    # var -> (parent var, this group's own prefix segment)
-    group_parents: dict[str, tuple[str, str]] = {}
-    for m in ROUTE_GROUP_RE.finditer(text):
-        group_parents[m.group("var")] = (m.group("parent"), m.group("prefix"))
-
-    roots = {m.group("var") for m in FIBER_APP_RE.finditer(text)}
-    roots.add("app")  # the conventional name, even when fiber.New() is elsewhere
-
-    group_prefixes: dict[str, str] = {}
-    unresolved_groups: set[str] = set()
-    for var in group_parents:
-        full, resolved = _resolve_group_prefix(var, group_parents, roots)
-        group_prefixes[var] = full
-        if not resolved:
-            unresolved_groups.add(var)
+    graph, group_parents = _build_fiber_prefix_graph(text)
 
     all_middleware = extract_middleware(text)
-    # Auth on this var OR any ancestor group/app in the chain.
     protected_vars: set[str] = set()
     for mw in all_middleware:
         if mw.is_auth:
@@ -622,11 +619,6 @@ def extract_routes(text: str, uses_fiber: bool) -> list[ExtractedRoute]:
                 break
         return False
 
-    def _prefix_for(var: str) -> tuple[str, bool]:
-        prefix = group_prefixes.get(var, "" if var in roots else None)
-        prefix_assumed = prefix is None or var in unresolved_groups
-        return (prefix or ""), prefix_assumed
-
     def _make_route(
         *,
         var: str,
@@ -636,16 +628,18 @@ def extract_routes(text: str, uses_fiber: bool) -> list[ExtractedRoute]:
         offset: int,
         extra_notes: list[str] | None = None,
     ) -> ExtractedRoute:
-        prefix, prefix_assumed = _prefix_for(var)
-        path = prefix.rstrip("/") + path_suffix
+        res = full_route_path(graph, var, path_suffix)
         is_dynamic = ":" in path_suffix
         protected = _var_or_ancestor_protected(var)
         notes = list(extra_notes or [])
-        if prefix_assumed:
+        if not res.resolved:
             notes.append(
-                "Route group prefix for this variable could not be resolved; "
+                res.note
+                or "Route group prefix for this variable could not be resolved; "
                 "path may be incomplete."
             )
+            if "incomplete" not in " ".join(notes).lower():
+                notes.append("path may be incomplete.")
         notes.append(
             "Protected status is inferred only from .Use() / Group(..., mw) calls on this router "
             "or its ancestor groups in this file, matched by an 'auth'/'jwt' substring in the call "
@@ -654,15 +648,19 @@ def extract_routes(text: str, uses_fiber: bool) -> list[ExtractedRoute]:
         )
         return ExtractedRoute(
             method=method,
-            path=path,
+            path=res.path,
             handler=handler,
             static_or_dynamic="dynamic" if is_dynamic else "static",
             routing_library="gofiber" if uses_fiber else "unknown",
             protected=protected,
+            # Fiber protection heuristic is always assumed; unresolved prefixes
+            # also force assumed (hard rule: pathResolved False ⇒ assumed True).
             assumed=True,
             note=" ".join(notes),
             router_var=var,
             line=_line_of(text, offset),
+            path_resolved=res.resolved,
+            prefix_chain=chain_as_strings(res.chain),
         )
 
     routes: list[ExtractedRoute] = []
@@ -709,11 +707,7 @@ def extract_routes(text: str, uses_fiber: bool) -> list[ExtractedRoute]:
     return routes
 
 
-def extract_route_groups(text: str) -> tuple[dict[str, tuple[str, str]], set[str]]:
-    """Return (group_parents var→(parent, prefix), fiber app root vars)."""
-    group_parents: dict[str, tuple[str, str]] = {}
-    for m in ROUTE_GROUP_RE.finditer(text):
-        group_parents[m.group("var")] = (m.group("parent"), m.group("prefix"))
-    roots = {m.group("var") for m in FIBER_APP_RE.finditer(text)}
-    roots.add("app")
-    return group_parents, roots
+def extract_route_groups(text: str) -> tuple[dict[str, tuple[str, str | None]], set[str]]:
+    """Return (group_parents var→(parent, prefix|None), fiber app root vars)."""
+    graph, group_parents = _build_fiber_prefix_graph(text)
+    return group_parents, set(graph.roots)

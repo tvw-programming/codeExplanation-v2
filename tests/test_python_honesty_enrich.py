@@ -1,4 +1,4 @@
-"""Python honesty enrichments beyond Django path() (EXTRACTOR_VERSION 15)."""
+"""Python honesty enrichments beyond Django path() (EXTRACTOR_VERSION 15→17 current)."""
 
 from __future__ import annotations
 
@@ -10,8 +10,8 @@ from src.storage.mirror_store import EXTRACTOR_VERSION
 from src.visual.availability import is_present
 
 
-def test_extractor_version_is_15():
-    assert EXTRACTOR_VERSION == 15
+def test_extractor_version_is_17():
+    assert EXTRACTOR_VERSION == 17
 
 
 def test_django_require_post_same_file():
@@ -230,7 +230,7 @@ def test_builder_notes_and_version(tmp_path: Path):
         ChunkPlan("urls", "API", "python", "urls.py", 20, "small"),
         {"frontend": None, "backend": ["python"]},
     )
-    assert record["extractorVersion"] == 15
+    assert record["extractorVersion"] == 17
     assert is_present(record["visualAvailability"]["componentTree"])
     create = next(r for r in record["routes"] if r["path"] == "/create/")
     assert create["method"] == "POST"

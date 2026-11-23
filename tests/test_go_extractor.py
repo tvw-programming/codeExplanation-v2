@@ -155,3 +155,36 @@ func main() {
     routes = go.extract_routes(source, True)
     assert routes[0].path == "/health"
     assert "incomplete" not in (routes[0].note or "")
+
+
+def test_group_with_a_variable_prefix_is_unresolved_and_names_the_variable():
+    source = """package main
+func main() {
+	app := fiber.New()
+	api := app.Group(basePath)
+	api.Get("/users", listUsers)
+}"""
+    routes = go.extract_routes(source, True)
+    assert len(routes) == 1
+    assert routes[0].assumed is True
+    assert routes[0].path_resolved is False
+    assert "basePath" in (routes[0].note or "")
+
+
+def test_app_passed_as_a_parameter_is_not_treated_as_a_resolved_root():
+    """A function parameter named app must NOT be treated as fiber.New().
+
+    Previously roots.add("app") made Register(app) chains look fully
+    resolved — a confidently wrong URL. The shared resolver only roots
+    variables assigned via fiber.New().
+    """
+    source = """package routes
+func Register(app *fiber.App) {
+	v1 := app.Group("/api/v1")
+	v1.Get("/users", listUsers)
+}"""
+    routes = go.extract_routes(source, True)
+    assert len(routes) == 1
+    assert routes[0].path == "/api/v1/users"
+    assert routes[0].path_resolved is False
+    assert routes[0].assumed is True

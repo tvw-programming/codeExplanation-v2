@@ -21,7 +21,7 @@ too_large → no fence (Q5). Never invent edges.
 | **JavaScript** | `package.json` without concrete FE | `flowchart TD` (`module_graph`) | Sequence when call/lifecycle edges exist | No import/call edges |
 | **Go Fiber** | `go.mod` + Fiber import | `flowchart TD` (`route_tree`) | Sequence middleware→handler | No routes; unresolved prefixes / non-literal `Add` / `Route()` closures skipped or **assumed**; no Impl edges from interfaces |
 | **Express** | `express` in `package.json` | `flowchart TD` (`route_tree`; nested literal mounts; path arrays; regex→assumed) | Sequence middleware→handler (incl. per-route METHOD args) | No routes/edges; non-literal mounts assumed |
-| **Python** | `requirements.txt` / `pyproject.toml` / `setup.py` | `flowchart TD` route or module graph | Sequence when flows exist | No edges; in-file `APIRouter`/`Blueprint` + mounts composed; Django `path()` + in-file view/CBV methods; cross-file handlers `UNKNOWN`; `include()` mounts assumed (`fidelity: syntax`) |
+| **Python** | `requirements.txt` / `pyproject.toml` / `setup.py` | `flowchart TD` route or module graph | Sequence when flows exist | No edges; `APIRouter`/`Blueprint` + unique `include_router`/`include()` join; in-file view/CBV methods; unresolved mounts **assumed** (`fidelity: syntax`) |
 | **Spring Boot** | Maven/Gradle + spring-boot | `flowchart TD` (`di_graph` by injection type / Lombok/setter/@Inject) | Sequence when flows exist | No inject edges; never draw Impl from imports alone; bare `@RequestMapping`→ALL; placeholder paths assumed |
 | **Java** (non-Spring) | JVM markers without spring-boot | Same DI path when edges exist | Same | Empty → unavailable |
 | **Rust** | `Cargo.toml` | `flowchart TD` route / crate graph | Sequence when flows exist | Regex ceilings; macros may miss; methods from attrs/`get`/`post` |
@@ -32,7 +32,7 @@ Dispatch: `src/detect/project_type.py` → `src/extract/<stack>/` →
 `architecture.md` + `interactive.json`.
 
 Hardening notes + layout: Project store
-`docs/extractor-hardening-plan.md`. `EXTRACTOR_VERSION` **15**.
+`docs/extractor-hardening-plan.md`. `EXTRACTOR_VERSION` **17**.
 
 ## Honesty / confidence in diagrams
 

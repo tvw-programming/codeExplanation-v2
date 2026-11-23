@@ -10,8 +10,8 @@ from src.storage.mirror_store import EXTRACTOR_VERSION
 from src.visual.availability import is_present
 
 
-def test_extractor_version_is_14():
-    assert EXTRACTOR_VERSION == 15
+def test_extractor_version_is_17():
+    assert EXTRACTOR_VERSION == 17
 
 
 def test_nested_literal_mounts_compose():
@@ -179,7 +179,7 @@ def test_builder_feeds_route_tree_with_route_arg_middleware(tmp_path: Path):
         ChunkPlan("routes", "API", "express", "routes.js", 20, "small"),
         {"frontend": None, "backend": ["express"]},
     )
-    assert rec["extractorVersion"] == 15
+    assert rec["extractorVersion"] == 17
     assert is_present(rec["visualAvailability"]["componentTree"])
     users = next(r for r in rec["routes"] if r["path"] == "/api/users")
     assert users["assumed"] is False
