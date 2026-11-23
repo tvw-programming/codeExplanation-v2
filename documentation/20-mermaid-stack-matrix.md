@@ -15,11 +15,11 @@ too_large → no fence (Q5). Never invent edges.
 
 | Stack | Detection signal | Structure Mermaid | Lifecycle Mermaid | Skip when |
 |---|---|---|---|---|
-| **React** | `package.json` + React deps | `flowchart TD` (`component_tree` mounts) | `sequenceDiagram` from `lifecycleFlows` | No mounts / no flows / >40 nodes |
-| **Angular** | `package.json` + Angular deps | `flowchart TD` selector tree + confirmed template mounts | Sequence when flows exist | Empty `@Component` / no edges → unavailable; unmatched tags skipped |
+| **React** | `package.json` + React deps | `flowchart TD` (`component_tree` mounts) | `sequenceDiagram` from `lifecycleFlows` | No mounts / no flows / >40 nodes; nested JSX prop braces + memo/forwardRef names when proven |
+| **Angular** | `package.json` + Angular deps | `flowchart TD` selector tree + confirmed template mounts | Sequence when flows exist | Empty `@Component` / no edges → unavailable; unmatched tags skipped; clear `templateUrl` class+html stays one chunk |
 | **Vue / Solid / Qwik** | FE deps in `package.json` | `flowchart TD` mounts when present | Sequence when flows present | Thin extractors; missing mounts → skip |
 | **JavaScript** | `package.json` without concrete FE | `flowchart TD` (`module_graph`) | Sequence when call/lifecycle edges exist | No import/call edges |
-| **Go Fiber** | `go.mod` + Fiber import | `flowchart TD` (`route_tree`) | Sequence middleware→handler | No routes; unresolved prefixes / non-literal `Add` / `Route()` closures skipped or **assumed**; no Impl edges from interfaces |
+| **Go Fiber** | `go.mod` + Fiber import | `flowchart TD` (`route_tree`) | Sequence middleware→handler | No routes; unresolved prefixes / non-literal `Add` skipped; brace-scoped literal `Route()` composes; Impl only from explicit `var _` asserts |
 | **Express** | `express` in `package.json` | `flowchart TD` (`route_tree`; nested + cross-file `require()` mounts; path arrays; regex→assumed) | Sequence middleware→handler (incl. per-route METHOD args) | No routes/edges; non-literal / ambiguous mounts assumed |
 | **Python** | `requirements.txt` / `pyproject.toml` / `setup.py` | `flowchart TD` route or module graph | Sequence when flows exist | No edges; `APIRouter`/`Blueprint` + unique `include_router`/`include()` join; in-file view/CBV methods; unresolved mounts **assumed** (`fidelity: syntax`) |
 | **Spring Boot** | Maven/Gradle + spring-boot | `flowchart TD` (`di_graph` by injection type / Lombok/setter/@Inject) | Sequence when flows exist | No inject edges; never draw Impl from imports alone; bare `@RequestMapping`→ALL; placeholder paths assumed |
@@ -32,7 +32,7 @@ Dispatch: `src/detect/project_type.py` → `src/extract/<stack>/` →
 `architecture.md` + `interactive.json`.
 
 Hardening notes + layout: Project store
-`docs/extractor-hardening-plan.md`. `EXTRACTOR_VERSION` **19**.
+`docs/extractor-hardening-plan.md`. `EXTRACTOR_VERSION` **20**.
 
 ## Honesty / confidence in diagrams
 

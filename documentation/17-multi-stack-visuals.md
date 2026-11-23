@@ -1,7 +1,7 @@
 # Multi-stack visuals
 
 Shipped: React (#3), Go Fiber (#4), remaining stacks (#5), brand header
-chrome + center-packed trees (#6). `EXTRACTOR_VERSION = 19`.
+chrome + center-packed trees (#6). `EXTRACTOR_VERSION = 20`.
 
 Attach: `src/visual/pipeline.py: attach_visuals()`. Render:
 `render-app/src/FullVideo.tsx`. Layout: `treeLayout.ts`. Header:
@@ -71,9 +71,9 @@ and lifecycle → FileCard + ChunkView only.
 
 | Stack | Extractor package | Typical graph | Honesty note |
 |---|---|---|---|
-| React | `src/extract/react/` | `component_tree` | Regex limits remain |
-| Go Fiber | `src/extract/go/` | `route_tree` | In-file prefixes; generics/interfaces/factories; All/Add literals |
-| Angular | `src/extract/angular/` | `component_tree` | Selector index → template mounts; signal/decorator I/O; unmatched tags skipped; empty → unavailable |
+| React | `src/extract/react/` | `component_tree` | Brace/memo/HOC/hook honesty; regex limits remain |
+| Go Fiber | `src/extract/go/` | `route_tree` | In-file prefixes; generics/interfaces/factories; All/Add; brace-scoped `Route()`; `var _` asserts only |
+| Angular | `src/extract/angular/` | `component_tree` | Selector index → template mounts; signal/decorator I/O; templateUrl bundles; unmatched tags skipped; empty → unavailable |
 | Vue / Solid / Qwik | `src/extract/{vue,solid,qwik}/` | `component_tree` | Thin when mounts/signals missing |
 | JavaScript | `src/extract/javascript/` | `module_graph` | Import/export edges |
 | Python | `src/extract/python/` (`ast`) | `route_tree` / `module_graph` | In-file `APIRouter`/`Blueprint` + mounts compose; cross-file `include_router`/`register_blueprint`/`include()` on unique resolve; Django handlers cross-file `UNKNOWN` |

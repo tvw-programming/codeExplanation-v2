@@ -16,7 +16,7 @@ FIXTURES = Path(__file__).resolve().parent / "fixtures"
 
 
 def test_extractor_version_is_18():
-    assert EXTRACTOR_VERSION == 19
+    assert EXTRACTOR_VERSION == 20
 
 
 def test_fastapi_include_router_composes_across_files():
@@ -183,7 +183,7 @@ def test_python_builder_emits_path_resolved(tmp_path: Path):
         ChunkPlan("main", "API", "python", "main.py", 20, "small"),
         {"frontend": None, "backend": ["python"]},
     )
-    assert record["extractorVersion"] == 19
+    assert record["extractorVersion"] == 20
     route = next(r for r in record["routes"] if r["handler"] == "users")
     assert route["path"] == "/v1/api/users"
     assert route["pathResolved"] is True

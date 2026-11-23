@@ -109,6 +109,7 @@ def build_frontend_chunk_record(
             "truncated": fn.snippet.truncated,
             "continuationNote": fn.snippet.continuation_note,
             "secretsRedacted": fn.snippet.secrets_redacted,
+            **({"wrappers": list(fn.wrappers)} if fn.wrappers else {}),
         }
         for fn in functions if not fn.is_event_handler
     ]
