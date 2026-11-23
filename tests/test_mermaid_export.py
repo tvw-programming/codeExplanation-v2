@@ -121,6 +121,13 @@ def test_architecture_md_and_interactive_lifecycle_fields(tmp_path: Path):
     body = arch.read_text(encoding="utf-8")
     assert "```mermaid" in body
     assert "Structure" in body or "Lifecycle" in body
+    assert "## Honesty" in body
+    assert "Fidelity note" in body
+    assert "-.->" in body
+    payload = package_interactive_breakdown(record)
+    assert payload is not None
+    assert payload.get("mermaidHonesty", {}).get("assumedEdges") == "-.->"
+    assert payload["mermaidHonesty"].get("fidelity") == "regex"
 
     # Unavailable → no architecture.md
     empty = attach_visuals({

@@ -17,8 +17,8 @@ from src.extract.angular.extract import (
 from src.storage.mirror_store import EXTRACTOR_VERSION
 
 
-def test_extractor_version_21():
-    assert EXTRACTOR_VERSION == 21
+def test_extractor_version_22():
+    assert EXTRACTOR_VERSION == 22
 
 
 def test_resolve_template_url_sibling_relative_paths(tmp_path: Path):

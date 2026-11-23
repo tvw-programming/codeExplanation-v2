@@ -37,6 +37,15 @@ def regen_one(path: Path) -> dict:
     else:
         payload.pop("mermaidLifecycleSkipReason", None)
 
+    # Honesty chrome metadata for docs/chat — conventions only, not new edges.
+    payload["mermaidHonesty"] = {
+        "assumedEdges": "-.->",
+        "assumedLifecycle": "Note … assumed",
+        "skipWhen": ["unavailable", "empty", "too_large", "no_graph"],
+        "fidelity": payload.get("fidelity"),
+        "nodeCap": 40,
+    }
+
     path.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
     # architecture.md needs a record-shaped dict (same fields as payload)

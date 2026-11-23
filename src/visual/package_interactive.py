@@ -53,6 +53,15 @@ def _package_interactive_breakdown(record: dict) -> dict | None:
     payload["mermaidLifecycle"] = life_mermaid
     if life_reason:
         payload["mermaidLifecycleSkipReason"] = life_reason
+
+    # Docs/chat honesty chrome — grounded in existing export rules only.
+    payload["mermaidHonesty"] = {
+        "assumedEdges": "-.->",
+        "assumedLifecycle": "Note … assumed",
+        "skipWhen": ["unavailable", "empty", "too_large", "no_graph"],
+        "fidelity": record.get("fidelity"),
+        "nodeCap": 40,
+    }
     return payload
 
 

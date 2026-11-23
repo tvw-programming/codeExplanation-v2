@@ -648,7 +648,8 @@ def build_angular_selector_tree(record: dict) -> dict | None:
 def build_js_module_tree(record: dict) -> dict | None:
     imports = record.get("moduleImports") or []
     exports = record.get("moduleExports") or []
-    if not imports and not exports:
+    dom_mounts = record.get("domMounts") or []
+    if not imports and not exports and not dom_mounts:
         return None
     file_path = record.get("filePath") or ""
     stem = Path(file_path).stem if file_path else "module"
@@ -676,11 +677,31 @@ def build_js_module_tree(record: dict) -> dict | None:
         eid = _node_id("handler", exp.get("name") or f"export{i}")
         nodes[eid] = {
             "id": eid, "kind": "handler", "label": exp.get("name"), "filePath": file_path,
-            "line": exp.get("line"), "assumed": False, "meta": {"export": True},
+            "line": exp.get("line"), "assumed": bool(exp.get("assumed")), "meta": {
+                "export": True, "exportKind": exp.get("kind"),
+            },
         }
         edges.append({
             "id": f"provides:{root_id}->{eid}:{i}", "kind": "provides",
-            "from": root_id, "to": eid, "assumed": False, "label": None, "meta": {},
+            "from": root_id, "to": eid, "assumed": bool(exp.get("assumed")),
+            "label": None, "meta": {},
+        })
+    # Literal DOM selector mounts only — never invent from non-literal queries.
+    for i, mount in enumerate(dom_mounts):
+        sel = mount.get("selector") or ""
+        if not sel:
+            continue
+        mid = _node_id("dom", f"{mount.get('kind')}:{sel}:{mount.get('line', i)}")
+        assumed = bool(mount.get("assumed"))
+        nodes[mid] = {
+            "id": mid, "kind": "dom", "label": sel, "filePath": file_path,
+            "line": mount.get("line"), "assumed": assumed,
+            "meta": {"domMount": mount.get("kind")},
+        }
+        edges.append({
+            "id": f"mounts:{root_id}->{mid}:{i}", "kind": "mounts",
+            "from": root_id, "to": mid, "assumed": assumed,
+            "label": mount.get("kind"), "meta": {},
         })
     return _finish("module_graph", root_id, nodes, edges)
 
@@ -780,12 +801,20 @@ def build_solid_component_tree(record: dict) -> dict | None:
         root_id = graph["rootId"]
     for i, sig in enumerate(record.get("signals") or []):
         sid = _node_id("signal", f"{sig.get('kind')}:{sig.get('line', i)}")
+        assumed = bool(sig.get("assumed", True))
+        owner = sig.get("owner") or stem
+        owner_id = _node_id("component", owner)
+        if owner_id not in nodes:
+            nodes[owner_id] = {
+                "id": owner_id, "kind": "component", "label": owner, "filePath": file_path,
+                "line": sig.get("line"), "assumed": assumed, "meta": {"solid": True},
+            }
         nodes[sid] = {
             "id": sid, "kind": "signal", "label": sig.get("kind"), "filePath": file_path,
-            "line": sig.get("line"), "assumed": True, "meta": {"solid": True},
+            "line": sig.get("line"), "assumed": assumed, "meta": {"solid": True},
         }
         edges.append({
-            "id": f"owns_state:{root_id}->{sid}:{i}", "kind": "owns_state",
-            "from": root_id, "to": sid, "assumed": True, "label": None, "meta": {"accent": "solid"},
+            "id": f"owns_state:{owner_id}->{sid}:{i}", "kind": "owns_state",
+            "from": owner_id, "to": sid, "assumed": assumed, "label": None, "meta": {"accent": "solid"},
         })
     return _finish("component_tree", root_id, nodes, edges)

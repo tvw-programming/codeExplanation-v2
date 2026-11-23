@@ -17,8 +17,8 @@ too_large → no fence (Q5). Never invent edges.
 |---|---|---|---|---|
 | **React** | `package.json` + React deps | `flowchart TD` (`component_tree` mounts) | `sequenceDiagram` from `lifecycleFlows` | No mounts / no flows / >40 nodes; nested JSX prop braces + memo/forwardRef names when proven |
 | **Angular** | `package.json` + Angular deps | `flowchart TD` selector tree + confirmed template mounts | Sequence when flows exist | Empty `@Component` / no edges → unavailable; unmatched tags skipped; relative `templateUrl` (incl. `../`) class+html stays one chunk when uniquely resolved |
-| **Vue / Solid / Qwik** | FE deps in `package.json` | `flowchart TD` mounts when present | Sequence when flows present | Thin extractors; missing mounts → skip |
-| **JavaScript** | `package.json` without concrete FE | `flowchart TD` (`module_graph`) | Sequence when call/lifecycle edges exist | No import/call edges |
+| **Vue / Solid / Qwik** | FE deps in `package.json` | `flowchart TD` mounts when present (SFC / JSX / `component$`) | Sequence when flows present | Dynamic `:is` skipped; signal owners when enclosing fn / script-setup clear; missing mounts → skip |
+| **JavaScript** | `package.json` without concrete FE | `flowchart TD` (`module_graph`) | Sequence when call/lifecycle edges exist | Literal exports + `getElementById`/`querySelector` mounts; dynamic `import(expr)` skipped; no edges → skip |
 | **Go Fiber** | `go.mod` + Fiber import | `flowchart TD` (`route_tree`) | Sequence middleware→handler | No routes; unresolved prefixes / non-literal `Add` skipped; brace-scoped literal `Route()` composes; Impl only from explicit `var _` asserts |
 | **Express** | `express` in `package.json` | `flowchart TD` (`route_tree`; nested + cross-file `require()` mounts; path arrays; regex→assumed) | Sequence middleware→handler (incl. per-route METHOD args) | No routes/edges; non-literal / ambiguous mounts assumed |
 | **Python** | `requirements.txt` / `pyproject.toml` / `setup.py` | `flowchart TD` route or module graph | Sequence when flows exist | No edges; `APIRouter`/`Blueprint` + unique `include_router`/`include()` join; in-file view/CBV methods; unresolved mounts **assumed** (`fidelity: syntax`) |
@@ -32,10 +32,12 @@ Dispatch: `src/detect/project_type.py` → `src/extract/<stack>/` →
 `architecture.md` + `interactive.json`.
 
 Hardening notes + layout: Project store
-`docs/extractor-hardening-plan.md`. `EXTRACTOR_VERSION` **21**.
+`docs/extractor-hardening-plan.md`. `EXTRACTOR_VERSION` **22**.
 Sample Mermaid under `visuals/` is regenerated from checked-in
 `visualGraph` / `lifecycleFlows` only (`scripts/regen_mermaid_artifacts.py`)
-— never by inventing edges.
+— never by inventing edges. Per-chunk `architecture.md` ships honesty
+chrome (fidelity note, `-->` vs `-.->` legend); `interactive.json` may
+include `mermaidHonesty` metadata for docs/chat consumers.
 
 ## Honesty / confidence in diagrams
 

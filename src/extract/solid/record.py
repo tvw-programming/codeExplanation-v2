@@ -22,13 +22,31 @@ def build_solid_chunk_record(root: Path, chunk: ChunkPlan, project_type_dict: di
     record["signals"] = facts.signals
     record["effects"] = facts.effects
     record["hooks"] = [
-        {"name": s["kind"], "kind": s["kind"], "line": s["line"], "owner": stem, "assumed": s["assumed"]}
+        {
+            "name": s["kind"],
+            "kind": s["kind"],
+            "line": s["line"],
+            "owner": s.get("owner") or stem,
+            "assumed": s.get("assumed", True),
+        }
         for s in facts.signals
+    ] + [
+        {
+            "name": e["kind"],
+            "kind": e["kind"],
+            "line": e["line"],
+            "owner": e.get("owner") or stem,
+            "assumed": e.get("assumed", True),
+        }
+        for e in facts.effects
     ]
     conf = 0.5 if facts.mounts or facts.signals else 0.3
     record["confidence"] = conf
     record["confidenceLevel"] = confidence_level(conf)
-    record["notes"] = "Solid regex extract; signal→subscriber edges assumed under regex fidelity."
+    record["notes"] = (
+        "Solid regex extract; signal owners from enclosing function when clear; "
+        "subscriber edges still assumed under regex fidelity."
+    )
     record["fidelity"] = "regex"
     from src.visual.pipeline import attach_visuals
     return attach_visuals(record, stack="solid")

@@ -234,7 +234,7 @@ def test_full_frontend_record_from_fixture(tmp_path):
     record = build_frontend_chunk_record(
         root, chunk, {"frontend": "react", "backend": []}, "", None,
     )
-    assert record["extractorVersion"] == EXTRACTOR_VERSION == 21
+    assert record["extractorVersion"] == EXTRACTOR_VERSION == 22
     assert record["fidelity"] == "regex"
     assert is_present(record["visualAvailability"]["componentTree"])
     assert record["visualGraph"]["kind"] == "component_tree"

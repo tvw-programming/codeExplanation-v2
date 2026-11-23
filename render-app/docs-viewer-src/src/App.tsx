@@ -140,9 +140,18 @@ export default function App() {
     const nodes = host.querySelectorAll("pre.mermaid");
     if (nodes.length === 0) return;
     void loadMermaid()
-      .then((mod) => mod.default.run({ nodes }))
+      .then((mod) => mod.default.run({ nodes: Array.from(nodes) }))
       .catch(() => {
-        /* invalid fences stay as pre text — do not blank the page */
+        // Invalid fences stay as pre text — honesty: do not invent a diagram.
+        nodes.forEach((node) => {
+          if (node.getAttribute("data-mermaid-error")) return;
+          node.setAttribute("data-mermaid-error", "1");
+          const note = document.createElement("p");
+          note.className = "mermaid-skip-reason";
+          note.textContent =
+            "Mermaid parse skipped (invalid fence kept as source — no invented diagram).";
+          node.parentElement?.insertBefore(note, node);
+        });
       });
   }, [html, loadingDoc]);
 
@@ -326,6 +335,14 @@ export default function App() {
               my: 2,
               px: 2,
               color: "text.secondary",
+            },
+            "& ul": { pl: 2.5 },
+            "& li code": { fontSize: "0.85em" },
+            "& .mermaid-skip-reason": {
+              color: "text.secondary",
+              fontSize: 13,
+              fontStyle: "italic",
+              my: 1,
             },
             lineHeight: 1.65,
             fontSize: 16,

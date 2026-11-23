@@ -76,7 +76,9 @@ from src.extract.common import content_hash
 #  21 - Rust cross-file .nest onto PrefixGraph (unique literal module
 #       resolve); Angular relative templateUrl incl. ../ when unique;
 #       sample Mermaid regen from visualGraph fixtures only.
-EXTRACTOR_VERSION = 21
+#  22 - Vue/Solid/Qwik honesty (mounts/signal owners); JS literal
+#       exports/DOM mounts; Mermaid docs honesty chrome.
+EXTRACTOR_VERSION = 22
 
 
 def output_path_for(output_root: Path, file_path: str) -> Path:

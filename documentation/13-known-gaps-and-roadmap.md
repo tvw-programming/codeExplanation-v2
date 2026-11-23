@@ -15,7 +15,7 @@ Doc 14 is a **historical** audit — read its banner first.
 | React TS/JSX | yes | yes | `extract/react/` (regex) | tree/lifecycle when mounts exist; brace/memo/HOC/hook honesty (v20); regex limits remain |
 | Go Fiber | yes | yes | `extract/go/` (regex) | `route_tree`; generics/interfaces/factories; All/Add; brace-scoped `Route()`; Impl only via `var _` |
 | Angular | yes | yes | `extract/angular/` | selector→usage mounts + signal/decorator I/O; relative templateUrl class+html bundles (incl. `../`); empty → unavailable |
-| Vue / Solid / Qwik / JS | yes | yes | `extract/{vue,solid,qwik,javascript}/` | thin trees; skip when empty |
+| Vue / Solid / Qwik / JS | yes | yes | `extract/{vue,solid,qwik,javascript}/` | mounts/signal owners when clear (v22); JS literal exports/DOM mounts; skip when empty |
 | Python | yes | yes | `extract/python/` (`ast`) | APIRouter/Blueprint + cross-file `include_router`/`register_blueprint`/`include()`; Django `path()` + in-file view/CBV methods; empty → unavailable |
 | Spring Boot | yes | yes | `extract/spring/` | `di_graph` by type + Lombok/setter/@Inject; bare `@RequestMapping` → ALL; no Impl-from-imports; PrefixGraph cross-file mounts deferred |
 | Express | yes | yes | `extract/express/` | `route_tree`; nested + cross-file `require()` mounts (unique literal); path arrays; regex→assumed |
@@ -32,7 +32,9 @@ Flask `register_blueprint` + Express `require()` mounts) landed via shared
 `route_prefix.PrefixGraph` (`EXTRACTOR_VERSION` 17–19); React/Go/Angular
 honesty + same-dir template bundles (`EXTRACTOR_VERSION` 20); Rust
 cross-file `.nest` + relative Angular `templateUrl` (`EXTRACTOR_VERSION`
-21); unresolved mounts stay assumed.
+21); Vue/Solid/Qwik mount/signal honesty + JS literal exports/DOM mounts
++ Mermaid docs honesty chrome (`EXTRACTOR_VERSION` 22); unresolved mounts
+stay assumed.
 
 whisper.cpp-blocked-so-all-cues-assumed and the Chromium-sandbox
 download are **environment notes**, not the live production story.
@@ -44,7 +46,7 @@ See [`09-phase6-rendering.md`](./09-phase6-rendering.md).
 ### 1. Multi-stack extractors are shipped but still thin
 
 Python (`ast`), Spring (DI-by-type), Express, Angular, Vue/Solid/Qwik,
-JS, Rust, React, and Go builders exist (`EXTRACTOR_VERSION` 21). All
+JS, Rust, React, and Go builders exist (`EXTRACTOR_VERSION` 22). All
 stacks use `src/extract/<stack>/{extract,record}.py`; flat modules are
 shims; `stack_records.py` re-exports. Shared
 `src/extract/route_prefix.py` resolves FastAPI `include_router`, Flask
