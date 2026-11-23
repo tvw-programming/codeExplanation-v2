@@ -11,7 +11,7 @@ from src.visual.availability import is_present
 
 
 def test_extractor_version_is_21():
-    assert EXTRACTOR_VERSION == 22
+    assert EXTRACTOR_VERSION == 23
 
 
 def test_qualified_axum_routing_helper_and_real_handler():
@@ -117,7 +117,7 @@ def test_fixture_feeds_route_tree(tmp_path: Path):
         ChunkPlan("main", "api", "rust", "main.rs", 20, "small"),
         {"frontend": None, "backend": ["rust"]},
     )
-    assert record["extractorVersion"] == 22
+    assert record["extractorVersion"] == 23
     assert any(
         r["path"] == "/users" and r["handler"] == "list_users" and not r["assumed"]
         for r in record["routes"]

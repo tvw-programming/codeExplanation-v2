@@ -18,7 +18,7 @@ from src.storage.mirror_store import EXTRACTOR_VERSION
 
 
 def test_extractor_version_22():
-    assert EXTRACTOR_VERSION == 22
+    assert EXTRACTOR_VERSION == 23
 
 
 def test_resolve_template_url_sibling_relative_paths(tmp_path: Path):

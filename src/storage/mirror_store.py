@@ -78,7 +78,7 @@ from src.extract.common import content_hash
 #       sample Mermaid regen from visualGraph fixtures only.
 #  22 - Vue/Solid/Qwik honesty (mounts/signal owners); JS literal
 #       exports/DOM mounts; Mermaid docs honesty chrome.
-EXTRACTOR_VERSION = 22
+EXTRACTOR_VERSION = 23
 
 
 def output_path_for(output_root: Path, file_path: str) -> Path:

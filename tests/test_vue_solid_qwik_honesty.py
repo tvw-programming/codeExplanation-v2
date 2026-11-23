@@ -17,7 +17,7 @@ FIX = Path(__file__).resolve().parent / "fixtures"
 
 
 def test_extractor_version_22():
-    assert EXTRACTOR_VERSION == 22
+    assert EXTRACTOR_VERSION == 23
 
 
 def test_vue_template_line_and_props_and_script_setup_signals():
@@ -71,7 +71,7 @@ def test_vue_fixture_record_mount_line():
         ChunkPlan("UserCard", "UI", "vue", "UserCard.vue", 20, "small"),
         {"frontend": "vue", "backend": []},
     )
-    assert rec["extractorVersion"] == 22
+    assert rec["extractorVersion"] == 23
     mounts = rec["jsxMounts"]
     assert any(m["child"] == "Avatar" and m["line"] >= 6 for m in mounts)
     assert rec["vueMeta"]["scriptSetup"] is True

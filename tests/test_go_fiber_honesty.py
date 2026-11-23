@@ -11,7 +11,7 @@ from src.storage.mirror_store import EXTRACTOR_VERSION
 
 
 def test_extractor_version_bumped_for_go_fiber_honesty():
-    assert EXTRACTOR_VERSION == 22
+    assert EXTRACTOR_VERSION == 23
 
 
 def test_generic_function_is_extracted():
@@ -187,6 +187,46 @@ var _ UserRepo = (*userRepo)(nil)
     assert go.extract_interface_assertions("type userRepo struct{}") == []
 
 
+def test_value_composite_interface_assertion():
+    """``var _ Iface = Type{}`` is equally explicit — record, do not invent."""
+    text = """
+type Closer interface { Close() error }
+type fileHandle struct{}
+var _ Closer = fileHandle{}
+var _ Closer = &fileHandle{}
+"""
+    asserts = go.extract_interface_assertions(text)
+    forms = {(a.concrete, a.form) for a in asserts}
+    assert ("fileHandle", "value_composite") in forms
+    assert ("fileHandle", "addr_composite") in forms
+
+
+def test_method_set_match_alone_never_invents_assertion():
+    """Matching methods without ``var _`` must not create Impl edges."""
+    text = """
+type UserRepo interface {
+	FindByID(id string) (*User, error)
+}
+type userRepo struct{}
+func (u *userRepo) FindByID(id string) (*User, error) { return nil, nil }
+"""
+    assert go.extract_interface_assertions(text) == []
+    ifaces = go.extract_interfaces(text)
+    assert ifaces and ifaces[0].name == "UserRepo"
+
+
+def test_unbalanced_route_body_skipped():
+    """Unbalanced Route() brace body → skip (never invent prefix/scope)."""
+    text = """
+app := fiber.New()
+app.Route("/api", func(r fiber.Router) {
+	r.Get("/users", listUsers)
+"""
+    routes = go.extract_routes(text, uses_fiber=True)
+    assert not any(r.path.endswith("/users") for r in routes)
+    assert not any("/api" in (r.path or "") for r in routes)
+
+
 def test_record_includes_interfaces_and_factories():
     root = Path("/tmp")
     text = '''package api
@@ -223,7 +263,7 @@ func Map[T any](xs []T) []T { return xs }
         record = build_backend_go_chunk_record(
             tdp, chunk, {"type": "go", "framework": "fiber"}, None, True,
         )
-    assert record["extractorVersion"] == 22
+    assert record["extractorVersion"] == 23
     kinds = {m["kind"] for m in record["dataModels"]}
     assert "interface" in kinds
     assert "struct" in kinds

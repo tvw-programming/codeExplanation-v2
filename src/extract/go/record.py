@@ -205,7 +205,7 @@ def build_backend_go_chunk_record(
     if iface_assertions:
         notes.append(
             "interfaceAssertions come only from explicit var _ Iface = (*T)(nil) "
-            "/ &T{} lines — never guessed Impl edges."
+            "/ &T{} / T{} lines — never guessed Impl edges."
         )
     if middleware_factories_out:
         notes.append(
