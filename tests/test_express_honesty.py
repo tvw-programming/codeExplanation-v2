@@ -11,7 +11,7 @@ from src.visual.availability import is_present
 
 
 def test_extractor_version_is_18():
-    assert EXTRACTOR_VERSION == 18
+    assert EXTRACTOR_VERSION == 19
 
 
 def test_nested_literal_mounts_compose():
@@ -45,7 +45,8 @@ r.get('/users', listUsers);
     assert len(users) == 1
     assert users[0].path == "/users"
     assert users[0].assumed is True
-    assert users[0].note and "not a string literal" in users[0].note
+    assert users[0].path_resolved is False
+    assert users[0].note and "BASE" in users[0].note
 
 
 def test_path_array_emits_one_route_per_literal():
@@ -179,7 +180,7 @@ def test_builder_feeds_route_tree_with_route_arg_middleware(tmp_path: Path):
         ChunkPlan("routes", "API", "express", "routes.js", 20, "small"),
         {"frontend": None, "backend": ["express"]},
     )
-    assert rec["extractorVersion"] == 18
+    assert rec["extractorVersion"] == 19
     assert is_present(rec["visualAvailability"]["componentTree"])
     users = next(r for r in rec["routes"] if r["path"] == "/api/users")
     assert users["assumed"] is False

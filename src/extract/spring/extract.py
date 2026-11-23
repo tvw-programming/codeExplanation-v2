@@ -1,4 +1,12 @@
-"""Spring Boot annotation extraction (regex). DI is by type — never imports-as-inject."""
+"""Spring Boot annotation extraction (regex). DI is by type — never imports-as-inject.
+
+Cross-file route mounts onto shared PrefixGraph are deferred: Spring has no
+safe literal analogue of Express ``app.use`` / Flask ``register_blueprint`` /
+FastAPI ``include_router``. Class-level ``@RequestMapping`` is in-file
+containment only. Servlet ``context-path`` lives in config, not code.
+``WebMvcConfigurer`` / bean ``RouterFunction`` wiring would require inventing
+bean edges — never do that here.
+"""
 
 from __future__ import annotations
 

@@ -53,7 +53,9 @@ def build_spring_chunk_record(root: Path, chunk: ChunkPlan, project_type_dict: d
         "@Inject); imports are never treated as injects. Injectee types stay as declared "
         "(interface-only) — Impl is never invented from imports. Bare @RequestMapping "
         "method=ALL; path arrays expand; ${}/{#{} placeholders are assumed; Spring Data "
-        "repository interfaces are recorded without proxy Impl nodes."
+        "repository interfaces are recorded without proxy Impl nodes. Cross-file route "
+        "mounts onto PrefixGraph are deferred (no safe literal mount analogue without "
+        "inventing bean edges)."
     )
     record["fidelity"] = "regex"
     from src.visual.pipeline import attach_visuals

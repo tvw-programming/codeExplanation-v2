@@ -1,7 +1,7 @@
 # Multi-stack visuals
 
 Shipped: React (#3), Go Fiber (#4), remaining stacks (#5), brand header
-chrome + center-packed trees (#6). `EXTRACTOR_VERSION = 18`.
+chrome + center-packed trees (#6). `EXTRACTOR_VERSION = 19`.
 
 Attach: `src/visual/pipeline.py: attach_visuals()`. Render:
 `render-app/src/FullVideo.tsx`. Layout: `treeLayout.ts`. Header:
@@ -76,8 +76,8 @@ and lifecycle → FileCard + ChunkView only.
 | Angular | `src/extract/angular/` | `component_tree` | Selector index → template mounts; signal/decorator I/O; unmatched tags skipped; empty → unavailable |
 | Vue / Solid / Qwik | `src/extract/{vue,solid,qwik}/` | `component_tree` | Thin when mounts/signals missing |
 | JavaScript | `src/extract/javascript/` | `module_graph` | Import/export edges |
-| Python | `src/extract/python/` (`ast`) | `route_tree` / `module_graph` | In-file `APIRouter`/`Blueprint` + mounts compose; Django `path()` + in-file view/CBV methods; cross-file handlers `UNKNOWN`; `include()` assumed, not joined |
-| Express | `src/extract/express/` | `route_tree` | Nested literal mounts; path arrays; regex→assumed; per-route METHOD mw |
+| Python | `src/extract/python/` (`ast`) | `route_tree` / `module_graph` | In-file `APIRouter`/`Blueprint` + mounts compose; cross-file `include_router`/`register_blueprint`/`include()` on unique resolve; Django handlers cross-file `UNKNOWN` |
+| Express | `src/extract/express/` | `route_tree` | Nested + cross-file `require()` mounts (unique literal); path arrays; regex→assumed; per-route METHOD mw |
 | Spring Boot | `src/extract/spring/` | `di_graph` | By type + Lombok/setter/@Inject; bare `@RequestMapping`→ALL; never imports-as-inject / never invent Impl |
 | Rust | `src/extract/rust/` | `route_tree` / `crate_graph` | Real handlers; in-file `.nest` compose; unresolved nest skips |
 
