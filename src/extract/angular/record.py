@@ -6,12 +6,18 @@ from pathlib import Path
 
 from src.chunk.chunk_splitter import ChunkPlan
 
-from ..common import confidence_level, read_lines
+from ..common import confidence_from_flags, confidence_level, read_lines
 from ..record_base import base_record
 from . import extract as ang
 
 
-def build_angular_chunk_record(root: Path, chunk: ChunkPlan, project_type_dict: dict) -> dict:
+def build_angular_chunk_record(
+    root: Path,
+    chunk: ChunkPlan,
+    project_type_dict: dict,
+    *,
+    selector_index: dict[str, list[ang.SelectorEntry]] | None = None,
+) -> dict:
     lines = read_lines(root, chunk.file_path)
     text = "\n".join(lines)
     prelim = ang.extract_angular_component(text, None)
@@ -28,6 +34,18 @@ def build_angular_chunk_record(root: Path, chunk: ChunkPlan, project_type_dict: 
         record["fidelity"] = "regex"
         from src.visual.pipeline import attach_visuals
         return attach_visuals(record, stack="angular")
+
+    # Template text for mount scan (sibling file or inline).
+    template_for_mounts = tmpl or ""
+    if not template_for_mounts:
+        m = ang.COMPONENT_RE.search(text)
+        if m:
+            im = ang.TEMPLATE_INLINE_RE.search(m.group("body"))
+            if im:
+                template_for_mounts = im.group("body")
+
+    index = selector_index if selector_index is not None else ang.build_selector_index(root)
+    mounts = ang.extract_template_mounts(comp.name, template_for_mounts, index)
 
     record["angularComponent"] = {
         "name": comp.name,
@@ -59,14 +77,53 @@ def build_angular_chunk_record(root: Path, chunk: ChunkPlan, project_type_dict: 
         {"name": m["name"], "lineRange": [m["line"], m["line"]], "calls": [], "sideEffects": []}
         for m in comp.methods
     ]
-    record["jsxMounts"] = []
+    # Same mount shape as React jsxMounts so shared tooling can read parent→child.
+    record["jsxMounts"] = [
+        {
+            "parent": m.parent,
+            "child": m.child,
+            "selector": m.selector,
+            "line": m.line,
+            "assumed": m.assumed,
+            "note": m.note,
+            "props": [
+                {
+                    "name": p.name,
+                    "valueKind": p.value_kind,
+                    "valuePreview": p.value_preview,
+                    "assumed": p.assumed,
+                }
+                for p in m.props
+            ],
+        }
+        for m in mounts
+    ]
     record["selector"] = comp.selector
-    conf = 0.55 if (comp.inputs or comp.outputs or comp.template_events) else 0.35
+
+    assumed_claims = sum(1 for m in mounts if m.assumed)
+    total_claims = max(
+        1,
+        len(comp.inputs) + len(comp.outputs) + len(comp.template_events) + len(mounts),
+    )
+    if mounts or comp.inputs or comp.outputs or comp.template_events:
+        conf = confidence_from_flags(total_claims, assumed_claims)
+        conf = max(
+            conf,
+            0.45 if mounts else (0.55 if (comp.inputs or comp.outputs or comp.template_events) else 0.35),
+        )
+    else:
+        conf = 0.35
     record["confidence"] = conf
     record["confidenceLevel"] = confidence_level(conf)
+
+    mount_note = (
+        f"{len(mounts)} template mount(s) via project selector index"
+        if mounts
+        else "no confirmed template child mounts (unmatched tags skipped)"
+    )
     record["notes"] = (
-        "Angular dedicated extractor (incl. signal input()/output()); "
-        "project-wide selector index not built — tree is this component unit."
+        "Angular dedicated extractor (signal input()/output() + selector→usage mounts); "
+        f"{mount_note}. Duplicate selectors skipped; attribute matches assumed."
     )
     record["fidelity"] = "regex"
     from src.visual.pipeline import attach_visuals

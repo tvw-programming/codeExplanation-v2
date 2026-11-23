@@ -1,7 +1,7 @@
 # Multi-stack visuals
 
 Shipped: React (#3), Go Fiber (#4), remaining stacks (#5), brand header
-chrome + center-packed trees (#6). `EXTRACTOR_VERSION = 9`.
+chrome + center-packed trees (#6). `EXTRACTOR_VERSION = 10`.
 
 Attach: `src/visual/pipeline.py: attach_visuals()`. Render:
 `render-app/src/FullVideo.tsx`. Layout: `treeLayout.ts`. Header:
@@ -73,7 +73,7 @@ and lifecycle → FileCard + ChunkView only.
 |---|---|---|---|
 | React | `src/extract/react/` | `component_tree` | Regex limits remain |
 | Go Fiber | `src/extract/go/` | `route_tree` | In-file group prefixes compose |
-| Angular | `src/extract/angular/` | `component_tree` | Decorator + signal I/O; empty → unavailable |
+| Angular | `src/extract/angular/` | `component_tree` | Selector index → template mounts; signal/decorator I/O; unmatched tags skipped; empty → unavailable |
 | Vue / Solid / Qwik | `src/extract/{vue,solid,qwik}/` | `component_tree` | Thin when mounts/signals missing |
 | JavaScript | `src/extract/javascript/` | `module_graph` | Import/export edges |
 | Python | `src/extract/python/` (`ast`) | `route_tree` / `module_graph` | In-file `APIRouter(prefix=)` composes |
