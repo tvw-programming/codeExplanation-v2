@@ -6,13 +6,22 @@ import re
 from dataclasses import dataclass, field
 
 
-CLASS_RE = re.compile(
+# Stereotype on class OR interface (Spring Data repos are interfaces).
+TYPE_RE = re.compile(
     r"@(?P<stereo>RestController|Controller|Service|Repository|Component)\b[^\n]*\n"
     r"(?:@[^\n]+\n)*"
-    r"(?:public\s+|protected\s+|private\s+)?(?:final\s+)?class\s+(?P<name>\w+)",
+    r"(?:public\s+|protected\s+|private\s+)?(?:final\s+)?"
+    r"(?P<kind>class|interface)\s+(?P<name>\w+)",
+)
+# Spring Data repository interface without a stereotype annotation.
+SPRING_DATA_IFACE_RE = re.compile(
+    r"(?:public\s+|protected\s+|private\s+)?interface\s+(?P<name>\w+)\s+"
+    r"extends\s+[^{]*?\b(?P<base>JpaRepository|CrudRepository|"
+    r"PagingAndSortingRepository|ListCrudRepository|ListPagingAndSortingRepository|"
+    r"ReactiveCrudRepository|CoroutineCrudRepository|Repository)\s*<",
 )
 CLASS_MAPPING_RE = re.compile(
-    r"@RequestMapping\s*\(\s*(?:value\s*=\s*)?(?P<quote>[\"'])(?P<path>[^\"']*)(?P=quote)",
+    r"@RequestMapping\s*\((?P<body>[^)]*)\)",
 )
 # Flexible method mapping: capture annotation name + optional paren body.
 METHOD_MAPPING_RE = re.compile(
@@ -22,13 +31,21 @@ METHOD_MAPPING_RE = re.compile(
 METHOD_RE = re.compile(
     r"(?:public|protected|private)\s+(?:static\s+)?[\w.<>,\[\]\s]+\s+(?P<name>\w+)\s*\((?P<params>[^)]*)\)",
 )
+# Access modifier optional — Spring injects package-private constructors too.
 CTOR_RE = re.compile(
-    r"(?:public|protected|private)\s+(?P<name>\w+)\s*\((?P<params>[^)]*)\)\s*\{",
+    r"(?:(?:public|protected|private)\s+)?(?P<name>\w+)\s*\((?P<params>[^)]*)\)\s*\{",
 )
 AUTOWIRED_FIELD_RE = re.compile(
-    r"@Autowired\b[^;]*?\b(?P<type>\w+)\s+(?P<field>\w+)\s*;",
+    r"@(?:Autowired|Inject)\b[^;]*?\b(?P<type>\w+)\s+(?P<field>\w+)\s*;",
     re.DOTALL,
 )
+AUTOWIRED_SETTER_RE = re.compile(
+    r"@(?:Autowired|Inject)\b\s*"
+    r"(?:public|protected|private)\s+void\s+(?P<setter>set\w+)\s*\(\s*"
+    r"(?P<type>[\w.]+)(?:<[^>]*>)?\s+(?P<field>\w+)\s*\)",
+    re.DOTALL,
+)
+CTOR_INJECT_ANN_RE = re.compile(r"@(?:Autowired|Inject)\b")
 PRE_AUTHORIZE_RE = re.compile(r"@PreAuthorize\b|@Secured\b")
 REQUIRED_ARGS_RE = re.compile(r"@RequiredArgsConstructor\b")
 FINAL_FIELD_RE = re.compile(
@@ -38,6 +55,8 @@ PATH_IN_BODY_RE = re.compile(
     r"(?:(?:value|path)\s*=\s*)?(?P<quote>[\"'])(?P<path>[^\"']*)(?P=quote)"
 )
 REQUEST_METHOD_RE = re.compile(r"RequestMethod\.(?P<m>GET|POST|PUT|DELETE|PATCH|HEAD|OPTIONS)")
+PLACEHOLDER_RE = re.compile(r"\$\{|\#\{")
+MEDIA_KEY_RE = re.compile(r"(?:produces|consumes|headers)\s*$")
 
 
 @dataclass
@@ -48,6 +67,7 @@ class SpringType:
     line: int
     methods: list[dict] = field(default_factory=list)
     injectees: list[dict] = field(default_factory=list)
+    kind: str = "class"  # "class" | "interface"
 
 
 @dataclass
@@ -78,22 +98,26 @@ def _split_params(params: str) -> list[tuple[str, str]]:
     return out
 
 
-def _path_from_mapping_body(body: str | None) -> str:
+def _paths_from_mapping_body(body: str | None) -> list[str]:
+    """All path literals from a mapping body; skip produces/consumes/headers."""
     if not body:
-        return ""
-    # Prefer explicit value=/path=; else first quoted string that looks like a path.
+        return [""]
+    paths: list[str] = []
     for m in PATH_IN_BODY_RE.finditer(body):
-        # Skip media-type-looking strings when value= absent and key is produces/consumes —
-        # simple heuristic: take first quote that starts with / or is empty or looks like a path segment.
-        path = m.group("path")
         before = body[: m.start()].rstrip()
-        if before.endswith("produces") or before.endswith("consumes") or before.endswith("headers"):
+        if MEDIA_KEY_RE.search(before):
             continue
-        return path
-    return ""
+        paths.append(m.group("path"))
+    return paths or [""]
 
 
-def _http_method(ann: str, body: str | None) -> str:
+def _path_assumed(path: str) -> bool:
+    """Property/SpEL placeholders are unresolved at extract time."""
+    return bool(PLACEHOLDER_RE.search(path))
+
+
+def _http_methods(ann: str, body: str | None) -> list[str]:
+    """HTTP methods for a mapping. Bare @RequestMapping → ALL (not silent GET)."""
     mapped = {
         "GetMapping": "GET",
         "PostMapping": "POST",
@@ -102,108 +126,264 @@ def _http_method(ann: str, body: str | None) -> str:
         "PatchMapping": "PATCH",
     }.get(ann)
     if mapped:
-        return mapped
+        return [mapped]
     if body:
-        rm = REQUEST_METHOD_RE.search(body)
-        if rm:
-            return rm.group("m")
-    return "GET"
+        found = [m.group("m") for m in REQUEST_METHOD_RE.finditer(body)]
+        if found:
+            # Preserve order, drop dupes.
+            seen: set[str] = set()
+            out: list[str] = []
+            for mth in found:
+                if mth not in seen:
+                    seen.add(mth)
+                    out.append(mth)
+            return out
+    # Plain @RequestMapping with no method= matches every HTTP method.
+    return ["ALL"]
 
 
 def _join_paths(class_path: str, path: str) -> str:
+    if not class_path and not path:
+        return "/"
+    if not class_path:
+        full = path if path.startswith("/") else f"/{path}" if path else "/"
+        return full or "/"
+    if not path:
+        return class_path if class_path.startswith("/") else f"/{class_path}"
     full = (class_path.rstrip("/") + "/" + path.lstrip("/")).replace("//", "/")
     if not full.startswith("/"):
-        full = "/" + full if full else class_path or "/"
+        full = "/" + full
     return full
 
 
-def extract_spring(text: str) -> tuple[list[SpringType], list[SpringRoute]]:
-    types: list[SpringType] = []
-    routes: list[SpringRoute] = []
+def _class_paths_from_window(window: str) -> list[str]:
+    """Class-level @RequestMapping path(s); empty list means no class mapping."""
+    cms = list(CLASS_MAPPING_RE.finditer(window))
+    if not cms:
+        return []
+    # Last @RequestMapping before the type declaration wins (Spring: one mapping per element).
+    return [p for p in _paths_from_mapping_body(cms[-1].group("body")) if p is not None]
 
-    for m in CLASS_RE.finditer(text):
-        name = m.group("name")
-        stereo = m.group("stereo")
-        line = _line_of(text, m.start())
-        window = text[max(0, m.start() - 400):m.end()]
-        cm = list(CLASS_MAPPING_RE.finditer(window))
-        class_path = cm[-1].group("path") if cm else ""
-        has_required_args = bool(REQUIRED_ARGS_RE.search(window))
 
-        body_start = text.find("{", m.end())
-        if body_start < 0:
-            body = ""
-            body_offset = m.end()
-        else:
-            depth = 0
-            i = body_start
-            while i < len(text):
-                if text[i] == "{":
-                    depth += 1
-                elif text[i] == "}":
-                    depth -= 1
-                    if depth == 0:
-                        break
-                i += 1
-            body = text[body_start:i + 1]
-            body_offset = body_start
+def _extract_body(text: str, type_end: int) -> tuple[str, int]:
+    body_start = text.find("{", type_end)
+    if body_start < 0:
+        return "", type_end
+    depth = 0
+    i = body_start
+    while i < len(text):
+        if text[i] == "{":
+            depth += 1
+        elif text[i] == "}":
+            depth -= 1
+            if depth == 0:
+                break
+        i += 1
+    return text[body_start:i + 1], body_start
 
-        injectees: list[dict] = []
-        for ctor in CTOR_RE.finditer(body):
-            if ctor.group("name") != name:
-                continue
-            for typ, field in _split_params(ctor.group("params")):
-                if typ[0].isupper():
-                    injectees.append({"type": typ, "field": field, "via": "constructor", "assumed": False})
-        for af in AUTOWIRED_FIELD_RE.finditer(body):
-            injectees.append({
-                "type": af.group("type"),
-                "field": af.group("field"),
-                "via": "field",
+
+def _ctor_injectees(name: str, body: str) -> list[dict]:
+    """Constructor injection points. Multi-ctor without @Autowired/@Inject → assumed."""
+    ctors = [c for c in CTOR_RE.finditer(body) if c.group("name") == name]
+    if not ctors:
+        return []
+
+    def _ann_before(ctor_start: int) -> bool:
+        window = body[max(0, ctor_start - 120):ctor_start]
+        return bool(CTOR_INJECT_ANN_RE.search(window))
+
+    annotated = [c for c in ctors if _ann_before(c.start())]
+    if len(ctors) > 1 and not annotated:
+        # Ambiguous: Spring picks at runtime — emit all candidates as assumed.
+        chosen = ctors
+        assumed = True
+    elif annotated:
+        chosen = annotated
+        assumed = False
+    else:
+        # Single constructor (annotated or not) — Spring always uses it.
+        chosen = ctors
+        assumed = False
+
+    injectees: list[dict] = []
+    for ctor in chosen:
+        for typ, field in _split_params(ctor.group("params")):
+            if typ and typ[0].isupper():
+                injectees.append({
+                    "type": typ.split(".")[-1],
+                    "field": field,
+                    "via": "constructor",
+                    "assumed": assumed,
+                })
+    return injectees
+
+
+def _field_and_setter_injectees(body: str) -> list[dict]:
+    injectees: list[dict] = []
+    for af in AUTOWIRED_FIELD_RE.finditer(body):
+        injectees.append({
+            "type": af.group("type"),
+            "field": af.group("field"),
+            "via": "field",
+            "assumed": False,
+        })
+    for st in AUTOWIRED_SETTER_RE.finditer(body):
+        typ = st.group("type").split(".")[-1]
+        injectees.append({
+            "type": typ,
+            "field": st.group("field"),
+            "via": "setter",
+            "assumed": False,
+        })
+    return injectees
+
+
+def _lombok_injectees(window: str, body: str, existing: list[dict]) -> list[dict]:
+    if not REQUIRED_ARGS_RE.search(window):
+        return []
+    # Only when no constructor/field injectees already found (Lombok generates the ctor).
+    if existing:
+        return []
+    out: list[dict] = []
+    for ff in FINAL_FIELD_RE.finditer(body):
+        typ = ff.group("type").split(".")[-1]
+        if typ and typ[0].isupper():
+            out.append({
+                "type": typ,
+                "field": ff.group("field"),
+                "via": "lombok",
                 "assumed": False,
             })
-        # Lombok: @RequiredArgsConstructor → private final fields are inject points.
-        if has_required_args and not injectees:
-            for ff in FINAL_FIELD_RE.finditer(body):
-                typ = ff.group("type").split(".")[-1]
-                if typ and typ[0].isupper():
-                    injectees.append({
-                        "type": typ,
-                        "field": ff.group("field"),
-                        "via": "lombok",
-                        "assumed": False,
-                    })
+    return out
 
-        methods: list[dict] = []
+
+def _emit_routes(
+    *,
+    routes: list[SpringRoute],
+    methods: list[dict],
+    ann: str,
+    map_body: str | None,
+    class_paths: list[str],
+    handler: str,
+    controller: str,
+    line_m: int,
+    has_sec: bool,
+) -> None:
+    http_methods = _http_methods(ann, map_body)
+    method_paths = _paths_from_mapping_body(map_body)
+    bases = class_paths if class_paths else [""]
+    for base in bases:
+        for path in method_paths:
+            full = _join_paths(base, path)
+            path_assumed = _path_assumed(base) or _path_assumed(path)
+            # Empty class+method path with no mapping text at all → weak claim.
+            empty_claim = (not base and not path and not map_body and ann == "RequestMapping")
+            for method in http_methods:
+                methods.append({
+                    "name": handler,
+                    "method": method,
+                    "path": full,
+                    "line": line_m,
+                })
+                routes.append(SpringRoute(
+                    method=method,
+                    path=full or "/",
+                    handler=handler,
+                    controller=controller,
+                    line=line_m,
+                    assumed=path_assumed or empty_claim,
+                    has_security=has_sec,
+                ))
+
+
+def _append_stereotyped_type(
+    text: str,
+    m: re.Match[str],
+    types: list[SpringType],
+    routes: list[SpringRoute],
+    seen: set[str],
+) -> None:
+    name = m.group("name")
+    if name in seen:
+        return
+    seen.add(name)
+    stereo = m.group("stereo")
+    kind = m.group("kind")
+    line = _line_of(text, m.start())
+    window = text[max(0, m.start() - 400):m.end()]
+    class_paths = _class_paths_from_window(window)
+    # Record a single representative classPath (first) for the type card.
+    class_path = class_paths[0] if class_paths else ""
+
+    body, body_offset = _extract_body(text, m.end())
+    injectees = _ctor_injectees(name, body)
+    injectees.extend(_field_and_setter_injectees(body))
+    injectees.extend(_lombok_injectees(window, body, injectees))
+
+    methods: list[dict] = []
+    if kind == "class":
         for mm in METHOD_MAPPING_RE.finditer(body):
             ann = mm.group("ann")
             map_body = mm.group("body")
-            path = _path_from_mapping_body(map_body)
-            method = _http_method(ann, map_body)
-            full = _join_paths(class_path, path)
             after = body[mm.end():mm.end() + 200]
             sig = METHOD_RE.search(after)
             handler = sig.group("name") if sig else "handler"
             line_m = _line_of(text, body_offset + mm.start())
             has_sec = bool(PRE_AUTHORIZE_RE.search(body[max(0, mm.start() - 120):mm.end() + 80]))
-            methods.append({"name": handler, "method": method, "path": full, "line": line_m})
-            routes.append(SpringRoute(
-                method=method,
-                path=full or "/",
+            _emit_routes(
+                routes=routes,
+                methods=methods,
+                ann=ann,
+                map_body=map_body,
+                class_paths=class_paths,
                 handler=handler,
                 controller=name,
-                line=line_m,
-                assumed=bool(class_path == "" and path == ""),
-                has_security=has_sec,
-            ))
+                line_m=line_m,
+                has_sec=has_sec,
+            )
 
-        types.append(SpringType(
-            name=name,
-            stereotype=stereo,
-            class_path=class_path,
-            line=line,
-            methods=methods,
-            injectees=injectees,
-        ))
+    types.append(SpringType(
+        name=name,
+        stereotype=stereo,
+        class_path=class_path,
+        line=line,
+        methods=methods,
+        injectees=injectees,
+        kind=kind,
+    ))
+
+
+def _append_spring_data_iface(
+    text: str,
+    m: re.Match[str],
+    types: list[SpringType],
+    seen: set[str],
+) -> None:
+    name = m.group("name")
+    if name in seen:
+        return
+    seen.add(name)
+    # Interface only — never invent a *Impl or SimpleJpaRepository node.
+    types.append(SpringType(
+        name=name,
+        stereotype="Repository",
+        class_path="",
+        line=_line_of(text, m.start()),
+        methods=[],
+        injectees=[],
+        kind="interface",
+    ))
+
+
+def extract_spring(text: str) -> tuple[list[SpringType], list[SpringRoute]]:
+    types: list[SpringType] = []
+    routes: list[SpringRoute] = []
+    seen: set[str] = set()
+
+    for m in TYPE_RE.finditer(text):
+        _append_stereotyped_type(text, m, types, routes, seen)
+
+    for m in SPRING_DATA_IFACE_RE.finditer(text):
+        _append_spring_data_iface(text, m, types, seen)
 
     return types, routes
