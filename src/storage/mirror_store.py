@@ -78,7 +78,16 @@ from src.extract.common import content_hash
 #       sample Mermaid regen from visualGraph fixtures only.
 #  22 - Vue/Solid/Qwik honesty (mounts/signal owners); JS literal
 #       exports/DOM mounts; Mermaid docs honesty chrome.
-EXTRACTOR_VERSION = 23
+#  23 - Spring invent skip-locks (@Import/@ComponentScan/typed-Impl);
+#       Go var _ T{} + unbalanced Route param poison; Rust unique
+#       use-imported nest; tree-sitter substrate + Go/TSX/Java probes
+#       (probe-only, unused by records).
+#  24 - Optional tree-sitter: Go/TSX/Java declaration spans overlay under
+#       CEV_TREE_SITTER (regex fallback on flag/parse/name mismatch);
+#       Vue SFC dual-parse script+template honesty (unmatched mounts
+#       skipped); Rust+Express probes (probe-only); Spring bean-index /
+#       Go method-set Impl still deferred (never invent).
+EXTRACTOR_VERSION = 24
 
 
 def output_path_for(output_root: Path, file_path: str) -> Path:

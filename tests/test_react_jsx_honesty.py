@@ -8,7 +8,7 @@ from src.storage.mirror_store import EXTRACTOR_VERSION
 
 
 def test_extractor_version_22():
-    assert EXTRACTOR_VERSION == 23
+    assert EXTRACTOR_VERSION == 24
 
 
 def test_nested_brace_props_captured():

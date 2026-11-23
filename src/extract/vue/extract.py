@@ -8,6 +8,12 @@ Honesty enrichments (EXTRACTOR_VERSION 22):
   attributed to the SFC stem under ``<script setup>`` (unambiguous owner);
   otherwise file-stem fallback is ``assumed``. Prefer skip over invent —
   dynamic ``<component :is>`` and unmatched kebab tags are not mounts.
+
+Optional dual-parse (``CEV_TREE_SITTER=1``, EXTRACTOR_VERSION 24):
+script (js/ts/tsx) + template (html) via ``tree_sitter_probe``. When the
+probe returns script-proven PascalCase names, mounts are filtered to that
+set — unmatched tags are skipped (never invented). Flag off / parse fail /
+empty evidence → full regex PascalCase path.
 """
 
 from __future__ import annotations
@@ -165,6 +171,13 @@ def extract_vue_sfc(text: str, file_stem: str = "Component") -> VueSfc:
         if "setup" in (m.group("attrs") or ""):
             script_setup = True
 
+    # Dual-parse honesty gate: when probe succeeds with script evidence,
+    # only emit mounts whose PascalCase name is proven in script.
+    # None → keep regex PascalCase behaviour (flag off / fail / empty).
+    from .tree_sitter_probe import honest_mount_children
+
+    allowed_mounts = honest_mount_children(text)
+
     components: list[dict] = []
     events: list[dict] = []
     has_v_html = False
@@ -182,6 +195,9 @@ def extract_vue_sfc(text: str, file_stem: str = "Component") -> VueSfc:
             attrs = m.group("attrs") or ""
             # Dynamic component identity — do not invent a stable child edge.
             if DYNAMIC_IS_RE.search(attrs) or name == "Component":
+                continue
+            # Dual-parse filter: unmatched tags are skipped, not invented.
+            if allowed_mounts is not None and name not in allowed_mounts:
                 continue
             file_offset = tmpl_base + m.start()
             line = _line_of(text, file_offset)

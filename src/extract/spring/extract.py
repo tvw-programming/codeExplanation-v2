@@ -7,9 +7,12 @@ containment only. Servlet ``context-path`` lives in config, not code.
 ``WebMvcConfigurer`` / bean ``RouterFunction`` wiring would require inventing
 bean edges — never do that here.
 
-Optional tree-sitter probe (``CEV_TREE_SITTER=1``): Java type/method/
-annotation *names* via ``tree_sitter_probe``. Records stay regex; v23
-``@Import`` / ``@ComponentScan`` / typed-Impl invent skip-locks unchanged.
+Optional tree-sitter (``CEV_TREE_SITTER=1``): ``extract_spring`` overlays
+clean probe line numbers onto stereotype / Spring Data types when class
+or interface names uniquely match; flag off / fail / mismatch → regex.
+Annotation *names* may be listed by the probe but never invent
+``@Import`` / ``@ComponentScan`` / typed-Impl / bean-index edges (still
+deferred).
 """
 
 from __future__ import annotations
@@ -398,6 +401,25 @@ def extract_spring(text: str) -> tuple[list[SpringType], list[SpringRoute]]:
     for m in SPRING_DATA_IFACE_RE.finditer(text):
         _append_spring_data_iface(text, m, types, seen)
 
+    # Optional tree-sitter line overlay for type decls only. Never invents
+    # bean-index / @Import / typed-Impl edges from annotation names.
+    from .tree_sitter_probe import probe_java_declarations
+
+    decls = probe_java_declarations(text)
+    if decls is None:
+        return types, routes
+    by_name: dict[str, int] = {}
+    for d in decls:
+        if d.kind not in ("class", "interface", "enum"):
+            continue
+        if d.name in by_name:
+            # Ambiguous duplicate — keep regex lines for the whole file.
+            return types, routes
+        by_name[d.name] = d.line_range[0]
+    if any(t.name not in by_name for t in types):
+        return types, routes
+    for t in types:
+        t.line = by_name[t.name]
     return types, routes
 
 
@@ -406,10 +428,10 @@ def tree_sitter_decl_names_or_fallback(text: str) -> list[str] | None:
 
     Returns ``None`` when the feature flag is off, the substrate is
     missing, or the parse is catastrophic — callers must keep the regex
-    path. Successful lists are proven clean-node names only; they are
-    **not** consumed by ``extract_spring`` / records yet (deferred until
-    EXTRACTOR_VERSION ≥ 24). Annotation names from the probe never invent
-    ``@Import`` / ``@ComponentScan`` / typed ``*Impl`` edges.
+    path. ``extract_spring`` overlays matching type line numbers under
+    ``CEV_TREE_SITTER`` (EXTRACTOR_VERSION 24). Annotation names from the
+    probe never invent ``@Import`` / ``@ComponentScan`` / typed ``*Impl``
+    / bean-index edges.
     """
     from .tree_sitter_probe import probe_java_declarations
 
