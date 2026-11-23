@@ -65,7 +65,10 @@ from src.extract.common import content_hash
 #       + Django include() cross-file join on unique literal resolution;
 #       Go Fiber groups via shared resolver (no assumed "app" root);
 #       routes may carry pathResolved / prefixChain.
-EXTRACTOR_VERSION = 17
+#  18 - Rust honesty: real handlers, qualified axum::routing::*, chained
+#       MethodRouter methods, in-file .nest compose; no Express-style
+#       .get("/path"); unresolved nest invents no children.
+EXTRACTOR_VERSION = 18
 
 
 def output_path_for(output_root: Path, file_path: str) -> Path:

@@ -24,7 +24,7 @@ too_large → no fence (Q5). Never invent edges.
 | **Python** | `requirements.txt` / `pyproject.toml` / `setup.py` | `flowchart TD` route or module graph | Sequence when flows exist | No edges; `APIRouter`/`Blueprint` + unique `include_router`/`include()` join; in-file view/CBV methods; unresolved mounts **assumed** (`fidelity: syntax`) |
 | **Spring Boot** | Maven/Gradle + spring-boot | `flowchart TD` (`di_graph` by injection type / Lombok/setter/@Inject) | Sequence when flows exist | No inject edges; never draw Impl from imports alone; bare `@RequestMapping`→ALL; placeholder paths assumed |
 | **Java** (non-Spring) | JVM markers without spring-boot | Same DI path when edges exist | Same | Empty → unavailable |
-| **Rust** | `Cargo.toml` | `flowchart TD` route / crate graph | Sequence when flows exist | Regex ceilings; macros may miss; methods from attrs/`get`/`post` |
+| **Rust** | `Cargo.toml` | `flowchart TD` route / crate graph | Sequence when flows exist | Regex ceilings; macros may miss; handlers + in-file `.nest`; unresolved nest skips |
 
 Dispatch: `src/detect/project_type.py` → `src/extract/<stack>/` →
 `src/visual/pipeline.py` `attach_visuals()` →
@@ -32,7 +32,7 @@ Dispatch: `src/detect/project_type.py` → `src/extract/<stack>/` →
 `architecture.md` + `interactive.json`.
 
 Hardening notes + layout: Project store
-`docs/extractor-hardening-plan.md`. `EXTRACTOR_VERSION` **17**.
+`docs/extractor-hardening-plan.md`. `EXTRACTOR_VERSION` **18**.
 
 ## Honesty / confidence in diagrams
 

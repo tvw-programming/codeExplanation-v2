@@ -30,8 +30,8 @@ def _write(path: Path, content: str) -> None:
     path.write_text(content)
 
 
-def test_extractor_version_is_9():
-    assert EXTRACTOR_VERSION == 17
+def test_extractor_version_is_18():
+    assert EXTRACTOR_VERSION == 18
 
 
 def test_express_detect_not_react_or_angular(tmp_path):
@@ -65,7 +65,7 @@ def test_python_ast_route_graph(tmp_path):
     chunk = ChunkPlan("app", "API", "python", "app.py", 30, "small")
     record = build_python_chunk_record(tmp_path, chunk, {"frontend": None, "backend": ["python"]})
     assert record["fidelity"] == "syntax"
-    assert record["extractorVersion"] == 17
+    assert record["extractorVersion"] == 18
     assert is_present(record["visualAvailability"]["componentTree"])
     assert record["visualGraph"]["kind"] in ("route_tree", "module_graph")
     assert any(r["path"] == "/users" for r in record["routes"])

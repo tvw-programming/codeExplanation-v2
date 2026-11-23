@@ -1,7 +1,7 @@
 # Multi-stack visuals
 
 Shipped: React (#3), Go Fiber (#4), remaining stacks (#5), brand header
-chrome + center-packed trees (#6). `EXTRACTOR_VERSION = 17`.
+chrome + center-packed trees (#6). `EXTRACTOR_VERSION = 18`.
 
 Attach: `src/visual/pipeline.py: attach_visuals()`. Render:
 `render-app/src/FullVideo.tsx`. Layout: `treeLayout.ts`. Header:
@@ -79,7 +79,7 @@ and lifecycle → FileCard + ChunkView only.
 | Python | `src/extract/python/` (`ast`) | `route_tree` / `module_graph` | In-file `APIRouter`/`Blueprint` + mounts compose; Django `path()` + in-file view/CBV methods; cross-file handlers `UNKNOWN`; `include()` assumed, not joined |
 | Express | `src/extract/express/` | `route_tree` | Nested literal mounts; path arrays; regex→assumed; per-route METHOD mw |
 | Spring Boot | `src/extract/spring/` | `di_graph` | By type + Lombok/setter/@Inject; bare `@RequestMapping`→ALL; never imports-as-inject / never invent Impl |
-| Rust | `src/extract/rust/` | `route_tree` / `crate_graph` | Method from attrs/`get`/`post`; assumed |
+| Rust | `src/extract/rust/` | `route_tree` / `crate_graph` | Real handlers; in-file `.nest` compose; unresolved nest skips |
 
 **Mermaid twin (docs/chat):** same stacks → flowchart / sequence kinds and
 skip reasons in

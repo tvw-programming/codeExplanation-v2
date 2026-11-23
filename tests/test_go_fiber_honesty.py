@@ -11,7 +11,7 @@ from src.storage.mirror_store import EXTRACTOR_VERSION
 
 
 def test_extractor_version_bumped_for_go_fiber_honesty():
-    assert EXTRACTOR_VERSION == 17
+    assert EXTRACTOR_VERSION == 18
 
 
 def test_generic_function_is_extracted():
@@ -191,7 +191,7 @@ func Map[T any](xs []T) []T { return xs }
         record = build_backend_go_chunk_record(
             tdp, chunk, {"type": "go", "framework": "fiber"}, None, True,
         )
-    assert record["extractorVersion"] == 17
+    assert record["extractorVersion"] == 18
     kinds = {m["kind"] for m in record["dataModels"]}
     assert "interface" in kinds
     assert "struct" in kinds

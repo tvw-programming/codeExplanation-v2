@@ -16,8 +16,8 @@ from src.visual.availability import is_present
 from src.visual.graph_builder import build_angular_selector_tree
 
 
-def test_extractor_version_is_10():
-    assert EXTRACTOR_VERSION == 17
+def test_extractor_version_is_18():
+    assert EXTRACTOR_VERSION == 18
 
 
 def test_parse_selector_fragments_honesty():
@@ -141,7 +141,7 @@ def test_chunk_record_emits_mount_edges(tmp_path: Path):
         ChunkPlan("ParentComponent", "UI", "angular", "parent.component.ts", 30, "small"),
         {"frontend": "angular", "backend": []},
     )
-    assert record["extractorVersion"] == 17
+    assert record["extractorVersion"] == 18
     assert is_present(record["visualAvailability"]["componentTree"])
     assert len(record["jsxMounts"]) == 1
     mount = record["jsxMounts"][0]

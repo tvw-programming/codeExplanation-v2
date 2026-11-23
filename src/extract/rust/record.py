@@ -6,7 +6,7 @@ from pathlib import Path
 
 from src.chunk.chunk_splitter import ChunkPlan
 
-from ..common import confidence_level, read_lines
+from ..common import confidence_level, confidence_from_flags, read_lines
 from ..record_base import base_record
 from . import extract as rust
 
@@ -27,19 +27,26 @@ def build_rust_chunk_record(root: Path, chunk: ChunkPlan, project_type_dict: dic
         {
             "method": r["method"],
             "path": r["path"],
-            "handler": "handler",
-            "assumed": r["assumed"],
+            "handler": r.get("handler") or "",
+            "assumed": bool(r.get("assumed")),
             "line": r["line"],
             "middleware": [],
             "protected": False,
+            **({"note": r["note"]} if r.get("note") else {}),
         }
         for r in facts.routes
     ]
     record["unsafeBlocks"] = facts.unsafe_blocks
-    conf = 0.45 if facts.routes or facts.modules else 0.3
+    total = max(1, len(facts.routes) + len(facts.modules))
+    assumed = sum(1 for r in facts.routes if r.get("assumed"))
+    conf = confidence_from_flags(total, assumed) if (facts.routes or facts.modules) else 0.3
     record["confidence"] = conf
     record["confidenceLevel"] = confidence_level(conf)
-    record["notes"] = "Rust regex extract; macro-generated routes may be missing (partial)."
+    record["notes"] = (
+        "Rust regex extract; literal Axum/Actix/Rocket routes emit real handlers. "
+        "In-file .nest composes; unresolved nest targets invent no children. "
+        "Macro-generated routes may be missing (partial)."
+    )
     record["fidelity"] = "regex"
     from src.visual.pipeline import attach_visuals
     return attach_visuals(record, stack="rust")
