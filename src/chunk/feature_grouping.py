@@ -105,7 +105,7 @@ def _pick_primary(files: list[Path]) -> Path | None:
 # ---------------------------------------------------------------------------
 
 def _attach_angular_template_siblings(root: Path, files: list[str]) -> list[str]:
-    """Append clear ``templateUrl`` same-dir ``.html`` siblings for Angular."""
+    """Append clear relative ``templateUrl`` ``.html`` siblings for Angular."""
     from src.extract.angular.extract import resolve_template_url_sibling, TEMPLATE_URL_RE, COMPONENT_RE
 
     out = list(files)
@@ -139,8 +139,9 @@ def group_react_or_angular_features(root: Path, src_root: Path, stack: str = "re
       (all files under it, recursively).
     - Loose files directly in src_root (no subdirectory) are grouped into
       one feature named after src_root's own directory name.
-    - Angular: clear ``templateUrl`` same-dir ``.html`` siblings are attached
-      to the feature (orphan templates are never claimed).
+    - Angular: clear relative ``templateUrl`` ``.html`` siblings (incl. ``../``)
+      are attached to the feature when uniquely resolved (orphan templates are
+      never claimed).
     """
     features: list[Feature] = []
     if not src_root.is_dir():

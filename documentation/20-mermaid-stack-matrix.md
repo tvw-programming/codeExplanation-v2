@@ -16,7 +16,7 @@ too_large → no fence (Q5). Never invent edges.
 | Stack | Detection signal | Structure Mermaid | Lifecycle Mermaid | Skip when |
 |---|---|---|---|---|
 | **React** | `package.json` + React deps | `flowchart TD` (`component_tree` mounts) | `sequenceDiagram` from `lifecycleFlows` | No mounts / no flows / >40 nodes; nested JSX prop braces + memo/forwardRef names when proven |
-| **Angular** | `package.json` + Angular deps | `flowchart TD` selector tree + confirmed template mounts | Sequence when flows exist | Empty `@Component` / no edges → unavailable; unmatched tags skipped; clear `templateUrl` class+html stays one chunk |
+| **Angular** | `package.json` + Angular deps | `flowchart TD` selector tree + confirmed template mounts | Sequence when flows exist | Empty `@Component` / no edges → unavailable; unmatched tags skipped; relative `templateUrl` (incl. `../`) class+html stays one chunk when uniquely resolved |
 | **Vue / Solid / Qwik** | FE deps in `package.json` | `flowchart TD` mounts when present | Sequence when flows present | Thin extractors; missing mounts → skip |
 | **JavaScript** | `package.json` without concrete FE | `flowchart TD` (`module_graph`) | Sequence when call/lifecycle edges exist | No import/call edges |
 | **Go Fiber** | `go.mod` + Fiber import | `flowchart TD` (`route_tree`) | Sequence middleware→handler | No routes; unresolved prefixes / non-literal `Add` skipped; brace-scoped literal `Route()` composes; Impl only from explicit `var _` asserts |
@@ -24,7 +24,7 @@ too_large → no fence (Q5). Never invent edges.
 | **Python** | `requirements.txt` / `pyproject.toml` / `setup.py` | `flowchart TD` route or module graph | Sequence when flows exist | No edges; `APIRouter`/`Blueprint` + unique `include_router`/`include()` join; in-file view/CBV methods; unresolved mounts **assumed** (`fidelity: syntax`) |
 | **Spring Boot** | Maven/Gradle + spring-boot | `flowchart TD` (`di_graph` by injection type / Lombok/setter/@Inject) | Sequence when flows exist | No inject edges; never draw Impl from imports alone; bare `@RequestMapping`→ALL; placeholder paths assumed |
 | **Java** (non-Spring) | JVM markers without spring-boot | Same DI path when edges exist | Same | Empty → unavailable |
-| **Rust** | `Cargo.toml` | `flowchart TD` route / crate graph | Sequence when flows exist | Regex ceilings; macros may miss; handlers + in-file `.nest`; unresolved nest skips |
+| **Rust** | `Cargo.toml` | `flowchart TD` route / crate graph | Sequence when flows exist | Regex ceilings; macros may miss; handlers + in-file / unique cross-file `.nest` via PrefixGraph; unresolved nest skips |
 
 Dispatch: `src/detect/project_type.py` → `src/extract/<stack>/` →
 `src/visual/pipeline.py` `attach_visuals()` →
@@ -32,7 +32,10 @@ Dispatch: `src/detect/project_type.py` → `src/extract/<stack>/` →
 `architecture.md` + `interactive.json`.
 
 Hardening notes + layout: Project store
-`docs/extractor-hardening-plan.md`. `EXTRACTOR_VERSION` **20**.
+`docs/extractor-hardening-plan.md`. `EXTRACTOR_VERSION` **21**.
+Sample Mermaid under `visuals/` is regenerated from checked-in
+`visualGraph` / `lifecycleFlows` only (`scripts/regen_mermaid_artifacts.py`)
+— never by inventing edges.
 
 ## Honesty / confidence in diagrams
 

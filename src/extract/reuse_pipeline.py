@@ -29,7 +29,7 @@ from .common import read_lines
 def _build_record(
     root, chunk, project_type_dict, package_json_dir, base_url, module_path,
     uses_fiber, current_hash, *, angular_selector_index=None, python_route_index=None,
-    express_route_index=None,
+    express_route_index=None, rust_route_index=None,
 ):
     stack = chunk.stack
     if stack == "react":
@@ -59,7 +59,9 @@ def _build_record(
     if stack == "javascript":
         return build_javascript_chunk_record(root, chunk, project_type_dict)
     if stack == "rust":
-        return build_rust_chunk_record(root, chunk, project_type_dict)
+        return build_rust_chunk_record(
+            root, chunk, project_type_dict, route_index=rust_route_index,
+        )
 
     from src.visual.pipeline import attach_visuals
     return attach_visuals({
@@ -127,6 +129,11 @@ def extract_repo_with_reuse(
         from .express.extract import build_express_route_index
         express_route_index = build_express_route_index(root)
 
+    rust_route_index = None
+    if any(c.stack == "rust" for c in result.chunks):
+        from .rust.extract import build_rust_route_index
+        rust_route_index = build_rust_route_index(root)
+
     records: list[dict] = []
     reused_count = 0
     reanalyzed_count = 0
@@ -146,6 +153,7 @@ def extract_repo_with_reuse(
             angular_selector_index=angular_selector_index,
             python_route_index=python_route_index,
             express_route_index=express_route_index,
+            rust_route_index=rust_route_index,
         )
 
         if github_owner and github_repo:

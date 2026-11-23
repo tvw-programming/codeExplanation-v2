@@ -73,7 +73,10 @@ from src.extract.common import content_hash
 #  20 - React JSX brace/memo/HOC/hook honesty; Go brace-scoped Route()
 #       + explicit var _ interface assertions; Angular templateUrl
 #       class+html bundle chunking.
-EXTRACTOR_VERSION = 20
+#  21 - Rust cross-file .nest onto PrefixGraph (unique literal module
+#       resolve); Angular relative templateUrl incl. ../ when unique;
+#       sample Mermaid regen from visualGraph fixtures only.
+EXTRACTOR_VERSION = 21
 
 
 def output_path_for(output_root: Path, file_path: str) -> Path:
