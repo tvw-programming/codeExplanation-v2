@@ -21,7 +21,7 @@ FIXTURES = Path(__file__).resolve().parent / "fixtures"
 
 
 def test_extractor_version_22():
-    assert EXTRACTOR_VERSION == 23
+    assert EXTRACTOR_VERSION == 24
 
 
 def test_cross_file_nest_mod_fn_composes():
@@ -178,7 +178,7 @@ def test_builder_emits_path_resolved():
         ChunkPlan("api", "API", "rust", "api.rs", 20, "small"),
         {"frontend": None, "backend": ["rust"]},
     )
-    assert rec["extractorVersion"] == 23
+    assert rec["extractorVersion"] == 24
     assert is_present(rec["visualAvailability"]["componentTree"])
     items = next(r for r in rec["routes"] if r["path"] == "/api/items" and r["method"] == "GET")
     assert items["pathResolved"] is True

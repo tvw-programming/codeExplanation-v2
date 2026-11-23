@@ -45,6 +45,9 @@ GRAMMARS: dict[str, tuple[str, str]] = {
     "go": ("tree_sitter_go", "language"),
     "java": ("tree_sitter_java", "language"),
     "python": ("tree_sitter_python", "language"),
+    "rust": ("tree_sitter_rust", "language"),
+    # HTML used for Vue SFC <template> dual-parse honesty (not a full Vue grammar).
+    "html": ("tree_sitter_html", "language"),
 }
 
 EXTENSION_TO_LANGUAGE = {
@@ -57,6 +60,9 @@ EXTENSION_TO_LANGUAGE = {
     ".tsx": "tsx",
     ".go": "go",
     ".py": "python",
+    ".rs": "rust",
+    ".html": "html",
+    ".vue": "html",  # template half only; script uses js/ts/tsx via dual-parse
 }
 
 

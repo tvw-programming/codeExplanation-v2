@@ -1,18 +1,18 @@
-"""Optional Go tree-sitter probe (spike — not yet record-authoritative).
+"""Optional Go tree-sitter probe.
 
 When ``CEV_TREE_SITTER=1`` and ``tree-sitter`` + ``tree-sitter-go`` are
-installed, this module can parse Go source and list **proven** top-level
+installed, this module parses Go source and lists **proven** top-level
 function / method / type names from clean nodes.
 
-It does **not** invent Fiber routes, Impl edges, or mounts. Record
-assembly in ``extract.py`` / ``record.py`` still uses the regex path.
-Query-backed replacement of regex facts requires an ``EXTRACTOR_VERSION``
-bump (see store docs/tree-sitter-substrate-spike.md).
+``extract.py`` overlays matching line ranges onto regex facts (version
+24). It does **not** invent Fiber routes, Impl edges, or mounts.
+Method-set interface→Impl inference stays deferred.
 
 Honesty
 -------
 - Flag off / substrate missing / catastrophic parse → ``None`` (fallback).
 - Nodes with ``has_error`` are skipped (no guessed names from ERROR trees).
+- Name mismatch with regex → extract keeps the full regex path.
 - Never emits edges — names + line ranges only.
 """
 

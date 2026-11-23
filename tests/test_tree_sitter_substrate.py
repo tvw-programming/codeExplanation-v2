@@ -1,6 +1,7 @@
-"""Tree-sitter substrate spike — skip/fallback locks (no record invent).
+"""Tree-sitter substrate — wiring + probe locks (no invent).
 
-EXTRACTOR_VERSION stays 23: probes do not change chunk-record semantics.
+EXTRACTOR_VERSION is 24: Go/TSX/Java spans + Vue dual-parse honesty under
+CEV_TREE_SITTER; Rust/Express probe-only. Flag off keeps regex parity.
 """
 
 from __future__ import annotations
@@ -34,8 +35,8 @@ from src.parse.tree_sitter_support import (  # noqa: E402
 )
 
 
-def test_extractor_version_unchanged_by_substrate_spike():
-    assert EXTRACTOR_VERSION == 23
+def test_extractor_version_is_24_for_tree_sitter_wiring():
+    assert EXTRACTOR_VERSION == 24
 
 
 def test_runtime_api_is_querycursor_era():
@@ -119,8 +120,8 @@ def test_catastrophic_parse_falls_back(monkeypatch):
     assert tree_sitter_decl_names_or_fallback(garbage) is None
 
 
-def test_regex_path_unchanged_when_flag_on(monkeypatch):
-    """Flag-on probe must not alter regex extract_functions output."""
+def test_go_wired_names_match_when_flag_on(monkeypatch):
+    """Flag-on overlay keeps function names; spans come from the probe when matched."""
     src = """package main
 
 func Visible() {
@@ -132,17 +133,52 @@ func Visible() {
     monkeypatch.setenv("CEV_TREE_SITTER", "1")
     on = extract_functions(src)
     assert [f.name for f in off] == [f.name for f in on] == ["Visible"]
-    # Probe sees the same name but is not wired into extract_functions yet.
     assert tree_sitter_decl_names_or_fallback(src) == ["Visible"]
+    # Wired: flag-on line_range comes from the clean probe node.
+    decls = probe_go_declarations(src)
+    assert decls is not None
+    assert on[0].line_range == decls[0].line_range
+
+
+def test_go_name_mismatch_falls_back_to_regex(monkeypatch):
+    """When probe function names diverge from regex, keep the full regex path."""
+    monkeypatch.setenv("CEV_TREE_SITTER", "1")
+    src = """package main
+
+func Visible() {
+\tprintln("x")
+}
+"""
+    # Force a fake mismatch by patching the probe return.
+    import src.extract.go.tree_sitter_probe as probe_mod
+
+    real = probe_mod.probe_go_declarations
+
+    def _wrong(text):
+        decls = real(text)
+        if not decls:
+            return decls
+        # Rename first function so overlay refuses.
+        from src.extract.go.tree_sitter_probe import GoDeclSpan
+        return [GoDeclSpan(kind=d.kind, name="Other", line_range=d.line_range) if i == 0 else d
+                for i, d in enumerate(decls)]
+
+    monkeypatch.setattr(probe_mod, "probe_go_declarations", _wrong)
+    monkeypatch.delenv("CEV_TREE_SITTER", raising=False)
+    # Re-enable after capturing regex baseline via extract with flag off.
+    off = extract_functions(src)
+    monkeypatch.setenv("CEV_TREE_SITTER", "1")
+    on = extract_functions(src)
+    assert [f.line_range for f in on] == [f.line_range for f in off]
 
 
 def test_missing_grammar_raises_parser_unavailable(monkeypatch):
     monkeypatch.setenv("CEV_TREE_SITTER", "1")
     load_language.cache_clear()
-    # "rust" is not registered in this spike's GRAMMARS map.
+    # Unregistered language key → ParserUnavailable / try_parse None.
     with pytest.raises(ParserUnavailable):
-        parse_source("fn main() {}", "rust")
-    assert try_parse("fn main() {}", "rust") is None
+        parse_source("IDENTIFICATION DIVISION.", "cobol")
+    assert try_parse("IDENTIFICATION DIVISION.", "cobol") is None
     load_language.cache_clear()
 
 
@@ -223,13 +259,14 @@ def test_tsx_probe_skips_damaged_not_invent(monkeypatch):
     assert "Broken" not in names
 
 
-def test_tsx_regex_path_unchanged_when_flag_on(monkeypatch):
-    """Flag-on probe must not alter regex extract_functions output."""
+def test_tsx_wired_names_match_when_flag_on(monkeypatch):
+    """Flag-on overlay keeps function names when probe matches 1:1."""
     pytest.importorskip("tree_sitter_typescript")
     from src.extract.react.extract import (
         extract_functions,
         tree_sitter_decl_names_or_fallback as tsx_names,
     )
+    from src.extract.react.tree_sitter_probe import probe_tsx_declarations
 
     src = "export function Visible() { return <div/>; }\n"
     monkeypatch.delenv("CEV_TREE_SITTER", raising=False)
@@ -238,6 +275,21 @@ def test_tsx_regex_path_unchanged_when_flag_on(monkeypatch):
     on = extract_functions(src)
     assert [f.name for f in off] == [f.name for f in on] == ["Visible"]
     assert tsx_names(src) == ["Visible"]
+    decls = probe_tsx_declarations(src)
+    assert decls is not None
+    assert on[0].line_range == decls[0].line_range
+
+
+def test_tsx_never_invents_jsx_mounts_from_probe(monkeypatch):
+    """Probe lists decls only — no element tag names as declarations."""
+    pytest.importorskip("tree_sitter_typescript")
+    from src.extract.react.tree_sitter_probe import probe_tsx_declarations
+
+    monkeypatch.setenv("CEV_TREE_SITTER", "1")
+    src = "export function App() { return <UnregisteredChild />; }\n"
+    decls = probe_tsx_declarations(src)
+    assert decls is not None
+    assert "UnregisteredChild" not in {d.name for d in decls}
 
 
 def test_tsx_catastrophic_parse_falls_back(monkeypatch):
@@ -355,3 +407,128 @@ def test_java_grammar_loads():
     parsed = parse_source("public class A {}", "java")
     assert parsed.root is not None
     assert not catastrophic_parse(parsed)
+
+
+# --- Vue SFC dual-parse honesty ---
+
+
+def test_vue_dual_parse_flag_off(monkeypatch):
+    pytest.importorskip("tree_sitter_html")
+    pytest.importorskip("tree_sitter_typescript")
+    from src.extract.vue.tree_sitter_probe import probe_vue_sfc, honest_mount_children
+    from src.extract.vue.extract import extract_vue_sfc
+
+    sfc = """
+<script setup lang=\"ts\">
+import HelloWorld from './HelloWorld.vue'
+</script>
+<template>
+  <HelloWorld />
+  <UnmatchedThing />
+</template>
+"""
+    monkeypatch.delenv("CEV_TREE_SITTER", raising=False)
+    assert probe_vue_sfc(sfc) is None
+    assert honest_mount_children(sfc) is None
+    # Regex path keeps both PascalCase tags when flag is off.
+    facts = extract_vue_sfc(sfc)
+    assert {c["child"] for c in facts.components} == {"HelloWorld", "UnmatchedThing"}
+
+
+def test_vue_dual_parse_skips_unmatched_mounts(monkeypatch):
+    pytest.importorskip("tree_sitter_html")
+    pytest.importorskip("tree_sitter_typescript")
+    from src.extract.vue.extract import extract_vue_sfc
+    from src.extract.vue.tree_sitter_probe import probe_vue_sfc
+
+    monkeypatch.setenv("CEV_TREE_SITTER", "1")
+    sfc = """
+<script setup lang=\"ts\">
+import HelloWorld from './HelloWorld.vue'
+const LocalComp = defineComponent({})
+</script>
+<template>
+  <HelloWorld />
+  <LocalComp />
+  <UnmatchedThing />
+  <div>x</div>
+</template>
+"""
+    result = probe_vue_sfc(sfc)
+    assert result is not None
+    assert "HelloWorld" in result.honest_mount_names
+    assert "LocalComp" in result.honest_mount_names
+    assert "UnmatchedThing" not in result.honest_mount_names
+    facts = extract_vue_sfc(sfc)
+    assert {c["child"] for c in facts.components} == {"HelloWorld", "LocalComp"}
+
+
+def test_vue_dual_parse_empty_script_falls_back(monkeypatch):
+    """No script identifiers → mismatch → regex PascalCase path kept."""
+    pytest.importorskip("tree_sitter_html")
+    pytest.importorskip("tree_sitter_javascript")
+    from src.extract.vue.tree_sitter_probe import probe_vue_sfc
+    from src.extract.vue.extract import extract_vue_sfc
+
+    monkeypatch.setenv("CEV_TREE_SITTER", "1")
+    sfc = """
+<script setup>
+// no imports / decls
+</script>
+<template>
+  <OrphanMount />
+</template>
+"""
+    assert probe_vue_sfc(sfc) is None
+    facts = extract_vue_sfc(sfc)
+    assert {c["child"] for c in facts.components} == {"OrphanMount"}
+
+
+# --- Rust + Express probes (probe-only; records stay regex) ---
+
+
+def test_rust_probe_flag_and_decls(monkeypatch):
+    pytest.importorskip("tree_sitter_rust")
+    from src.extract.rust.tree_sitter_probe import probe_rust_declarations
+    from src.extract.rust.extract import tree_sitter_decl_names_or_fallback as rust_names
+
+    src = "pub fn hello() {}\npub struct S {}\nimpl S { fn m(&self) {} }\n"
+    monkeypatch.delenv("CEV_TREE_SITTER", raising=False)
+    assert probe_rust_declarations(src) is None
+    assert rust_names(src) is None
+    monkeypatch.setenv("CEV_TREE_SITTER", "1")
+    decls = probe_rust_declarations(src)
+    assert decls is not None
+    names = {d.name for d in decls}
+    assert {"hello", "S", "m"} <= names
+    assert "hello" in rust_names(src)
+
+
+def test_rust_grammar_loads():
+    pytest.importorskip("tree_sitter_rust")
+    parsed = parse_source("fn main() {}", "rust")
+    assert parsed.root is not None
+
+
+def test_express_js_probe_flag_and_decls(monkeypatch):
+    pytest.importorskip("tree_sitter_javascript")
+    from src.extract.express.tree_sitter_probe import probe_js_declarations
+    from src.extract.express.extract import tree_sitter_decl_names_or_fallback as js_names
+
+    src = "const foo = () => {};\nfunction bar() {}\n"
+    monkeypatch.delenv("CEV_TREE_SITTER", raising=False)
+    assert probe_js_declarations(src) is None
+    assert js_names(src) is None
+    monkeypatch.setenv("CEV_TREE_SITTER", "1")
+    decls = probe_js_declarations(src)
+    assert decls is not None
+    assert {d.name for d in decls} >= {"foo", "bar"}
+    assert js_names(src) is not None
+
+
+def test_express_js_catastrophic_falls_back(monkeypatch):
+    pytest.importorskip("tree_sitter_javascript")
+    from src.extract.express.tree_sitter_probe import probe_js_declarations
+
+    monkeypatch.setenv("CEV_TREE_SITTER", "1")
+    assert probe_js_declarations("function {\n" * 20) is None

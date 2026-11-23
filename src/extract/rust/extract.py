@@ -16,6 +16,11 @@ Honesty rules (never invent edges):
   Unresolved / ambiguous / external-crate targets → no invented children.
 - ``pathResolved False ⇒ assumed True``.
 - Trait Impl unresolved / macros that hide routes → partial (miss, not invent).
+
+Optional tree-sitter probe (``CEV_TREE_SITTER=1``): declaration names via
+``tree_sitter_probe`` / ``tree_sitter_decl_names_or_fallback``. Records stay
+regex + PrefixGraph — query-backed nest/route spans deferred until macro
+and trait-Impl parity tests (see feasibility matrix).
 """
 
 from __future__ import annotations
@@ -858,3 +863,20 @@ def extract_rust(
         routes=routes,
         unsafe_blocks=unsafe_blocks,
     )
+
+
+def tree_sitter_decl_names_or_fallback(text: str) -> list[str] | None:
+    """Optional tree-sitter plug-in point for Rust declarations.
+
+    Returns ``None`` when the feature flag is off, the substrate is
+    missing, or the parse is catastrophic — callers must keep the regex
+    path. Successful lists are proven clean-node names only; they are
+    **not** consumed by record builders yet (macros / trait Impl invent
+    risk — deferred). Never invents ``.nest`` or route edges.
+    """
+    from .tree_sitter_probe import probe_rust_declarations
+
+    decls = probe_rust_declarations(text)
+    if decls is None:
+        return None
+    return [d.name for d in decls]

@@ -1,13 +1,12 @@
-"""Optional Java tree-sitter probe for Spring stacks (not record-authoritative).
+"""Optional Java tree-sitter probe for Spring stacks.
 
 When ``CEV_TREE_SITTER=1`` and ``tree-sitter`` + ``tree-sitter-java`` are
-installed, this module can parse Java and list **proven** type / method /
+installed, this module parses Java and lists **proven** type / method /
 annotation names from clean nodes.
 
-It does **not** invent ``@Import`` / ``@ComponentScan`` bean edges, typed
-``*Impl`` nodes, or DI graphs. Record assembly still uses the regex path
-and v23 invent skip-locks. Query-backed facts require ``EXTRACTOR_VERSION``
-bump when records change.
+``extract_spring`` overlays matching type line numbers (version 24). It
+does **not** invent ``@Import`` / ``@ComponentScan`` bean-index edges,
+typed ``*Impl`` nodes, or DI graphs — those stay deferred.
 
 Honesty
 -------

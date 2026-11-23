@@ -1,17 +1,17 @@
-"""Optional TSX/TypeScript tree-sitter probe (not record-authoritative).
+"""Optional TSX/TypeScript tree-sitter probe.
 
 When ``CEV_TREE_SITTER=1`` and ``tree-sitter`` + ``tree-sitter-typescript``
-are installed, this module can parse TSX (or TS) and list **proven**
+are installed, this module parses TSX (or TS) and lists **proven**
 declaration names from clean nodes.
 
-It does **not** invent JSX mounts, dynamic ``:is``/tag edges, or hook
-owners. Record assembly in ``extract.py`` / ``record.py`` still uses the
-regex path. Query-backed spans require an ``EXTRACTOR_VERSION`` bump.
+``extract_functions`` overlays matching line ranges (version 24). It does
+**not** invent JSX mounts, dynamic ``:is``/tag edges, or hook owners.
 
 Honesty
 -------
 - Flag off / substrate missing / catastrophic parse → ``None`` (fallback).
 - Nodes with ``has_error`` are skipped (no guessed names from ERROR trees).
+- Name mismatch with regex → extract keeps the full regex path.
 - Never emits mounts or edges — names + line ranges only.
 """
 

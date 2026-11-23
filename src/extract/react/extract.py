@@ -12,9 +12,10 @@ Honesty enrichments (EXTRACTOR_VERSION 20):
 - Hook owners use the innermost enclosing function when evidence is
   clear; file-stem fallback is ``assumed``.
 
-Optional tree-sitter probe (``CEV_TREE_SITTER=1``): declaration names via
-``tree_sitter_probe`` / ``tree_sitter_decl_names_or_fallback``. Record
-facts below still come from regex only — no VERSION bump until wired.
+Optional tree-sitter (``CEV_TREE_SITTER=1``): ``extract_functions`` overlays
+clean probe line ranges when function/const_fn/method names match the
+regex path 1:1; flag off / fail / mismatch → full regex fallback.
+Never invents JSX mounts from tags or dynamic ``:is``.
 """
 
 from __future__ import annotations
@@ -382,7 +383,29 @@ def extract_functions(text: str) -> list[ExtractedFunction]:
                 wrappers=None,
             )
 
-    return functions
+    # Optional tree-sitter span overlay — match function-like decl names
+    # 1:1; mismatch / flag off → keep regex spans. Never touches mounts.
+    from .tree_sitter_probe import probe_tsx_declarations
+
+    decls = probe_tsx_declarations(text, language_key="tsx")
+    if decls is None:
+        return functions
+    ts_fns = [d for d in decls if d.kind in ("function", "const_fn", "method")]
+    if [d.name for d in ts_fns] != [f.name for f in functions]:
+        return functions
+    overlaid: list[ExtractedFunction] = []
+    for fn, d in zip(functions, ts_fns):
+        start, end = d.line_range
+        overlaid.append(ExtractedFunction(
+            name=fn.name,
+            signature=fn.signature,
+            line_range=(start, end),
+            snippet=trim_snippet(lines, start, end),
+            is_event_handler=fn.is_event_handler,
+            event_type=fn.event_type,
+            wrappers=list(fn.wrappers or []),
+        ))
+    return overlaid
 
 
 def extract_api_calls(text: str) -> list[ExtractedApiCall]:
@@ -809,9 +832,8 @@ def tree_sitter_decl_names_or_fallback(
 
     Returns ``None`` when the feature flag is off, the substrate is
     missing, or the parse is catastrophic — callers must keep the regex
-    path. A successful list is names proven by clean nodes only; it is
-    **not** yet consumed by ``extract_functions`` / JSX mounts / records
-    (deferred until EXTRACTOR_VERSION ≥ 24). Never invents mounts.
+    path. ``extract_functions`` consumes matching spans under
+    ``CEV_TREE_SITTER`` (EXTRACTOR_VERSION 24). Never invents mounts.
     """
     from .tree_sitter_probe import probe_tsx_declarations
 

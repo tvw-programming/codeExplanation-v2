@@ -3,10 +3,11 @@
 Regex-based static analysis — see common.py's module docstring for the
 scope decision. Record assembly lives in record.py.
 
-Tree-sitter substrate spike: optional probe in ``tree_sitter_probe.py``
-(``CEV_TREE_SITTER=1``). Record facts below still come from regex only —
-query-backed spans/edges require an EXTRACTOR_VERSION bump. Parse fail /
-missing deps / flag off → fall back; never invent edges from a partial tree.
+Tree-sitter (``CEV_TREE_SITTER=1``): ``extract_functions`` / structs /
+interfaces overlay clean probe line ranges when declaration names match
+the regex path 1:1; flag off / parse fail / name mismatch → full regex
+fallback. Never invents Fiber routes, Impl edges, or mounts from a
+partial tree. Go method-set Impl inference stays deferred.
 
 Honesty (Fiber enrichments):
 - Generics: type params on funcs/structs/interfaces are captured; no
@@ -294,6 +295,26 @@ def extract_imports(text: str, module_path: str | None = None) -> list[GoImport]
     return imports
 
 
+def _go_probe_type_spans_by_name(text: str) -> dict[str, tuple[int, int]] | None:
+    """Map type name → line range from the Go probe, or None to fall back.
+
+    Duplicate type names in one file → None (ambiguous; keep regex).
+    """
+    from .tree_sitter_probe import probe_go_declarations
+
+    decls = probe_go_declarations(text)
+    if decls is None:
+        return None
+    by_name: dict[str, tuple[int, int]] = {}
+    for d in decls:
+        if d.kind != "type":
+            continue
+        if d.name in by_name:
+            return None
+        by_name[d.name] = d.line_range
+    return by_name
+
+
 def extract_structs(text: str) -> list[ExtractedGoStruct]:
     lines = text.splitlines()
     structs: list[ExtractedGoStruct] = []
@@ -321,7 +342,23 @@ def extract_structs(text: str) -> list[ExtractedGoStruct]:
             snippet=snippet,
             type_params=type_params,
         ))
-    return structs
+    spans = _go_probe_type_spans_by_name(text)
+    if spans is None:
+        return structs
+    # Every regex struct must uniquely resolve in the probe; else full fallback.
+    if any(s.name not in spans for s in structs):
+        return structs
+    out: list[ExtractedGoStruct] = []
+    for s in structs:
+        start, end = spans[s.name]
+        out.append(ExtractedGoStruct(
+            name=s.name,
+            fields=s.fields,
+            line_range=(start, end),
+            snippet=trim_snippet(lines, start, end),
+            type_params=s.type_params,
+        ))
+    return out
 
 
 def extract_interfaces(text: str) -> list[ExtractedGoInterface]:
@@ -362,7 +399,23 @@ def extract_interfaces(text: str) -> list[ExtractedGoInterface]:
             snippet=snippet,
             type_params=type_params,
         ))
-    return out
+    spans = _go_probe_type_spans_by_name(text)
+    if spans is None:
+        return out
+    if any(iface.name not in spans for iface in out):
+        return out
+    overlaid: list[ExtractedGoInterface] = []
+    for iface in out:
+        start, end = spans[iface.name]
+        overlaid.append(ExtractedGoInterface(
+            name=iface.name,
+            methods=iface.methods,
+            embedded=iface.embedded,
+            line_range=(start, end),
+            snippet=trim_snippet(lines, start, end),
+            type_params=iface.type_params,
+        ))
+    return overlaid
 
 
 def extract_interface_assertions(text: str) -> list[ExtractedInterfaceAssertion]:
@@ -418,7 +471,30 @@ def extract_functions(text: str) -> list[ExtractedGoFunction]:
             returns=returns,
             returns_fiber_handler=_returns_fiber_handler(returns or ""),
         ))
-    return functions
+    # Optional tree-sitter span overlay — 1:1 name match with probe
+    # function/method decls; mismatch → keep regex spans entirely.
+    from .tree_sitter_probe import probe_go_declarations
+
+    decls = probe_go_declarations(text)
+    if decls is None:
+        return functions
+    ts_fm = [d for d in decls if d.kind in ("function", "method")]
+    if [d.name for d in ts_fm] != [f.name for f in functions]:
+        return functions
+    overlaid: list[ExtractedGoFunction] = []
+    for fn, d in zip(functions, ts_fm):
+        start, end = d.line_range
+        overlaid.append(ExtractedGoFunction(
+            name=fn.name,
+            signature=fn.signature,
+            line_range=(start, end),
+            snippet=trim_snippet(lines, start, end),
+            receiver=fn.receiver,
+            type_params=fn.type_params,
+            returns=fn.returns,
+            returns_fiber_handler=fn.returns_fiber_handler,
+        ))
+    return overlaid
 
 
 def extract_middleware_factories(text: str) -> list[ExtractedMiddlewareFactory]:
@@ -895,9 +971,10 @@ def tree_sitter_decl_names_or_fallback(text: str) -> list[str] | None:
 
     Returns ``None`` when the feature flag is off, the substrate is
     missing, or the parse is catastrophic — callers must keep the regex
-    path. A successful list is names proven by clean nodes only; it is
-    **not** yet consumed by ``extract_functions`` / record builders
-    (deferred until EXTRACTOR_VERSION ≥ 24). Never invents route/Impl edges.
+    path. A successful list is names proven by clean nodes only.
+    ``extract_functions`` / structs / interfaces consume matching spans
+    under ``CEV_TREE_SITTER`` (EXTRACTOR_VERSION 24). Never invents
+    route/Impl edges or method-set satisfaction.
     """
     from .tree_sitter_probe import probe_go_declarations
 
