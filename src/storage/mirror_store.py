@@ -68,7 +68,7 @@ from src.extract.common import content_hash
 #  18 - Rust honesty: real handlers, qualified axum::routing::*, chained
 #       MethodRouter methods, in-file .nest compose; no Express-style
 #       .get("/path"); unresolved nest invents no children.
-EXTRACTOR_VERSION = 18
+EXTRACTOR_VERSION = 19
 
 
 def output_path_for(output_root: Path, file_path: str) -> Path:

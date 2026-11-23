@@ -30,6 +30,7 @@ from .common import read_lines
 def _build_record(
     root, chunk, project_type, project_type_dict, package_json_dir, base_url,
     module_path, uses_fiber, *, angular_selector_index=None, python_route_index=None,
+    express_route_index=None,
 ):
     stack = chunk.stack
     if stack == "react":
@@ -45,7 +46,9 @@ def _build_record(
             root, chunk, project_type_dict, route_index=python_route_index,
         )
     if stack == "express":
-        return build_express_chunk_record(root, chunk, project_type_dict)
+        return build_express_chunk_record(
+            root, chunk, project_type_dict, route_index=express_route_index,
+        )
     if stack in ("spring_boot", "java"):
         return build_spring_chunk_record(root, chunk, project_type_dict)
     if stack == "vue":
@@ -112,6 +115,11 @@ def extract_repo(root: str | Path, project_type: ProjectType) -> list[dict]:
         from .python.extract import build_python_route_index
         python_route_index = build_python_route_index(root)
 
+    express_route_index = None
+    if any(c.stack == "express" for c in result.chunks):
+        from .express.extract import build_express_route_index
+        express_route_index = build_express_route_index(root)
+
     records: list[dict] = []
     for chunk in result.chunks:
         records.append(_build_record(
@@ -119,6 +127,7 @@ def extract_repo(root: str | Path, project_type: ProjectType) -> list[dict]:
             package_json_dir, base_url, module_path, uses_fiber,
             angular_selector_index=angular_selector_index,
             python_route_index=python_route_index,
+            express_route_index=express_route_index,
         ))
 
     _apply_feature_mapping(records, result.chunks, base_url)

@@ -97,8 +97,8 @@ def build_python_chunk_record(
     record["notes"] = (
         "Python via stdlib ast; in-file APIRouter(prefix=)/Blueprint(url_prefix=) "
         "and include_router/register_blueprint literal mounts compose via shared "
-        "PrefixGraph; cross-file include_router / Django include() join only on "
-        "unique literal resolution (else assumed/skip). "
+        "PrefixGraph; cross-file include_router / register_blueprint / Django "
+        "include() join only on unique literal resolution (else assumed/skip). "
         "Django urlpatterns path()/re_path()/url() literals; method UNKNOWN unless "
         "the view/CBV is defined in-file with require_*/api_view or HTTP verb methods."
     )

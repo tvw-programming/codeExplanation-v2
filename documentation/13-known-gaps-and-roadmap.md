@@ -16,9 +16,9 @@ Doc 14 is a **historical** audit — read its banner first.
 | Go Fiber | yes | yes | `extract/go/` (regex) | `route_tree`; generics/interfaces/factories; All/Add; no Impl edges |
 | Angular | yes | yes | `extract/angular/` | selector→usage mounts + signal/decorator I/O; empty → unavailable |
 | Vue / Solid / Qwik / JS | yes | yes | `extract/{vue,solid,qwik,javascript}/` | thin trees; skip when empty |
-| Python | yes | yes | `extract/python/` (`ast`) | APIRouter/Blueprint + cross-file `include_router`/`include()`; Django `path()` + in-file view/CBV methods; empty → unavailable |
-| Spring Boot | yes | yes | `extract/spring/` | `di_graph` by type + Lombok/setter/@Inject; bare `@RequestMapping` → ALL; no Impl-from-imports |
-| Express | yes | yes | `extract/express/` | `route_tree`; nested literal mounts; path arrays; regex→assumed; backend stack |
+| Python | yes | yes | `extract/python/` (`ast`) | APIRouter/Blueprint + cross-file `include_router`/`register_blueprint`/`include()`; Django `path()` + in-file view/CBV methods; empty → unavailable |
+| Spring Boot | yes | yes | `extract/spring/` | `di_graph` by type + Lombok/setter/@Inject; bare `@RequestMapping` → ALL; no Impl-from-imports; PrefixGraph cross-file mounts deferred |
+| Express | yes | yes | `extract/express/` | `route_tree`; nested + cross-file `require()` mounts (unique literal); path arrays; regex→assumed |
 | Rust | yes | yes | `extract/rust/` | handlers + in-file `.nest` compose; unresolved nest skips; macros partial |
 
 ## Carried-forward product gaps
@@ -27,9 +27,10 @@ Keep these as roadmap: deeper parsers (tree-sitter / typed), package-
 level Go / Angular component-bundle chunking, `outputs` always empty,
 statement-level split (`needs_further_split` unused), LLM-elaborated
 narration (`llm:` config unused), production voice quality. Cross-file
-route-prefix resolution (FastAPI `include_router` + Django `include()`)
-landed via shared `route_prefix.PrefixGraph` (`EXTRACTOR_VERSION` 17);
-unresolved mounts stay assumed.
+route-prefix resolution (FastAPI `include_router` + Django `include()` +
+Flask `register_blueprint` + Express `require()` mounts) landed via shared
+`route_prefix.PrefixGraph` (`EXTRACTOR_VERSION` 17–19); unresolved mounts
+stay assumed.
 
 whisper.cpp-blocked-so-all-cues-assumed and the Chromium-sandbox
 download are **environment notes**, not the live production story.
@@ -41,13 +42,15 @@ See [`09-phase6-rendering.md`](./09-phase6-rendering.md).
 ### 1. Multi-stack extractors are shipped but still thin
 
 Python (`ast`), Spring (DI-by-type), Express, Angular, Vue/Solid/Qwik,
-JS, Rust, React, and Go builders exist (`EXTRACTOR_VERSION` 18). All
+JS, Rust, React, and Go builders exist (`EXTRACTOR_VERSION` 19). All
 stacks use `src/extract/<stack>/{extract,record}.py`; flat modules are
 shims; `stack_records.py` re-exports. Shared
-`src/extract/route_prefix.py` resolves FastAPI `include_router` and
-Django `include()` across files on unique literal matches only; Go
-Fiber groups use the same resolver. Remaining gaps: regex ceilings,
-Express/Spring cross-file mounts onto PrefixGraph, package-level Go
+`src/extract/route_prefix.py` resolves FastAPI `include_router`, Flask
+`register_blueprint`, Django `include()`, and Express
+`app.use(prefix, require('./…'))` across files on unique literal matches
+only; Go Fiber groups use the same resolver. Spring cross-file mounts
+onto PrefixGraph remain deferred (no safe literal mount analogue without
+inventing bean edges). Remaining gaps: regex ceilings, package-level Go
 chunking, Angular template-bundle chunking (class+html as one chunk
 unit), Spring typed interface→impl resolution (still never invent Impl
 from imports), cross-file Django view methods, Go `app.Route()` closure
@@ -60,10 +63,14 @@ Django `urlpatterns` `path()`/`re_path()`/`url()` literals landed
 Blueprint / include_router mounts (`EXTRACTOR_VERSION` 15); cross-file
 `include()` join in 17. Express nested literal mounts, path arrays,
 regex→assumed, and per-route METHOD middleware landed
-(`EXTRACTOR_VERSION` 14). Angular project selector index → template
-child mounts landed (`EXTRACTOR_VERSION` 10). Go Fiber generics,
-interface method sets (no Impl), `fiber.Handler` factories, and
-`All()` / literal `Add()` landed (`EXTRACTOR_VERSION` 13). Rust honesty enrichments landed (`EXTRACTOR_VERSION` 18: real handlers, qualified `axum::routing::*`, chained MethodRouter methods, in-file `.nest` compose; unresolved nest invents no children; Express-style `.get("/path")` ignored).  Doc 14’s
+(`EXTRACTOR_VERSION` 14); cross-file `require()` mounts in 19. Angular
+project selector index → template child mounts landed
+(`EXTRACTOR_VERSION` 10). Go Fiber generics, interface method sets (no
+Impl), `fiber.Handler` factories, and `All()` / literal `Add()` landed
+(`EXTRACTOR_VERSION` 13). Rust honesty enrichments landed
+(`EXTRACTOR_VERSION` 18: real handlers, qualified `axum::routing::*`,
+chained MethodRouter methods, in-file `.nest` compose; unresolved nest
+invents no children; Express-style `.get("/path")` ignored). Doc 14’s
 “placeholder only” claim is **obsolete**; its structural ceiling
 analysis still applies.
 

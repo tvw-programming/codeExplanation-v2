@@ -2,12 +2,12 @@
 
 Honesty: only facts the AST can prove. Prefer assumed/skip over inventing
 joins. In-file APIRouter(prefix=...) / Blueprint(url_prefix=...) literals
-compose. Cross-file include_router / Django include() joins only when the
-target module resolves uniquely via the shared PrefixGraph; otherwise
-assumed/skip. In-file register_blueprint / include_router literal mounts
-compose. Django method stays UNKNOWN unless the view/CBV is defined in
-this file with require_*/api_view or HTTP verb methods. Docstrings via
-ast.get_docstring (not upward // scan).
+compose. Cross-file include_router / register_blueprint / Django include()
+joins only when the target module resolves uniquely via the shared
+PrefixGraph; otherwise assumed/skip. In-file register_blueprint /
+include_router literal mounts compose. Django method stays UNKNOWN unless
+the view/CBV is defined in this file with require_*/api_view or HTTP verb
+methods. Docstrings via ast.get_docstring (not upward // scan).
 """
 
 from __future__ import annotations
@@ -983,9 +983,9 @@ def _apply_fastapi_mounts(
             route.path_resolved = False
             route.assumed = True
             route.note = (
-                "This router was not found in any include_router(...) call in the "
-                "files scanned, so the mount prefix is unknown and the path shown "
-                "is router-local."
+                "This router/blueprint was not found in any include_router(...) / "
+                "register_blueprint(...) call in the files scanned, so the mount "
+                "prefix is unknown and the path shown is router-local."
             )
             route.prefix_chain = [f"{file_path}::{var}"]
         else:
