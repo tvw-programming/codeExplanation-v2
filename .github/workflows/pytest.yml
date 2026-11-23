@@ -1,0 +1,35 @@
+name: Pytest
+
+on:
+  push:
+    branches: [main, "cursor/**"]
+    paths:
+      - "src/**"
+      - "tests/**"
+      - "requirements.txt"
+      - ".github/workflows/pytest.yml"
+  pull_request:
+    paths:
+      - "src/**"
+      - "tests/**"
+      - "requirements.txt"
+      - ".github/workflows/pytest.yml"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      # Exercise optional tree-sitter probes; regex remains authoritative on
+      # flag/parse/name/grammar failure (fail-open). See documentation/06 +
+      # requirements.txt comments.
+      CEV_TREE_SITTER: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install deps
+        run: pip install -r requirements.txt
+      - name: Pytest (CEV_TREE_SITTER=1; regex fallback authoritative)
+        run: python -m pytest tests/ -q

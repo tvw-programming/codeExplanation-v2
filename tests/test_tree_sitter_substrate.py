@@ -1,7 +1,8 @@
 """Tree-sitter substrate — wiring + probe locks (no invent).
 
-EXTRACTOR_VERSION is 24: Go/TSX/Java spans + Vue dual-parse honesty under
-CEV_TREE_SITTER; Rust/Express probe-only. Flag off keeps regex parity.
+EXTRACTOR_VERSION 25: Go/TSX/Java/Rust/Express span overlays + Vue
+dual-parse under CEV_TREE_SITTER. Flag off keeps regex parity.
+CI sets CEV_TREE_SITTER=1; missing grammar still falls back to regex.
 """
 
 from __future__ import annotations
@@ -180,6 +181,31 @@ def test_missing_grammar_raises_parser_unavailable(monkeypatch):
         parse_source("IDENTIFICATION DIVISION.", "cobol")
     assert try_parse("IDENTIFICATION DIVISION.", "cobol") is None
     load_language.cache_clear()
+
+
+def test_missing_grammar_falls_back_to_regex_extract(monkeypatch):
+    """Flag on + substrate unavailable → extract keeps regex (fail-open).
+
+    Proves CI can set CEV_TREE_SITTER=1 without inventing when a grammar
+    is missing: try_parse → None → probe → None → regex path unchanged.
+    """
+    src = """package main
+
+func Visible() {
+\tprintln("x")
+}
+"""
+    monkeypatch.delenv("CEV_TREE_SITTER", raising=False)
+    off = extract_functions(src)
+    monkeypatch.setenv("CEV_TREE_SITTER", "1")
+    import src.extract.go.tree_sitter_probe as probe_mod
+
+    monkeypatch.setattr(probe_mod, "try_parse", lambda *_a, **_k: None)
+    on = extract_functions(src)
+    assert [f.name for f in on] == [f.name for f in off] == ["Visible"]
+    assert [f.line_range for f in on] == [f.line_range for f in off]
+    assert probe_go_declarations(src) is None
+    assert tree_sitter_decl_names_or_fallback(src) is None
 
 
 def test_line_range_and_is_sound_helpers():

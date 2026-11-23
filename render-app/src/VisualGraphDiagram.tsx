@@ -2,6 +2,7 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import type { SecurityFlag, VisualGraph } from "./ComponentTreeClip";
 import {
+  CEV_FG_MUTED,
   CEV_SECURITY,
   type VisualTheme,
   videoAccent,
@@ -50,6 +51,11 @@ export const VisualGraphDiagram: React.FC<{
   const flagged = new Set(securityFlags.flatMap((f) => f.nodeIds || []));
   const labelColor = videoLabelColor(theme);
   const halfH = NODE_HEIGHT / 2;
+  // Honesty chrome only when the graph already marks assumed facts —
+  // never invent a hedge for clean edges.
+  const hasAssumed =
+    (visualGraph.nodes || []).some((n) => n.assumed) ||
+    (visualGraph.edges || []).some((e) => e.assumed);
 
   return (
     <>
@@ -151,6 +157,21 @@ export const VisualGraphDiagram: React.FC<{
           </Box>
         );
       })}
+      {hasAssumed ? (
+        <Typography
+          sx={{
+            position: "absolute",
+            left: 28,
+            top: 56,
+            color: CEV_FG_MUTED,
+            fontSize: 11,
+            letterSpacing: 0.4,
+            zIndex: 2,
+          }}
+        >
+          Dashed / dimmed = assumed (extractor hedge — not invented)
+        </Typography>
+      ) : null}
     </>
   );
 };

@@ -140,21 +140,36 @@ export default function App() {
     const nodes = host.querySelectorAll("pre.mermaid");
     if (nodes.length === 0) return;
     // Per-fence render: one bad fence must not invent SVG or blank siblings.
-    void loadMermaid().then(async (mod) => {
-      for (const node of Array.from(nodes)) {
-        try {
-          await mod.default.run({ nodes: [node] });
-        } catch {
-          if (node.getAttribute("data-mermaid-error")) continue;
-          node.setAttribute("data-mermaid-error", "1");
-          const note = document.createElement("p");
-          note.className = "mermaid-skip-reason";
-          note.textContent =
-            "Mermaid parse skipped (invalid fence kept as source — no invented diagram).";
-          node.parentElement?.insertBefore(note, node);
+    // Module load failure is the same honesty rule — keep source, no blank invent.
+    const markSkip = (node: Element, message: string) => {
+      if (node.getAttribute("data-mermaid-error")) return;
+      node.setAttribute("data-mermaid-error", "1");
+      const note = document.createElement("p");
+      note.className = "mermaid-skip-reason";
+      note.textContent = message;
+      node.parentElement?.insertBefore(note, node);
+    };
+    void loadMermaid()
+      .then(async (mod) => {
+        for (const node of Array.from(nodes)) {
+          try {
+            await mod.default.run({ nodes: [node] });
+          } catch {
+            markSkip(
+              node,
+              "Mermaid parse skipped (invalid fence kept as source — no invented diagram).",
+            );
+          }
         }
-      }
-    });
+      })
+      .catch(() => {
+        for (const node of Array.from(nodes)) {
+          markSkip(
+            node,
+            "Mermaid unavailable (fence kept as source — no invented diagram).",
+          );
+        }
+      });
   }, [html, loadingDoc]);
 
   const filteredGroups = useMemo(() => {

@@ -21,7 +21,10 @@ def test_extractor_version_22():
 
 
 def test_vue_template_line_and_props_and_script_setup_signals():
+    # Import proves Avatar under CEV_TREE_SITTER dual-parse; without it the
+    # flag-on path skips unmatched template tags (never invent mounts).
     text = """<script setup>
+import Avatar from './Avatar.vue'
 const name = ref('x')
 const full = computed(() => name.value)
 onMounted(() => {})
@@ -38,7 +41,7 @@ onMounted(() => {})
     assert avatar["child"] == "Avatar"
     assert avatar["assumed"] is False
     # Line is in the full file, not template-local offset 0.
-    assert avatar["line"] >= 6
+    assert avatar["line"] >= 7
     prop_names = {p["name"] for p in avatar["props"]}
     assert "src" in prop_names
     assert "alt" in prop_names
@@ -46,6 +49,20 @@ onMounted(() => {})
     assert "ref" in kinds and "computed" in kinds
     assert all(s["owner"] == "UserCard" and s["assumed"] is False for s in sfc.signals)
     assert any(e["kind"] == "onMounted" and e["assumed"] is False for e in sfc.effects)
+
+
+def test_vue_flag_on_skips_unproven_mount(monkeypatch):
+    """CEV_TREE_SITTER dual-parse: template PascalCase without script proof → skip."""
+    monkeypatch.setenv("CEV_TREE_SITTER", "1")
+    text = """<script setup>
+const name = ref('x')
+</script>
+<template>
+  <Avatar />
+</template>
+"""
+    sfc = vue_extract.extract_vue_sfc(text, file_stem="UserCard")
+    assert sfc.components == []
 
 
 def test_vue_skips_dynamic_is_component():

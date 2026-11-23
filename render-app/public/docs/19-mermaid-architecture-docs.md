@@ -79,6 +79,13 @@ cd render-app && npm ci && npm run check:mermaid
 Parses `visuals/**` Mermaid fields/fences plus product-doc fences via
 Mermaid.js (`scripts/check-mermaid-syntax.mjs`).
 
+Extractor CI (`.github/workflows/pytest.yml`) sets `CEV_TREE_SITTER=1`
+so optional span overlays run in tests; regex remains the fallback when
+a grammar is missing. Remotion tree/breakdown diagrams show a muted
+“dashed = assumed” cue only when the graph already marks assumed facts
+— never invent hedges for clean edges. Docs-viewer keeps Mermaid source
+on parse or module-load failure (no blank invent).
+
 ## Example fence (viewer smoke)
 
 ```mermaid

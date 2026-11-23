@@ -6,6 +6,12 @@ Regex ceilings and remaining gaps:
 (banner) and [`17-multi-stack-visuals.md`](./17-multi-stack-visuals.md).
 Live suite count: documentation index / doc 10.
 
+**Optional tree-sitter:** set `CEV_TREE_SITTER=1` to overlay declaration
+spans (Go/TSX/Java/Rust/Express) and Vue SFC dual-parse honesty when
+grammars are installed. Regex/ast stay authoritative on flag off,
+missing grammar, bad parse, or name mismatch (fail-open). CI
+(`.github/workflows/pytest.yml`) sets the flag so probes are exercised.
+
 Historical Alumni-web snapshot (not a live dashboard):
 `AlumniAdminGrid.tsx` → 17 handlers + 2 functions, confidence 0.5/low;
 `alumni_repository.go` → 4 structs, 11 functions, 7 real pgx calls,
