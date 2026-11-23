@@ -6,6 +6,10 @@ FastAPI ``include_router``. Class-level ``@RequestMapping`` is in-file
 containment only. Servlet ``context-path`` lives in config, not code.
 ``WebMvcConfigurer`` / bean ``RouterFunction`` wiring would require inventing
 bean edges — never do that here.
+
+Optional tree-sitter probe (``CEV_TREE_SITTER=1``): Java type/method/
+annotation *names* via ``tree_sitter_probe``. Records stay regex; v23
+``@Import`` / ``@ComponentScan`` / typed-Impl invent skip-locks unchanged.
 """
 
 from __future__ import annotations
@@ -395,3 +399,23 @@ def extract_spring(text: str) -> tuple[list[SpringType], list[SpringRoute]]:
         _append_spring_data_iface(text, m, types, seen)
 
     return types, routes
+
+
+def tree_sitter_decl_names_or_fallback(text: str) -> list[str] | None:
+    """Optional tree-sitter plug-in point for Java type/method names.
+
+    Returns ``None`` when the feature flag is off, the substrate is
+    missing, or the parse is catastrophic — callers must keep the regex
+    path. Successful lists are proven clean-node names only; they are
+    **not** consumed by ``extract_spring`` / records yet (deferred until
+    EXTRACTOR_VERSION ≥ 24). Annotation names from the probe never invent
+    ``@Import`` / ``@ComponentScan`` / typed ``*Impl`` edges.
+    """
+    from .tree_sitter_probe import probe_java_declarations
+
+    decls = probe_java_declarations(text)
+    if decls is None:
+        return None
+    # Prefer type/method names for the plug-in helper; annotations stay
+    # available via probe_java_declarations for experiments.
+    return [d.name for d in decls if d.kind != "annotation"]
