@@ -48,9 +48,16 @@ security:
 audio:
   tts_provider: null   # unused; live path is Piper then espeak-ng
 
-# UNUSED AT RUNTIME. Remotion compositions hardcode 30 fps, 1280×720
-# (see render-app/src/FullVideo.tsx and ChunkView.tsx). highlight_config
-# defaults fps=30 independently of this block.
+# video.fps / video.resolution are unused (Remotion hardcodes 30 fps, 1280×720).
+# video.phaseStyle is loaded at staging time and embedded on chunks/manifest.json
+# for FullVideo / StackVideo (see src/config/phase_style.py).
 video:
   fps: 30
   resolution: "1280x720"
+  phaseStyle:
+    fileCard: classic            # classic | fancy — default classic when omitted
+    componentTree: classic
+    lifecycle: classic
+    chunkView: classic
+    visualBreakdown: classic
+    architectureDocs: classic    # docs cutaway only; not a FullVideo slot

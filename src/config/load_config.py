@@ -14,6 +14,8 @@ from typing import Any
 
 import yaml
 
+from src.config.phase_style import resolve_phase_style
+
 
 class ConfigError(ValueError):
     """Raised when pipeline.config.yaml is missing required fields."""
@@ -53,6 +55,7 @@ class PipelineConfig:
     storage: StorageConfig
     security: SecurityConfig
     detection: dict[str, Any]
+    phase_style: dict[str, str]
     raw: dict[str, Any]
 
     def resolve_source(self, override: str | None = None) -> str:
@@ -107,11 +110,17 @@ def load_config(path: str | Path) -> PipelineConfig:
         secret_scan_before_write=bool(security_raw.get("secret_scan_before_write", True)),
     )
 
+    try:
+        phase_style = resolve_phase_style(raw)
+    except ValueError as exc:
+        raise ConfigError(str(exc)) from exc
+
     return PipelineConfig(
         source=source,
         chunking=chunking,
         storage=storage,
         security=security,
         detection=raw.get("detection", {}),
+        phase_style=phase_style,
         raw=raw,
     )

@@ -11,6 +11,7 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { DiagramHeader } from "./DiagramHeader";
 import { HEADER_HEIGHT as DIAGRAM_HEADER_HEIGHT } from "./treeLayout";
+import type { PhaseStyleMode } from "./phaseStyle";
 import { type VisualTheme, themeForStack } from "./visualTheme";
 
 // Shared per-chunk view, used by both the single-chunk demo composition
@@ -175,7 +176,8 @@ export const ChunkView: React.FC<{
   chunkDir: string;
   visualTheme?: VisualTheme | null;
   filePath?: string | null;
-}> = ({ chunkDir, visualTheme, filePath }) => {
+  phaseStyle?: PhaseStyleMode;
+}> = ({ chunkDir, visualTheme, filePath, phaseStyle: _phaseStyle = "classic" }) => {
   const frame = useCurrentFrame();
   const [bundle, setBundle] = useState<Bundle | null>(null);
   const [sourceLines, setSourceLines] = useState<string[] | null>(null);

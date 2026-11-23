@@ -3,6 +3,7 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import type { ClipNarration, SecurityFlag } from "./ComponentTreeClip";
 import { DiagramHeader } from "./DiagramHeader";
+import type { PhaseStyleMode } from "./phaseStyle";
 import {
   CEV_BG_VIDEO,
   CEV_SECURITY,
@@ -47,7 +48,8 @@ export const LifecycleFlowClip: React.FC<{
   securityFlags?: SecurityFlag[];
   narration?: ClipNarration | null;
   filePath?: string | null;
-}> = ({ chunkDir, flows, visualTheme, securityFlags = [], narration, filePath }) => {
+  phaseStyle?: PhaseStyleMode;
+}> = ({ chunkDir, flows, visualTheme, securityFlags = [], narration, filePath, phaseStyle: _phaseStyle = "classic" }) => {
   const frame = useCurrentFrame();
   const theme = visualTheme || themeForStack("react");
   const flow = flows[0];

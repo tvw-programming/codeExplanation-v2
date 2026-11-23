@@ -3,6 +3,7 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { DiagramHeader, shortFilePath } from "./DiagramHeader";
 import { HEADER_HEIGHT } from "./treeLayout";
+import type { PhaseStyleMode } from "./phaseStyle";
 import {
   type VisualTheme,
   resolveVisualTheme,
@@ -218,7 +219,9 @@ export const FileCard: React.FC<{
   position?: { index: number; total: number };
   sectionSeconds?: number;
   visualTheme?: VisualTheme | null;
-}> = ({ overview, narration, chunkDir, position, sectionSeconds, visualTheme }) => {
+  /** classic = today's layout; fancy reserved for L1–L4 matrix (later PRs). */
+  phaseStyle?: PhaseStyleMode;
+}> = ({ overview, narration, chunkDir, position, sectionSeconds, visualTheme, phaseStyle: _phaseStyle = "classic" }) => {
   const frame = useCurrentFrame();
   const fade = interpolate(frame, [0, 8], [0, 1], {
     extrapolateLeft: "clamp",
