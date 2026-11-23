@@ -2,13 +2,19 @@
 
 Honesty: only facts the AST can prove. Route prefixes from other files
 stay assumed. In-file APIRouter(prefix=...) literals are composed.
-Docstrings via ast.get_docstring (not upward // scan).
+Django urlpatterns path()/re_path()/url() literals only; include() is
+flagged assumed and never joined across files. Method is UNKNOWN
+(Django patterns carry no HTTP method). Docstrings via
+ast.get_docstring (not upward // scan).
 """
 
 from __future__ import annotations
 
 import ast
 from dataclasses import dataclass, field
+
+# Django URL dispatcher helpers (django.urls).
+_DJANGO_ROUTE_FUNCS = frozenset({"path", "re_path", "url"})
 
 
 @dataclass
@@ -204,6 +210,130 @@ def _depends_in(node: ast.AST) -> list[str]:
     return deps
 
 
+def _call_func_name(call: ast.Call) -> str | None:
+    if isinstance(call.func, ast.Name):
+        return call.func.id
+    if isinstance(call.func, ast.Attribute):
+        return call.func.attr
+    return None
+
+
+def _handler_unparse(node: ast.AST | None) -> str:
+    if node is None:
+        return ""
+    try:
+        return ast.unparse(node)
+    except Exception:
+        return ""
+
+
+def _django_full_path(prefix: str, route: str) -> str:
+    """Compose Django route text without inventing characters.
+
+    - Empty prefix + relative ``path()`` string → leading ``/`` for display
+      consistency with FastAPI/Flask routes.
+    - Regex ``re_path`` / ``url`` literals that start with ``^`` are kept
+      verbatim (prepending ``/`` would forge a character not in the pattern).
+    - Callers must not pass a regex route under a non-empty prefix (skipped
+      upstream — joining path-prefix + regex would invent a pattern).
+    """
+    if not prefix:
+        if not route:
+            return "/"
+        if route.startswith("/") or route.startswith("^"):
+            return route
+        return f"/{route}"
+    piece = route if route.startswith("/") else f"/{route}"
+    return _compose_path(prefix, piece)
+
+
+def _extract_django_pattern_list(
+    elts: list[ast.AST],
+    prefix: str,
+    routes: list[PyRoute],
+) -> None:
+    """Walk a urlpatterns (or inline include) list. Literals only; order preserved."""
+    for elt in elts:
+        if not isinstance(elt, ast.Call):
+            continue
+        fname = _call_func_name(elt)
+        if fname not in _DJANGO_ROUTE_FUNCS or not elt.args:
+            continue
+        route_lit = _const_str(elt.args[0])
+        if route_lit is None:
+            # Non-literal route argument — skip; never invent a path string.
+            continue
+        # path-prefix + regex cannot be joined without guessing — skip.
+        if prefix and route_lit.startswith("^"):
+            continue
+        full = _django_full_path(prefix, route_lit)
+        line = getattr(elt, "lineno", 1) or 1
+        target = elt.args[1] if len(elt.args) > 1 else None
+
+        if isinstance(target, ast.Call) and _call_func_name(target) == "include":
+            if not target.args:
+                routes.append(PyRoute(
+                    method="UNKNOWN", path=full, handler="", line=line, assumed=True,
+                ))
+                continue
+            included = target.args[0]
+            # Inline include([...]) — compose prefix in this file only.
+            if isinstance(included, (ast.List, ast.Tuple)):
+                _extract_django_pattern_list(included.elts, full, routes)
+                continue
+            # Module-string / other include — mount point only; do not join children.
+            routes.append(PyRoute(
+                method="UNKNOWN", path=full, handler="", line=line, assumed=True,
+            ))
+            continue
+
+        handler = _handler_unparse(target)
+        routes.append(PyRoute(
+            method="UNKNOWN",
+            path=full,
+            handler=handler,
+            line=line,
+            assumed=False,
+        ))
+
+
+def _django_routes(tree: ast.AST) -> list[PyRoute]:
+    """Extract Django urlpatterns path()/re_path()/url() entries.
+
+    Honesty:
+    - method is always UNKNOWN (HTTP method lives on the view, not the pattern).
+    - Non-literal route args are skipped.
+    - include('other.urls') emits an assumed mount prefix; children are not joined.
+    - Inline include([...]) with literal prefixes composes in-file only.
+    - Dynamic urlpatterns (call/comprehension/+= of non-list) yield no routes.
+    """
+    routes: list[PyRoute] = []
+    body = tree.body if isinstance(tree, ast.Module) else []
+    for node in body:
+        targets: list[str] = []
+        value: ast.AST | None = None
+        if isinstance(node, ast.Assign):
+            targets = [t.id for t in node.targets if isinstance(t, ast.Name)]
+            value = node.value
+        elif isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name):
+            targets = [node.target.id]
+            value = node.value
+        elif (
+            isinstance(node, ast.AugAssign)
+            and isinstance(node.target, ast.Name)
+            and isinstance(node.op, ast.Add)
+        ):
+            targets = [node.target.id]
+            value = node.value
+        if "urlpatterns" not in targets or value is None:
+            continue
+        if not isinstance(value, (ast.List, ast.Tuple)):
+            # Built by a call/comprehension/binop — do not invent entries.
+            continue
+        _extract_django_pattern_list(value.elts, "", routes)
+    return routes
+
+
 def _visibility(name: str, all_names: set[str] | None) -> str:
     if all_names is not None:
         if name in all_names:
@@ -284,5 +414,8 @@ def extract_python(text: str) -> tuple[list[PyFunction], list[PyRoute], list[PyI
                 assumed=assumed,
                 depends=list(deps),
             ))
+
+    # Django urlpatterns are module-level assignments, not function decorators.
+    routes.extend(_django_routes(tree))
 
     return functions, routes, imports, sorted(all_names or [])

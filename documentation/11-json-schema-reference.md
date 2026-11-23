@@ -47,7 +47,7 @@ one ever disagree, the `docs/` file wins.
 | Field | Required | Rule | Implemented by |
 |---|---|---|---|
 | `contentHash` | yes | SHA-256 of the primary file's raw bytes | `common.py: content_hash()` |
-| `extractorVersion` | yes (implementation) | Integer; currently `10`. Hash match is **not** enough to reuse — version mismatch forces re-analysis | `mirror_store.EXTRACTOR_VERSION` / `json_builder.py` |
+| `extractorVersion` | yes (implementation) | Integer; currently `11`. Hash match is **not** enough to reuse — version mismatch forces re-analysis | `mirror_store.EXTRACTOR_VERSION` / `json_builder.py` |
 | `fileDescription` | no | File header comment; FileCard purpose | `file_header_comment()` |
 | `lastUpdated` | yes | ISO-8601 UTC timestamp of last analysis | `common.py: now_iso()` |
 | `pullRequest` | yes (key); value may be `null` | Full PR URL, when determinable | `pull_request_lookup.py: find_last_pull_request_url()` |
@@ -76,7 +76,7 @@ than inventing a graph (doc 17).
 | `lifecycleFlows` | developer-centric flows; may be `[]` | `lifecycle_builder.py` |
 | `visualTheme` | brand tokens + `logoPath` | `theme.py` |
 | `securityFlags` | optional path/middleware/unsafe flags | `security_flags.py` |
-| `extractorVersion` | currently `10` | `mirror_store.EXTRACTOR_VERSION` |
+| `extractorVersion` | currently `11` | `mirror_store.EXTRACTOR_VERSION` |
 
 ## Narration/render fields (produced outside the stored chunk record)
 
