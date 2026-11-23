@@ -28,6 +28,7 @@ export type FancyPatternFlags = {
   l2: boolean;
   l2Direction: EnterDirection;
   l3: boolean;
+  l4: boolean;
 };
 
 export type HonestyHints = {
@@ -189,6 +190,7 @@ export function resolveFancyPatterns(
     l2: false,
     l2Direction: DEFAULT_L2[part],
     l3: false,
+    l4: false,
   };
   if (phaseStyle !== "fancy") {
     return off;
@@ -200,6 +202,7 @@ export function resolveFancyPatterns(
     l2: c.L2 === "D",
     l2Direction: c.L2Direction ?? DEFAULT_L2[part],
     l3: c.L3 === "D" || (c.L3 === "A" && Boolean(hints?.hasAssumed)),
+    l4: c.L4 === "D" || c.L4 === "A",
   };
 }
 

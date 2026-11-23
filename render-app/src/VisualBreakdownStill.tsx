@@ -3,7 +3,7 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import type { ClipNarration, SecurityFlag, VisualGraph } from "./ComponentTreeClip";
 import type { PhaseStyleMode } from "./phaseStyle";
-import { TickerBar } from "./fancyLayout";
+import { Card3D, TickerBar } from "./fancyLayout";
 import {
   honestyTickerLabel,
   resolveFancyPatterns,
@@ -80,21 +80,44 @@ export const VisualBreakdownStill: React.FC<{
         theme={theme}
         securityFlags={securityFlags}
       />
-      <Box
-        sx={{
-          position: "absolute",
-          left: 28,
-          right: 28,
-          bottom: 20,
-          textAlign: "center",
-        }}
-      >
-        <Typography sx={{ color: CEV_FG_MUTED, fontSize: 14 }}>
-          <Box component="span" sx={{ color: accent, fontWeight: 600 }}>
-            {edgeSummaryLabel(visualGraph)}
-          </Box>
-        </Typography>
-      </Box>
+      {patterns.l4 ? (
+        <Box
+          sx={{
+            position: "absolute",
+            left: 28,
+            right: 28,
+            bottom: 16,
+            maxWidth: 520,
+            mx: "auto",
+          }}
+        >
+          <Card3D variant="panel" durationInFrames={22}>
+            <Box sx={{ px: 2, py: 1.25, textAlign: "center" }}>
+              <Typography sx={{ color: CEV_FG_MUTED, fontSize: 14 }}>
+                <Box component="span" sx={{ color: accent, fontWeight: 600 }}>
+                  {edgeSummaryLabel(visualGraph)}
+                </Box>
+              </Typography>
+            </Box>
+          </Card3D>
+        </Box>
+      ) : (
+        <Box
+          sx={{
+            position: "absolute",
+            left: 28,
+            right: 28,
+            bottom: 20,
+            textAlign: "center",
+          }}
+        >
+          <Typography sx={{ color: CEV_FG_MUTED, fontSize: 14 }}>
+            <Box component="span" sx={{ color: accent, fontWeight: 600 }}>
+              {edgeSummaryLabel(visualGraph)}
+            </Box>
+          </Typography>
+        </Box>
+      )}
       {tickerLabel ? (
         <TickerBar label={tickerLabel} showFromFrame={8} hideAtFrame={null} />
       ) : null}

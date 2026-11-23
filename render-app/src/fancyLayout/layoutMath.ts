@@ -138,3 +138,38 @@ export function bulletItemOpacity(
   if (frame < revealFrame) return 0;
   return clamp01((frame - revealFrame) / Math.max(1, fadeFrames));
 }
+
+export type Card3dTransform = {
+  rotateXDeg: number;
+  rotateYDeg: number;
+  translateZPx: number;
+  opacity: number;
+};
+
+/**
+ * L4 — CSS 3D card pose: brief tilt-in, then a shallow readable depth (clarity-first).
+ * Reduced motion: flat, no travel.
+ */
+export function card3dTransform(
+  frame: number,
+  durationFrames = 28,
+  startFrame = 0,
+  reducedMotion = false,
+): Card3dTransform {
+  if (reducedMotion) {
+    return {
+      rotateXDeg: 0,
+      rotateYDeg: 0,
+      translateZPx: 0,
+      opacity: frame >= startFrame ? 1 : 0,
+    };
+  }
+  const progress = enterProgress(frame, durationFrames, startFrame);
+  const easeOut = 1 - (1 - progress) * (1 - progress);
+  return {
+    rotateXDeg: 9 * (1 - easeOut) + 1.25 * easeOut,
+    rotateYDeg: -7 * (1 - easeOut),
+    translateZPx: Math.round(14 * easeOut),
+    opacity: clamp01(progress * 1.15),
+  };
+}

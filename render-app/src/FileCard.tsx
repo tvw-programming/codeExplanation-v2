@@ -4,7 +4,7 @@ import Typography from "@mui/material/Typography";
 import { DiagramHeader, shortFilePath } from "./DiagramHeader";
 import { HEADER_HEIGHT } from "./treeLayout";
 import type { PhaseStyleMode } from "./phaseStyle";
-import { EnterFrom } from "./fancyLayout";
+import { Card3D, EnterFrom } from "./fancyLayout";
 import { resolveFancyPatterns } from "./fancyLayout/phaseLayoutMatrix";
 import { resolveMatrixStackKey } from "./fancyLayout/stackResolve";
 import {
@@ -264,10 +264,11 @@ export const FileCard: React.FC<{
   const stackKey = resolveMatrixStackKey(stackId ?? theme.stack);
   const patterns = resolveFancyPatterns(phaseStyle, "fileCard", stackKey);
   const useFancyEnter = patterns.l2;
+  const useCard3d = patterns.l4;
   const motionY = useFancyEnter ? 0 : rise;
 
-  const cardBody = (
-      <Box sx={{ transform: `translateY(${motionY}px)`, height: "100%", display: "flex", flexDirection: "column" }}>
+  const cardInner = (
+      <Box sx={{ transform: `translateY(${motionY}px)`, height: "100%", display: "flex", flexDirection: "column", p: useCard3d ? "4px 6px" : 0 }}>
         <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 2 }}>
           <Typography
             sx={{
@@ -381,6 +382,14 @@ export const FileCard: React.FC<{
           ) : null}
         </Box>
       </Box>
+  );
+
+  const cardBody = useCard3d ? (
+    <Card3D variant="panel" durationInFrames={26}>
+      {cardInner}
+    </Card3D>
+  ) : (
+    cardInner
   );
 
   return (
