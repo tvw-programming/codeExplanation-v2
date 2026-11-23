@@ -23,6 +23,7 @@ def build_spring_chunk_record(root: Path, chunk: ChunkPlan, project_type_dict: d
             "stereotype": t.stereotype,
             "classPath": t.class_path,
             "line": t.line,
+            "kind": t.kind,
             "injectees": t.injectees,
             "methods": t.methods,
         }
@@ -41,13 +42,18 @@ def build_spring_chunk_record(root: Path, chunk: ChunkPlan, project_type_dict: d
         }
         for r in routes
     ]
-    assumed = sum(1 for r in routes if r.assumed)
+    assumed = sum(1 for r in routes if r.assumed) + sum(
+        1 for t in types for i in t.injectees if i.get("assumed")
+    )
     conf = confidence_from_flags(max(1, len(types) + len(routes)), assumed)
     record["confidence"] = conf
     record["confidenceLevel"] = confidence_level(conf)
     record["notes"] = (
-        "Spring DI is by type (constructor/field/Lombok RequiredArgsConstructor); "
-        "imports are never treated as injects."
+        "Spring DI is by type (constructor/field/setter/Lombok RequiredArgsConstructor/"
+        "@Inject); imports are never treated as injects. Injectee types stay as declared "
+        "(interface-only) — Impl is never invented from imports. Bare @RequestMapping "
+        "method=ALL; path arrays expand; ${}/{#{} placeholders are assumed; Spring Data "
+        "repository interfaces are recorded without proxy Impl nodes."
     )
     record["fidelity"] = "regex"
     from src.visual.pipeline import attach_visuals

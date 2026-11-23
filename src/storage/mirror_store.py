@@ -48,7 +48,10 @@ from src.extract.common import content_hash
 #       (unmatched tags skipped; duplicates skipped; attribute assumed).
 #  11 - Django urlpatterns path()/re_path()/url() literals; include()
 #       mounts assumed (not joined cross-file); method UNKNOWN.
-EXTRACTOR_VERSION = 11
+#  12 - Spring honesty: bare @RequestMapping → ALL (not silent GET);
+#       multi method=/path arrays; ${}/#{} assumed; setter/@Inject DI;
+#       multi-ctor assumed; Spring Data repo interfaces (no Impl invent).
+EXTRACTOR_VERSION = 12
 
 
 def output_path_for(output_root: Path, file_path: str) -> Path:

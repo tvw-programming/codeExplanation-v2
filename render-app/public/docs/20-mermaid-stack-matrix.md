@@ -22,7 +22,7 @@ too_large → no fence (Q5). Never invent edges.
 | **Go Fiber** | `go.mod` + Fiber import | `flowchart TD` (`route_tree`) | Sequence middleware→handler | No routes; unresolved cross-file prefixes stay **assumed** |
 | **Express** | `express` in `package.json` | `flowchart TD` (`route_tree`, incl. `route().get/post`) | Sequence middleware→handler | No routes/edges |
 | **Python** | `requirements.txt` / `pyproject.toml` / `setup.py` | `flowchart TD` route or module graph | Sequence when flows exist | No edges; in-file `APIRouter(prefix=)` composed; Django `path()` literals with method `UNKNOWN`; `include()` mounts assumed (`fidelity: syntax`) |
-| **Spring Boot** | Maven/Gradle + spring-boot | `flowchart TD` (`di_graph` by injection type / Lombok) | Sequence when flows exist | No inject edges; never draw Impl from imports alone |
+| **Spring Boot** | Maven/Gradle + spring-boot | `flowchart TD` (`di_graph` by injection type / Lombok/setter/@Inject) | Sequence when flows exist | No inject edges; never draw Impl from imports alone; bare `@RequestMapping`→ALL; placeholder paths assumed |
 | **Java** (non-Spring) | JVM markers without spring-boot | Same DI path when edges exist | Same | Empty → unavailable |
 | **Rust** | `Cargo.toml` | `flowchart TD` route / crate graph | Sequence when flows exist | Regex ceilings; macros may miss; methods from attrs/`get`/`post` |
 
@@ -32,7 +32,7 @@ Dispatch: `src/detect/project_type.py` → `src/extract/<stack>/` →
 `architecture.md` + `interactive.json`.
 
 Hardening notes + layout: Project store
-`docs/extractor-hardening-plan.md`. `EXTRACTOR_VERSION` **11**.
+`docs/extractor-hardening-plan.md`. `EXTRACTOR_VERSION` **12**.
 
 ## Honesty / confidence in diagrams
 
