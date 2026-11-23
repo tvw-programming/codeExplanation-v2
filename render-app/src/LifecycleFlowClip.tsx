@@ -4,6 +4,13 @@ import Typography from "@mui/material/Typography";
 import type { ClipNarration, SecurityFlag } from "./ComponentTreeClip";
 import { DiagramHeader } from "./DiagramHeader";
 import type { PhaseStyleMode } from "./phaseStyle";
+import { EnterFrom, TickerBar } from "./fancyLayout";
+import {
+  honestyTickerLabel,
+  resolveFancyPatterns,
+  type HonestyHints,
+} from "./fancyLayout/phaseLayoutMatrix";
+import { resolveMatrixStackKey } from "./fancyLayout/stackResolve";
 import {
   CEV_BG_VIDEO,
   CEV_SECURITY,
@@ -49,7 +56,17 @@ export const LifecycleFlowClip: React.FC<{
   narration?: ClipNarration | null;
   filePath?: string | null;
   phaseStyle?: PhaseStyleMode;
-}> = ({ chunkDir, flows, visualTheme, securityFlags = [], narration, filePath, phaseStyle: _phaseStyle = "classic" }) => {
+  stackId?: string | null;
+}> = ({
+  chunkDir,
+  flows,
+  visualTheme,
+  securityFlags = [],
+  narration,
+  filePath,
+  phaseStyle = "classic",
+  stackId,
+}) => {
   const frame = useCurrentFrame();
   const theme = visualTheme || themeForStack("react");
   const flow = flows[0];
@@ -64,6 +81,23 @@ export const LifecycleFlowClip: React.FC<{
   );
   // Map beat index onto steps (beat 0 = trigger; subsequent ≈ steps)
   const activeStep = Math.max(0, Math.min(steps.length - 1, activeBeatIndex <= 0 ? 0 : activeBeatIndex - 1));
+
+  const stackKey = resolveMatrixStackKey(stackId ?? theme.stack);
+  const honesty: HonestyHints = {
+    hasAssumed: steps.some((s) => s.assumed) || Boolean(flow?.assumed),
+    hasAllMethod: steps.some((s) => s.action?.toUpperCase?.() === "ALL"),
+  };
+  const patterns = resolveFancyPatterns(phaseStyle, "lifecycle", stackKey, honesty);
+  const tickerLabel = patterns.l1 ? honestyTickerLabel(honesty) : null;
+
+  const stepRevealFrame = (index: number): number => {
+    const beatIndex = index + 1;
+    const beat = narration?.beats?.[beatIndex];
+    if (beat?.startMs != null) {
+      return Math.floor((beat.startMs / 1000) * FPS);
+    }
+    return 8 + index * 14;
+  };
 
   return (
     <AbsoluteFill style={{ backgroundColor: CEV_BG_VIDEO }}>
@@ -103,8 +137,7 @@ export const LifecycleFlowClip: React.FC<{
             const active = i === activeStep;
             const accent =
               step.action === "middleware" ? theme.secondary || accentBase : accentBase;
-            return (
-              <Box key={`${step.order}-${step.label}`} sx={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            const pill = (
                 <Box
                   sx={{
                     border: `2px ${step.assumed ? "dashed" : "solid"} ${accent}`,
@@ -152,6 +185,20 @@ export const LifecycleFlowClip: React.FC<{
                     />
                   ) : null}
                 </Box>
+            );
+            return (
+              <Box key={`${step.order}-${step.label}`} sx={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                {patterns.l2 ? (
+                  <EnterFrom
+                    direction={patterns.l2Direction}
+                    startFrame={stepRevealFrame(i)}
+                    durationInFrames={16}
+                  >
+                    {pill}
+                  </EnterFrom>
+                ) : (
+                  pill
+                )}
                 {i < steps.length - 1 ? (
                   <Typography sx={{ color: accentBase, fontSize: 22 }}>→</Typography>
                 ) : null}
@@ -160,6 +207,10 @@ export const LifecycleFlowClip: React.FC<{
           })}
         </Box>
       </Box>
+
+      {tickerLabel ? (
+        <TickerBar label={tickerLabel} showFromFrame={6} hideAtFrame={null} />
+      ) : null}
 
       {narration?.audio ? (
         <Audio src={staticFile(`${chunkDir}/${narration.audio}`)} />

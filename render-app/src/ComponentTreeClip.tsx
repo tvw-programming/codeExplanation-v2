@@ -3,6 +3,13 @@ import Box from "@mui/material/Box";
 import { DiagramHeader } from "./DiagramHeader";
 import { VisualGraphDiagram } from "./VisualGraphDiagram";
 import type { PhaseStyleMode } from "./phaseStyle";
+import { EnterFrom, TickerBar } from "./fancyLayout";
+import {
+  honestyTickerLabel,
+  resolveFancyPatterns,
+  type HonestyHints,
+} from "./fancyLayout/phaseLayoutMatrix";
+import { resolveMatrixStackKey } from "./fancyLayout/stackResolve";
 import {
   CEV_BG_VIDEO,
   CEV_FG_PRIMARY,
@@ -84,7 +91,17 @@ export const ComponentTreeClip: React.FC<{
   narration?: ClipNarration | null;
   filePath?: string | null;
   phaseStyle?: PhaseStyleMode;
-}> = ({ chunkDir, visualGraph, visualTheme, securityFlags = [], narration, filePath, phaseStyle: _phaseStyle = "classic" }) => {
+  stackId?: string | null;
+}> = ({
+  chunkDir,
+  visualGraph,
+  visualTheme,
+  securityFlags = [],
+  narration,
+  filePath,
+  phaseStyle = "classic",
+  stackId,
+}) => {
   const frame = useCurrentFrame();
   const theme =
     visualTheme ||
@@ -100,6 +117,25 @@ export const ComponentTreeClip: React.FC<{
         frame < Math.floor(((b.endMs || 0) / 1000) * FPS),
     ) || null;
 
+  const stackKey = resolveMatrixStackKey(stackId ?? theme.stack);
+  const honesty: HonestyHints = {
+    hasAssumed:
+      visualGraph.edges.some((e) => e.assumed) ||
+      visualGraph.nodes.some((n) => n.assumed),
+    pathUnresolved: visualGraph.edges.some(
+      (e) => e.assumed && (e.label || "").toLowerCase().includes("unresolved"),
+    ),
+  };
+  const patterns = resolveFancyPatterns(phaseStyle, "componentTree", stackKey, honesty);
+  const tickerLabel = patterns.l1 ? honestyTickerLabel(honesty) : null;
+  const diagram = (
+    <VisualGraphDiagram
+      visualGraph={visualGraph}
+      theme={theme}
+      securityFlags={securityFlags}
+    />
+  );
+
   return (
     <AbsoluteFill style={{ backgroundColor: CEV_BG_VIDEO }}>
       <DiagramHeader
@@ -109,11 +145,11 @@ export const ComponentTreeClip: React.FC<{
         titleFallback={rootLabel}
       />
 
-      <VisualGraphDiagram
-        visualGraph={visualGraph}
-        theme={theme}
-        securityFlags={securityFlags}
-      />
+      {patterns.l2 ? (
+        <EnterFrom direction={patterns.l2Direction}>{diagram}</EnterFrom>
+      ) : (
+        diagram
+      )}
 
       {activeBeat?.spoken ? (
         <Box
@@ -131,6 +167,10 @@ export const ComponentTreeClip: React.FC<{
         >
           {activeBeat.spoken}
         </Box>
+      ) : null}
+
+      {tickerLabel ? (
+        <TickerBar label={tickerLabel} showFromFrame={6} hideAtFrame={null} />
       ) : null}
 
       {narration?.audio ? (

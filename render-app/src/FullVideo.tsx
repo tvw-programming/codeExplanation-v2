@@ -21,6 +21,7 @@ import {
   resolvePhaseStyleFromManifest,
   type ResolvedPhaseStyle,
 } from "./phaseStyle";
+import { resolveChunkStackId } from "./fancyLayout/stackResolve";
 import {
   FPS,
   cardFramesFor,
@@ -78,7 +79,8 @@ type ChunkVisuals = {
 async function loadChunks(chunkIds: string[], chunkDirPrefix: string) {
   const loaded = await Promise.all(
     chunkIds.map(async (id) => {
-      const bundle = await fetchBundle(`${chunkDirPrefix}/${id}`) as typeof bundle & {
+      const bundle = (await fetchBundle(`${chunkDirPrefix}/${id}`)) as TimingBundle & {
+        stack?: string | null;
         fileOverview?: FileOverview;
         cardNarration?: CardNarration;
         treeNarration?: ClipNarration;
@@ -105,13 +107,19 @@ async function loadChunks(chunkIds: string[], chunkDirPrefix: string) {
         visualTheme: bundle.visualTheme ?? null,
         securityFlags: bundle.securityFlags ?? [],
       };
+      const overview = bundle.fileOverview ?? null;
       return {
         bundle: bundle as TimingBundle,
         duration: frames.code,
         cardFrames: frames.card,
-        overview: bundle.fileOverview ?? null,
+        overview,
         narration: bundle.cardNarration ?? null,
         visuals,
+        stackId: resolveChunkStackId(
+          bundle.stack ?? null,
+          bundle.visualTheme ?? null,
+          overview,
+        ),
       };
     }),
   );
@@ -127,6 +135,7 @@ async function loadChunks(chunkIds: string[], chunkDirPrefix: string) {
     cardNarrations: loaded.map((e) => e.narration),
     cardDurations: loaded.map((e) => e.cardFrames),
     visuals: loaded.map((e) => e.visuals),
+    stackIds: loaded.map((e) => e.stackId),
     totalFrames,
   };
 }
@@ -140,6 +149,7 @@ type VideoProps = {
   cardNarrations?: (CardNarration | null)[];
   cardDurations?: number[];
   visuals?: ChunkVisuals[];
+  stackIds?: string[];
   /** Directory prefix where chunk subdirs live (e.g. "chunks" or
    *  "chunks/react"). Used to build the staticFile path for each chunk. */
   chunkDirPrefix?: string;
@@ -153,6 +163,7 @@ const VideoBody: React.FC<VideoProps> = ({
   cardNarrations = [],
   cardDurations = [],
   visuals = [],
+  stackIds = [],
   chunkDirPrefix = "chunks",
   phaseStyle = DEFAULT_PHASE_STYLE,
 }) => {
@@ -169,6 +180,7 @@ const VideoBody: React.FC<VideoProps> = ({
           const cardFrames = cardDurations[i] ?? cardFramesFor(narration);
           const chunkFrames = Math.max(1, durations[i] ?? FPS);
           const v = visuals[i];
+          const stackId = stackIds[i] ?? overview?.frameworks?.[0] ?? null;
           const dir = `${chunkDirPrefix}/${id}`;
           const sequences = [
             <Series.Sequence key={`${id}-card`} durationInFrames={cardFrames}>
@@ -181,6 +193,7 @@ const VideoBody: React.FC<VideoProps> = ({
                   sectionSeconds={chunkFrames / FPS}
                   visualTheme={v?.visualTheme}
                   phaseStyle={phaseStyle.fileCard}
+                  stackId={stackId}
                 />
               ) : null}
             </Series.Sequence>,
@@ -198,6 +211,7 @@ const VideoBody: React.FC<VideoProps> = ({
                   narration={v.treeNarration}
                   filePath={overview?.filePath}
                   phaseStyle={phaseStyle.componentTree}
+                  stackId={stackId}
                 />
               </Series.Sequence>,
             );
@@ -214,6 +228,7 @@ const VideoBody: React.FC<VideoProps> = ({
                   narration={v.lifecycleNarration}
                   filePath={overview?.filePath}
                   phaseStyle={phaseStyle.lifecycle}
+                  stackId={stackId}
                 />
               </Series.Sequence>,
             );
@@ -226,6 +241,7 @@ const VideoBody: React.FC<VideoProps> = ({
                 visualTheme={v?.visualTheme}
                 filePath={overview?.filePath}
                 phaseStyle={phaseStyle.chunkView}
+                stackId={stackId}
               />
             </Series.Sequence>,
           );
@@ -241,6 +257,7 @@ const VideoBody: React.FC<VideoProps> = ({
                   filePath={overview?.filePath}
                   securityFlags={v.securityFlags}
                   phaseStyle={phaseStyle.visualBreakdown}
+                  stackId={stackId}
                 />
               </Series.Sequence>,
             );
@@ -273,7 +290,7 @@ function makeStackCalculateMetadata(
     try {
       const manifest = await fetchStackManifest(stack);
       const chunkDirPrefix = `chunks/${stack}`;
-      const { durations, overviews, cardNarrations, cardDurations, visuals, totalFrames } =
+      const { durations, overviews, cardNarrations, cardDurations, visuals, stackIds, totalFrames } =
         await loadChunks(manifest.chunkIds, chunkDirPrefix);
       const resolvedPhaseStyle = resolvePhaseStyleFromManifest(manifest.phaseStyle);
 
@@ -286,6 +303,7 @@ function makeStackCalculateMetadata(
           cardNarrations,
           cardDurations,
           visuals,
+          stackIds,
           chunkDirPrefix,
           phaseStyle: resolvedPhaseStyle,
         },
@@ -367,7 +385,7 @@ async function fetchCombinedManifest(): Promise<CombinedManifest> {
 
 const calculateMetadata: CalculateMetadataFunction<VideoProps> = async () => {
   const manifest = await fetchCombinedManifest();
-  const { durations, overviews, cardNarrations, cardDurations, visuals, totalFrames } =
+  const { durations, overviews, cardNarrations, cardDurations, visuals, stackIds, totalFrames } =
     await loadChunks(manifest.chunkIds, "chunks");
   const resolvedPhaseStyle = resolvePhaseStyleFromManifest(manifest.phaseStyle);
 
@@ -380,6 +398,7 @@ const calculateMetadata: CalculateMetadataFunction<VideoProps> = async () => {
       cardNarrations,
       cardDurations,
       visuals,
+      stackIds,
       chunkDirPrefix: "chunks",
       phaseStyle: resolvedPhaseStyle,
     },
