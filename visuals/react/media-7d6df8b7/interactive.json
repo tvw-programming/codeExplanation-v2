@@ -258,5 +258,7 @@
     "logoAssetId": "react-logo-ondark",
     "logoPath": "visuals/logos/react.svg"
   },
-  "mermaid": "flowchart TD\n  component_GalleryPage[\"GalleryPage\"]\n  component_MediaGallery[\"MediaGallery\"]\n  component_Stack[\"Stack\"]\n  component_Typography[\"Typography\"]\n  component_GalleryPage --> component_MediaGallery\n  component_GalleryPage --> component_Stack\n  component_GalleryPage --> component_Typography\n  component_GalleryPage --> component_Typography"
+  "mermaid": "flowchart TD\n  component_GalleryPage[\"GalleryPage\"]\n  component_MediaGallery[\"MediaGallery\"]\n  component_Stack[\"Stack\"]\n  component_Typography[\"Typography\"]\n  component_GalleryPage --> component_MediaGallery\n  component_GalleryPage --> component_Stack\n  component_GalleryPage --> component_Typography\n  component_GalleryPage --> component_Typography",
+  "mermaidLifecycle": null,
+  "mermaidLifecycleSkipReason": "empty"
 }

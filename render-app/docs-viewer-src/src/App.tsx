@@ -33,23 +33,34 @@ function loadMermaid() {
   return mermaidReady;
 }
 
+/**
+ * marked@12 still invokes renderer.code(code, infostring, escaped) at
+ * runtime even though Tokens.Code types suggest a single token object.
+ * Accept both shapes so Mermaid fences never crash the page.
+ */
+function fenceParts(
+  codeOrToken: string | Tokens.Code,
+  infostring?: string,
+): { text: string; lang: string } {
+  if (typeof codeOrToken === "string") {
+    return { text: codeOrToken, lang: infostring || "" };
+  }
+  return { text: codeOrToken.text || "", lang: codeOrToken.lang || "" };
+}
+
 const mermaidRenderer = {
-  code({ text, lang }: Tokens.Code): string {
-    if (lang === "mermaid") {
-      // Escape so untrusted fences cannot break out of the pre; Mermaid
-      // reads textContent of .mermaid nodes after we set innerHTML.
-      const escaped = text
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;");
-      return `<pre class="mermaid">${escaped}</pre>`;
-    }
-    const language = lang || "";
+  code(codeOrToken: string | Tokens.Code, infostring?: string): string {
+    const { text, lang } = fenceParts(codeOrToken, infostring);
+    // Escape so untrusted fences cannot break out of the pre; Mermaid
+    // reads textContent of .mermaid nodes after we set innerHTML.
     const escaped = text
       .replace(/&/g, "&amp;")
       .replace(/</g, "&lt;")
       .replace(/>/g, "&gt;");
-    return `<pre><code class="language-${language}">${escaped}</code></pre>`;
+    if (lang === "mermaid") {
+      return `<pre class="mermaid">${escaped}</pre>`;
+    }
+    return `<pre><code class="language-${lang}">${escaped}</code></pre>`;
   },
 };
 

@@ -45,7 +45,29 @@ after `marked`. Product narrative lives under `documentation/`; per-chunk
 2. **Visual** — narrated mp4 → Remotion; static/shareable → Mermaid.  
 3. **Detail** — trees → flowchart; ordered flows → sequenceDiagram.  
 
-See store decision doc for the full matrix.
+Per-stack diagram kinds and skip reasons:
+[`20-mermaid-stack-matrix.md`](./20-mermaid-stack-matrix.md).
+
+## Regenerate checked-in visuals
+
+After exporter changes, backfill `mermaid` / `mermaidLifecycle` and
+`architecture.md` from each `interactive.json` (no full re-extract):
+
+```bash
+python3 scripts/regen_mermaid_artifacts.py
+```
+
+Full pipeline attach (`build_visual_artifacts`) also writes these on
+every extract/render run.
+
+## CI parse gate
+
+```bash
+cd render-app && npm ci && npm run check:mermaid
+```
+
+Parses `visuals/**` Mermaid fields/fences plus product-doc fences via
+Mermaid.js (`scripts/check-mermaid-syntax.mjs`).
 
 ## Example fence (viewer smoke)
 

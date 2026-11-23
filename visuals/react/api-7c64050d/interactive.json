@@ -163,5 +163,7 @@
     "logoAssetId": "react-logo-ondark",
     "logoPath": "visuals/logos/react.svg"
   },
-  "mermaid": "flowchart TD\n  component_AlumniPage[\"AlumniPage\"]\n  component_AlumniRow[\"AlumniRow\"]\n  component_ImportOutcome[\"ImportOutcome\"]\n  component_alumni[\"alumni\"]\n  component_alumni --> component_AlumniPage\n  component_alumni --> component_AlumniPage\n  component_alumni --> component_AlumniRow\n  component_alumni --> component_AlumniRow\n  component_alumni --> component_AlumniRow\n  component_alumni --> component_AlumniRow\n  component_alumni --> component_ImportOutcome\n  component_alumni --> component_ImportOutcome"
+  "mermaid": "flowchart TD\n  component_AlumniPage[\"AlumniPage\"]\n  component_AlumniRow[\"AlumniRow\"]\n  component_ImportOutcome[\"ImportOutcome\"]\n  component_alumni[\"alumni\"]\n  component_alumni --> component_AlumniPage\n  component_alumni --> component_AlumniPage\n  component_alumni --> component_AlumniRow\n  component_alumni --> component_AlumniRow\n  component_alumni --> component_AlumniRow\n  component_alumni --> component_AlumniRow\n  component_alumni --> component_ImportOutcome\n  component_alumni --> component_ImportOutcome",
+  "mermaidLifecycle": null,
+  "mermaidLifecycleSkipReason": "empty"
 }

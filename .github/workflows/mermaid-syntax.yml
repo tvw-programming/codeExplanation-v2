@@ -1,0 +1,40 @@
+name: Mermaid syntax
+
+on:
+  push:
+    branches: [main, "cursor/**"]
+    paths:
+      - "visuals/**"
+      - "documentation/**"
+      - "render-app/public/docs/**"
+      - "render-app/scripts/check-mermaid-syntax.mjs"
+      - "render-app/package.json"
+      - "render-app/package-lock.json"
+      - ".github/workflows/mermaid-syntax.yml"
+  pull_request:
+    paths:
+      - "visuals/**"
+      - "documentation/**"
+      - "render-app/public/docs/**"
+      - "render-app/scripts/check-mermaid-syntax.mjs"
+      - "render-app/package.json"
+      - "render-app/package-lock.json"
+      - ".github/workflows/mermaid-syntax.yml"
+
+jobs:
+  parse:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: render-app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: render-app/package-lock.json
+      - name: Install deps
+        run: npm ci
+      - name: Parse Mermaid fences / interactive fields
+        run: npm run check:mermaid

@@ -75,5 +75,7 @@
     "logoAssetId": "react-logo-ondark",
     "logoPath": "visuals/logos/react.svg"
   },
-  "mermaid": "flowchart TD\n  component_UploadGrant[\"UploadGrant\"]\n  component_media[\"media\"]\n  component_media --> component_UploadGrant\n  component_media --> component_UploadGrant"
+  "mermaid": "flowchart TD\n  component_UploadGrant[\"UploadGrant\"]\n  component_media[\"media\"]\n  component_media --> component_UploadGrant\n  component_media --> component_UploadGrant",
+  "mermaidLifecycle": null,
+  "mermaidLifecycleSkipReason": "empty"
 }
