@@ -4,6 +4,9 @@ import Typography from "@mui/material/Typography";
 import { DiagramHeader, shortFilePath } from "./DiagramHeader";
 import { HEADER_HEIGHT } from "./treeLayout";
 import type { PhaseStyleMode } from "./phaseStyle";
+import { EnterFrom } from "./fancyLayout";
+import { resolveFancyPatterns } from "./fancyLayout/phaseLayoutMatrix";
+import { resolveMatrixStackKey } from "./fancyLayout/stackResolve";
 import {
   type VisualTheme,
   resolveVisualTheme,
@@ -221,7 +224,17 @@ export const FileCard: React.FC<{
   visualTheme?: VisualTheme | null;
   /** classic = today's layout; fancy reserved for L1–L4 matrix (later PRs). */
   phaseStyle?: PhaseStyleMode;
-}> = ({ overview, narration, chunkDir, position, sectionSeconds, visualTheme, phaseStyle: _phaseStyle = "classic" }) => {
+  stackId?: string | null;
+}> = ({
+  overview,
+  narration,
+  chunkDir,
+  position,
+  sectionSeconds,
+  visualTheme,
+  phaseStyle = "classic",
+  stackId,
+}) => {
   const frame = useCurrentFrame();
   const fade = interpolate(frame, [0, 8], [0, 1], {
     extrapolateLeft: "clamp",
@@ -248,32 +261,13 @@ export const FileCard: React.FC<{
   const interfaceItems = overview.routes.length > 0 ? overview.routes : overview.outboundCalls;
   const interfaceLabel = overview.routes.length > 0 ? "Routes served" : "Outbound calls";
 
-  return (
-    <AbsoluteFill style={{ backgroundColor: "#15171c", opacity: fade }}>
-      <DiagramHeader
-        theme={theme}
-        filePath={overview.filePath}
-        eyebrow="File overview"
-        titleFallback={overview.fileName}
-      />
-      {narration && chunkDir ? (
-        <Audio src={staticFile(`${chunkDir}/${narration.audio}`)} />
-      ) : null}
+  const stackKey = resolveMatrixStackKey(stackId ?? theme.stack);
+  const patterns = resolveFancyPatterns(phaseStyle, "fileCard", stackKey);
+  const useFancyEnter = patterns.l2;
+  const motionY = useFancyEnter ? 0 : rise;
 
-      <Box
-        sx={{
-          position: "absolute",
-          top: HEADER_HEIGHT,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          px: "46px",
-          pt: "24px",
-          pb: "28px",
-          boxSizing: "border-box",
-        }}
-      >
-      <Box sx={{ transform: `translateY(${rise}px)`, height: "100%", display: "flex", flexDirection: "column" }}>
+  const cardBody = (
+      <Box sx={{ transform: `translateY(${motionY}px)`, height: "100%", display: "flex", flexDirection: "column" }}>
         <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 2 }}>
           <Typography
             sx={{
@@ -387,6 +381,40 @@ export const FileCard: React.FC<{
           ) : null}
         </Box>
       </Box>
+  );
+
+  return (
+    <AbsoluteFill style={{ backgroundColor: "#15171c", opacity: fade }}>
+      <DiagramHeader
+        theme={theme}
+        filePath={overview.filePath}
+        eyebrow="File overview"
+        titleFallback={overview.fileName}
+      />
+      {narration && chunkDir ? (
+        <Audio src={staticFile(`${chunkDir}/${narration.audio}`)} />
+      ) : null}
+
+      <Box
+        sx={{
+          position: "absolute",
+          top: HEADER_HEIGHT,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          px: "46px",
+          pt: "24px",
+          pb: "28px",
+          boxSizing: "border-box",
+        }}
+      >
+        {useFancyEnter ? (
+          <EnterFrom direction={patterns.l2Direction} durationInFrames={20}>
+            {cardBody}
+          </EnterFrom>
+        ) : (
+          cardBody
+        )}
       </Box>
     </AbsoluteFill>
   );

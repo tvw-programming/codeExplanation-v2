@@ -12,6 +12,17 @@ import Typography from "@mui/material/Typography";
 import { DiagramHeader } from "./DiagramHeader";
 import { HEADER_HEIGHT as DIAGRAM_HEADER_HEIGHT } from "./treeLayout";
 import type { PhaseStyleMode } from "./phaseStyle";
+import {
+  AnimatedBulletList,
+  Split7030,
+  TickerBar,
+} from "./fancyLayout";
+import {
+  honestyTickerLabel,
+  resolveFancyPatterns,
+  type HonestyHints,
+} from "./fancyLayout/phaseLayoutMatrix";
+import { resolveMatrixStackKey } from "./fancyLayout/stackResolve";
 import { type VisualTheme, themeForStack } from "./visualTheme";
 
 // Shared per-chunk view, used by both the single-chunk demo composition
@@ -177,7 +188,8 @@ export const ChunkView: React.FC<{
   visualTheme?: VisualTheme | null;
   filePath?: string | null;
   phaseStyle?: PhaseStyleMode;
-}> = ({ chunkDir, visualTheme, filePath, phaseStyle: _phaseStyle = "classic" }) => {
+  stackId?: string | null;
+}> = ({ chunkDir, visualTheme, filePath, phaseStyle = "classic", stackId }) => {
   const frame = useCurrentFrame();
   const [bundle, setBundle] = useState<Bundle | null>(null);
   const [sourceLines, setSourceLines] = useState<string[] | null>(null);
@@ -290,22 +302,40 @@ export const ChunkView: React.FC<{
   const pathForHeader = filePath || bundle.filePath || bundle.chunkId;
   const theme = visualTheme ?? bundle.visualTheme ?? themeForStack(bundle.stack);
 
-  return (
-    <AbsoluteFill style={{ backgroundColor: "#15171c" }}>
-      <Audio src={staticFile(`${chunkDir}/narration.wav`)} />
+  const treeSitterTeach = bundle.highlightConfig.some((c) => {
+    const note = (c.note || "").toLowerCase();
+    return note.includes("tree-sitter") || note.includes("tree_sitter");
+  });
+  const stackKey = resolveMatrixStackKey(stackId ?? bundle.stack ?? theme.stack, {
+    treeSitterTeach,
+  });
+  const honesty: HonestyHints = {
+    hasAssumed:
+      segments.some((s) => s.assumed) || bundle.highlightConfig.some((c) => c.assumed),
+    treeSitter: treeSitterTeach,
+    showSkip: segments.some((s) => (s.note || "").toUpperCase().includes("SKIP")),
+  };
+  const patterns = resolveFancyPatterns(phaseStyle, "chunkView", stackKey, honesty);
+  const tickerLabel = patterns.l1 ? honestyTickerLabel(honesty) : null;
+  const fancyL3 = patterns.l3;
+  const codePanelWidth = fancyL3 ? "100%" : `${WIDTH - NARRATION_WIDTH}px`;
 
-      <DiagramHeader
-        theme={theme}
-        filePath={pathForHeader}
-        eyebrow={bundle.featureName || "Code walkthrough"}
-        titleFallback={bundle.chunkId}
-      />
+  const bulletItems =
+    fancyL3 && segments.length > 0
+      ? segments.map((segment, i) => {
+          const text = bodyTextFor(segment, i === activeSegmentIndex);
+          return text.length > 140 ? `${text.slice(0, 137)}…` : text;
+        })
+      : [];
+  const bulletReveal =
+    fancyL3 && segments.length > 0
+      ? segments.map((s) => Math.max(0, s.fromFrame))
+      : [];
 
-      <Box sx={{ display: "flex", height: `${HEIGHT - HEADER_HEIGHT}px`, mt: `${HEADER_HEIGHT}px` }}>
-        {/* Code panel — scrolls to whichever line is being narrated. */}
+  const codePanel = (
         <Box
           sx={{
-            width: `${WIDTH - NARRATION_WIDTH}px`,
+            width: codePanelWidth,
             height: "100%",
             overflow: "hidden",
             position: "relative",
@@ -393,9 +423,9 @@ export const ChunkView: React.FC<{
             })}
           </Box>
         </Box>
+  );
 
-        {/* Narration panel — one lettered item per sentence, the one
-            being spoken is bright and the rest are dimmed. */}
+  const narrationPanel = (
         <Box
           sx={{
             width: `${NARRATION_WIDTH}px`,
@@ -489,7 +519,45 @@ export const ChunkView: React.FC<{
             </Box>
           )}
         </Box>
-      </Box>
+  );
+
+  return (
+    <AbsoluteFill style={{ backgroundColor: "#15171c" }}>
+      <Audio src={staticFile(`${chunkDir}/narration.wav`)} />
+
+      <DiagramHeader
+        theme={theme}
+        filePath={pathForHeader}
+        eyebrow={bundle.featureName || "Code walkthrough"}
+        titleFallback={bundle.chunkId}
+      />
+
+      {fancyL3 ? (
+        <Split7030
+          main={codePanel}
+          aside={
+            segments.length > 0 ? (
+              <AnimatedBulletList
+                items={bulletItems}
+                revealAtFrames={bulletReveal}
+                activeIndex={activeSegmentIndex >= 0 ? activeSegmentIndex : null}
+                accentColor={ACCENT}
+              />
+            ) : (
+              <Typography sx={{ color: DIM_TEXT, fontSize: 14 }}>{bundle.cleanText}</Typography>
+            )
+          }
+        />
+      ) : (
+        <Box sx={{ display: "flex", height: `${HEIGHT - HEADER_HEIGHT}px`, mt: `${HEADER_HEIGHT}px` }}>
+          {codePanel}
+          {narrationPanel}
+        </Box>
+      )}
+
+      {tickerLabel ? (
+        <TickerBar label={tickerLabel} showFromFrame={10} hideAtFrame={null} />
+      ) : null}
     </AbsoluteFill>
   );
 };

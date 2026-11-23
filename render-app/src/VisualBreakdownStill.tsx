@@ -3,6 +3,13 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import type { ClipNarration, SecurityFlag, VisualGraph } from "./ComponentTreeClip";
 import type { PhaseStyleMode } from "./phaseStyle";
+import { TickerBar } from "./fancyLayout";
+import {
+  honestyTickerLabel,
+  resolveFancyPatterns,
+  type HonestyHints,
+} from "./fancyLayout/phaseLayoutMatrix";
+import { resolveMatrixStackKey } from "./fancyLayout/stackResolve";
 import { DiagramHeader } from "./DiagramHeader";
 import { VisualGraphDiagram, edgeSummaryLabel } from "./VisualGraphDiagram";
 import {
@@ -35,12 +42,30 @@ export const VisualBreakdownStill: React.FC<{
   filePath?: string | null;
   securityFlags?: SecurityFlag[];
   phaseStyle?: PhaseStyleMode;
-}> = ({ chunkDir, visualGraph, visualTheme, narration, filePath, securityFlags = [], phaseStyle: _phaseStyle = "classic" }) => {
+  stackId?: string | null;
+}> = ({
+  chunkDir,
+  visualGraph,
+  visualTheme,
+  narration,
+  filePath,
+  securityFlags = [],
+  phaseStyle = "classic",
+  stackId,
+}) => {
   const isRouteTree = visualGraph.kind === "route_tree";
   const theme = visualTheme || themeForStack(isRouteTree ? "go" : "react");
   const root = (visualGraph.nodes || []).find((n) => n.id === visualGraph.rootId);
   const name = filePath?.split("/").pop() || root?.label || "this file";
   const accent = videoAccent(theme);
+  const stackKey = resolveMatrixStackKey(stackId ?? theme.stack);
+  const honesty: HonestyHints = {
+    hasAssumed:
+      visualGraph.edges.some((e) => e.assumed) ||
+      visualGraph.nodes.some((n) => n.assumed),
+  };
+  const patterns = resolveFancyPatterns(phaseStyle, "visualBreakdown", stackKey, honesty);
+  const tickerLabel = patterns.l1 ? honestyTickerLabel(honesty) : null;
 
   return (
     <AbsoluteFill style={{ backgroundColor: CEV_BG_VIDEO }}>
@@ -70,6 +95,10 @@ export const VisualBreakdownStill: React.FC<{
           </Box>
         </Typography>
       </Box>
+      {tickerLabel ? (
+        <TickerBar label={tickerLabel} showFromFrame={8} hideAtFrame={null} />
+      ) : null}
+
       {narration.audio ? (
         <Audio src={staticFile(`${chunkDir}/${narration.audio}`)} />
       ) : null}
