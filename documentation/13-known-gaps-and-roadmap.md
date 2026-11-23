@@ -66,6 +66,9 @@ literal matches only; Go Fiber groups use the same resolver. Optional
 tree-sitter (`CEV_TREE_SITTER`) overlays Go/TSX/Java declaration spans
 and Vue SFC mount honesty in 24; Rust/Express function / const-fn spans
 overlay into records in 25 (routes/mounts/mw stay regex + PrefixGraph).
+CI sets `CEV_TREE_SITTER=1` (`.github/workflows/pytest.yml`); missing
+grammar still falls back to regex (fail-open tests in
+`tests/test_tree_sitter_substrate.py`).
 Spring cross-file mounts onto PrefixGraph remain deferred (no safe
 literal mount analogue without inventing bean edges); `@Import` /
 `@ComponentScan` / `implements` alone never invent beans/Impl

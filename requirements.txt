@@ -11,6 +11,8 @@ piper-tts>=1.8.0
 # Prebuilt abi3 wheels — no C toolchain / Node / Go sidecar.
 # CEV_TREE_SITTER=1 enables query-backed spans / honesty filters with
 # regex/ast fallback; flag off keeps the regex path.
+# CI (.github/workflows/pytest.yml) sets CEV_TREE_SITTER=1 so probes run;
+# missing grammar / bad parse / name mismatch still fall back (fail-open).
 # Grammar pins are exact: node types are not stable across releases.
 # Runtime targets the >=0.25 QueryCursor API (Query.captures removed).
 tree-sitter>=0.25,<0.27

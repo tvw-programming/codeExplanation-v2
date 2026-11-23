@@ -61,7 +61,7 @@ topology.
 | Lifecycle flows / steps | `MERMAID_FLOW_CAP = 4`, `MERMAID_STEP_CAP = 24` |
 | `interactive.json` | `mermaid`, `mermaidLifecycle`, optional `*SkipReason` |
 | `architecture.md` | Honesty chrome + fenced diagrams beside the JSON |
-| CI | `npm run check:mermaid` (Mermaid.js `parse`) |
+| CI | `npm run check:mermaid` (Mermaid.js `parse`); pytest with `CEV_TREE_SITTER=1` (regex fallback authoritative) |
 
 ## Monorepo notes
 

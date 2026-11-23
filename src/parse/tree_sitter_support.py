@@ -14,9 +14,9 @@ Honesty contract
   guess.
 
 Feature flag: ``CEV_TREE_SITTER=1`` (see ``tree_sitter_enabled``).
-Until a stack wires query-backed facts and bumps ``EXTRACTOR_VERSION``,
-flag-on only enables probes / experiments — record semantics stay on
-the regex/ast path.
+CI sets the flag so probes run; missing grammar / bad parse / name
+mismatch still fall back to regex/ast (fail-open). Flag off keeps the
+regex path only.
 """
 
 from __future__ import annotations
