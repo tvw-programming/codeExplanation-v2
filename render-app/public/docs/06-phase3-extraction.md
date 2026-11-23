@@ -1,6 +1,6 @@
 # Phase 3 — Extraction Into the JSON Structure
 
-Status: multi-stack extractors shipped (`EXTRACTOR_VERSION = 14`).
+Status: multi-stack extractors shipped (`EXTRACTOR_VERSION = 15`).
 Regex ceilings and remaining gaps:
 [`14-stack-support-validation.md`](./14-stack-support-validation.md)
 (banner) and [`17-multi-stack-visuals.md`](./17-multi-stack-visuals.md).

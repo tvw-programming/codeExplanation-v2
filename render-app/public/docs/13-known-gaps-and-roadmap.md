@@ -16,7 +16,7 @@ Doc 14 is a **historical** audit — read its banner first.
 | Go Fiber | yes | yes | `extract/go/` (regex) | `route_tree`; generics/interfaces/factories; All/Add; no Impl edges |
 | Angular | yes | yes | `extract/angular/` | selector→usage mounts + signal/decorator I/O; empty → unavailable |
 | Vue / Solid / Qwik / JS | yes | yes | `extract/{vue,solid,qwik,javascript}/` | thin trees; skip when empty |
-| Python | yes | yes | `extract/python/` (`ast`) | in-file APIRouter prefix; Django `path()` literals (method UNKNOWN); empty → unavailable |
+| Python | yes | yes | `extract/python/` (`ast`) | in-file APIRouter/Blueprint prefixes + mounts; Django `path()` + in-file view/CBV methods; empty → unavailable |
 | Spring Boot | yes | yes | `extract/spring/` | `di_graph` by type + Lombok/setter/@Inject; bare `@RequestMapping` → ALL; no Impl-from-imports |
 | Express | yes | yes | `extract/express/` | `route_tree`; nested literal mounts; path arrays; regex→assumed; backend stack |
 | Rust | yes | yes | `extract/rust/` | partial; method from attrs; routes assumed |
@@ -39,7 +39,7 @@ See [`09-phase6-rendering.md`](./09-phase6-rendering.md).
 ### 1. Multi-stack extractors are shipped but still thin
 
 Python (`ast`), Spring (DI-by-type), Express, Angular, Vue/Solid/Qwik,
-JS, Rust, React, and Go builders exist (`EXTRACTOR_VERSION` 14). All
+JS, Rust, React, and Go builders exist (`EXTRACTOR_VERSION` 15). All
 stacks use `src/extract/<stack>/{extract,record}.py`; flat modules are
 shims; `stack_records.py` re-exports. Remaining gaps: regex ceilings,
 cross-file route prefixes, package-level Go chunking, Angular
@@ -50,7 +50,9 @@ Spring honesty enrichments landed (`EXTRACTOR_VERSION` 12): bare
 `@RequestMapping` → `ALL`; multi `method=` / path arrays; `${}`/`#{}`
 assumed; setter/`@Inject` DI; multi-ctor assumed; Spring Data repo
 interfaces without proxy Impl. Django `urlpatterns` `path()`/`re_path()`/
-`url()` literals landed (`EXTRACTOR_VERSION` 11; method `UNKNOWN`;
+`url()` literals landed (`EXTRACTOR_VERSION` 11); in-file view/CBV
+HTTP methods + Flask Blueprint / include_router mounts
+(`EXTRACTOR_VERSION` 15; cross-file handlers stay `UNKNOWN`;
 `include()` mounts assumed, not joined). Express nested literal mounts,
 path arrays, regex→assumed, and per-route METHOD middleware landed
 (`EXTRACTOR_VERSION` 14); cross-file prefixes still deferred. Angular
