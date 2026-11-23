@@ -15,7 +15,7 @@ from src.visual.availability import is_present
 
 
 def test_extractor_version_is_9():
-    assert EXTRACTOR_VERSION == 9
+    assert EXTRACTOR_VERSION == 10
 
 
 def test_python_apirouter_prefix_composes():
@@ -56,6 +56,9 @@ export class X {
     assert "user" in comp.inputs
     assert "legacy" in comp.inputs
     assert "saved" in comp.outputs
+
+
+# Selector→usage mounts covered thoroughly in test_angular_selector_mounts.py
 
 
 def test_spring_request_mapping_method_and_lombok_inject():
@@ -125,7 +128,7 @@ def test_hardened_builders_feed_visual_graphs(tmp_path: Path):
         tmp_path, ChunkPlan("app", "API", "python", "app.py", 20, "small"),
         {"frontend": None, "backend": ["python"]},
     )
-    assert py["extractorVersion"] == 9
+    assert py["extractorVersion"] == 10
     assert is_present(py["visualAvailability"]["componentTree"])
     assert any(r["path"] == "/api/users" for r in py["routes"])
 

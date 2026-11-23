@@ -526,6 +526,11 @@ def build_spring_di_tree(record: dict) -> dict | None:
 
 
 def build_angular_selector_tree(record: dict) -> dict | None:
+    """Angular component_tree: selector provides, I/O binds, injects, template mounts.
+
+    Mount edges come only from record jsxMounts produced by the selector
+    index — unmatched template tags are never invented here.
+    """
     comp = record.get("angularComponent")
     if not comp:
         return None
@@ -582,6 +587,61 @@ def build_angular_selector_tree(record: dict) -> dict | None:
             "id": f"injects:{root_id}->{tid}:{i}", "kind": "injects",
             "from": root_id, "to": tid, "assumed": True, "label": None, "meta": {},
         })
+
+    # Confirmed selector→usage mounts (from extract_template_mounts).
+    for i, mount in enumerate(record.get("jsxMounts") or []):
+        child = mount.get("child")
+        if not child:
+            continue
+        parent = mount.get("parent") or name
+        parent_id = _node_id("component", parent)
+        child_id = _node_id("component", child)
+        if parent_id not in nodes:
+            nodes[parent_id] = {
+                "id": parent_id, "kind": "component", "label": parent,
+                "filePath": file_path, "line": mount.get("line"),
+                "assumed": False, "meta": {},
+            }
+        if child_id not in nodes:
+            nodes[child_id] = {
+                "id": child_id, "kind": "component", "label": child,
+                "filePath": file_path, "line": mount.get("line"),
+                "assumed": bool(mount.get("assumed")),
+                "meta": {
+                    "selector": mount.get("selector"),
+                    "props": mount.get("props") or [],
+                },
+            }
+        edges.append({
+            "id": f"mounts:{parent_id}->{child_id}:{i}",
+            "kind": "mounts",
+            "from": parent_id,
+            "to": child_id,
+            "assumed": bool(mount.get("assumed")),
+            "label": mount.get("selector"),
+            "meta": {
+                "selector": mount.get("selector"),
+                "props": mount.get("props") or [],
+                "note": mount.get("note"),
+            },
+        })
+        for prop in mount.get("props") or []:
+            pname = prop.get("name") if isinstance(prop, dict) else None
+            if not pname:
+                continue
+            edges.append({
+                "id": f"prop:{parent_id}->{child_id}:{pname}:{i}",
+                "kind": "passes_prop",
+                "from": parent_id,
+                "to": child_id,
+                "assumed": bool(prop.get("assumed")) if isinstance(prop, dict) else False,
+                "label": pname,
+                "meta": {
+                    "valueKind": prop.get("valueKind") if isinstance(prop, dict) else None,
+                    "valuePreview": prop.get("valuePreview") if isinstance(prop, dict) else None,
+                },
+            })
+
     return _finish("component_tree", root_id, nodes, edges)
 
 

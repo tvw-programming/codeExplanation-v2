@@ -197,7 +197,10 @@ def _attach_angular_visuals(record: dict) -> dict:
         record["securityFlags"] = []
         record["visualAvailability"] = avail
         return record
-    avail = _set_tree(avail, record, graph, NO_MOUNTS_REASON, "Selector index is file-local (regex).")
+    avail = _set_tree(
+        avail, record, graph, NO_MOUNTS_REASON,
+        "Angular selector index + template mounts (regex); unmatched tags skipped.",
+    )
     flows = build_angular_lifecycle_flows(record)
     avail = _set_flows(avail, record, flows, "Angular lifecycle hedged under regex fidelity.")
     avail = _set_interactive(avail)

@@ -26,12 +26,17 @@ from .extractor import _apply_feature_mapping
 from .common import read_lines
 
 
-def _build_record(root, chunk, project_type_dict, package_json_dir, base_url, module_path, uses_fiber, current_hash):
+def _build_record(
+    root, chunk, project_type_dict, package_json_dir, base_url, module_path,
+    uses_fiber, current_hash, *, angular_selector_index=None,
+):
     stack = chunk.stack
     if stack == "react":
         return build_frontend_chunk_record(root, chunk, project_type_dict, package_json_dir, base_url)
     if stack == "angular":
-        return build_angular_chunk_record(root, chunk, project_type_dict)
+        return build_angular_chunk_record(
+            root, chunk, project_type_dict, selector_index=angular_selector_index,
+        )
     if stack == "go":
         return build_backend_go_chunk_record(root, chunk, project_type_dict, module_path, uses_fiber)
     if stack == "python":
@@ -102,6 +107,11 @@ def extract_repo_with_reuse(
         package_json_dir = hit.directory
         break
 
+    angular_selector_index = None
+    if any(c.stack == "angular" for c in result.chunks):
+        from .angular.extract import build_selector_index
+        angular_selector_index = build_selector_index(root)
+
     records: list[dict] = []
     reused_count = 0
     reanalyzed_count = 0
@@ -118,6 +128,7 @@ def extract_repo_with_reuse(
         record = _build_record(
             root, chunk, project_type_dict, package_json_dir,
             base_url, module_path, uses_fiber, current_hash,
+            angular_selector_index=angular_selector_index,
         )
 
         if github_owner and github_repo:

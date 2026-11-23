@@ -16,7 +16,7 @@ too_large → no fence (Q5). Never invent edges.
 | Stack | Detection signal | Structure Mermaid | Lifecycle Mermaid | Skip when |
 |---|---|---|---|---|
 | **React** | `package.json` + React deps | `flowchart TD` (`component_tree` mounts) | `sequenceDiagram` from `lifecycleFlows` | No mounts / no flows / >40 nodes |
-| **Angular** | `package.json` + Angular deps | `flowchart TD` when selector/inputs/outputs exist | Sequence when flows exist | Empty `@Component` / no edges → unavailable |
+| **Angular** | `package.json` + Angular deps | `flowchart TD` selector tree + confirmed template mounts | Sequence when flows exist | Empty `@Component` / no edges → unavailable; unmatched tags skipped |
 | **Vue / Solid / Qwik** | FE deps in `package.json` | `flowchart TD` mounts when present | Sequence when flows present | Thin extractors; missing mounts → skip |
 | **JavaScript** | `package.json` without concrete FE | `flowchart TD` (`module_graph`) | Sequence when call/lifecycle edges exist | No import/call edges |
 | **Go Fiber** | `go.mod` + Fiber import | `flowchart TD` (`route_tree`) | Sequence middleware→handler | No routes; unresolved cross-file prefixes stay **assumed** |
@@ -32,7 +32,7 @@ Dispatch: `src/detect/project_type.py` → `src/extract/<stack>/` →
 `architecture.md` + `interactive.json`.
 
 Hardening notes + layout: Project store
-`docs/extractor-hardening-plan.md`. `EXTRACTOR_VERSION` **9**.
+`docs/extractor-hardening-plan.md`. `EXTRACTOR_VERSION` **10**.
 
 ## Honesty / confidence in diagrams
 
