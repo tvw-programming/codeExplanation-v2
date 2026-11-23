@@ -11,6 +11,10 @@ Honesty enrichments (EXTRACTOR_VERSION 20):
   declaration site — never invent mounts from unbound HOC calls.
 - Hook owners use the innermost enclosing function when evidence is
   clear; file-stem fallback is ``assumed``.
+
+Optional tree-sitter probe (``CEV_TREE_SITTER=1``): declaration names via
+``tree_sitter_probe`` / ``tree_sitter_decl_names_or_fallback``. Record
+facts below still come from regex only — no VERSION bump until wired.
 """
 
 from __future__ import annotations
@@ -794,3 +798,24 @@ def callback_outputs_from_mounts(mounts: list[JsxMount]) -> list[dict]:
                 "line": mount.line,
             })
     return outputs
+
+
+def tree_sitter_decl_names_or_fallback(
+    text: str,
+    *,
+    language_key: str = "tsx",
+) -> list[str] | None:
+    """Optional tree-sitter plug-in point for TSX/TS declarations.
+
+    Returns ``None`` when the feature flag is off, the substrate is
+    missing, or the parse is catastrophic — callers must keep the regex
+    path. A successful list is names proven by clean nodes only; it is
+    **not** yet consumed by ``extract_functions`` / JSX mounts / records
+    (deferred until EXTRACTOR_VERSION ≥ 24). Never invents mounts.
+    """
+    from .tree_sitter_probe import probe_tsx_declarations
+
+    decls = probe_tsx_declarations(text, language_key=language_key)
+    if decls is None:
+        return None
+    return [d.name for d in decls]

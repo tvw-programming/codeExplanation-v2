@@ -23,9 +23,10 @@ Doc 14 is a **historical** audit — read its banner first.
 
 ## Carried-forward product gaps
 
-Keep these as roadmap: deeper parsers (tree-sitter substrate spike
-landed as optional `src/parse/` + Go probe behind `CEV_TREE_SITTER`;
-query-backed extractors still deferred — typed/compiler APIs later), package-
+Keep these as roadmap: deeper parsers (tree-sitter substrate + optional
+Go/TSX/Java probes behind `CEV_TREE_SITTER`; records still regex —
+query-backed extractors deferred to EXTRACTOR_VERSION 24+; Express/
+Python/Rust/Vue SFC probes deferred — typed/compiler APIs later), package-
 level Go chunking, `outputs` always empty,
 statement-level split (`needs_further_split` unused), LLM-elaborated
 narration (`llm:` config unused), production voice quality. Cross-file
