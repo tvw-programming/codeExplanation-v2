@@ -28,7 +28,7 @@ from .common import read_lines
 
 def _build_record(
     root, chunk, project_type_dict, package_json_dir, base_url, module_path,
-    uses_fiber, current_hash, *, angular_selector_index=None,
+    uses_fiber, current_hash, *, angular_selector_index=None, python_route_index=None,
 ):
     stack = chunk.stack
     if stack == "react":
@@ -40,7 +40,9 @@ def _build_record(
     if stack == "go":
         return build_backend_go_chunk_record(root, chunk, project_type_dict, module_path, uses_fiber)
     if stack == "python":
-        return build_python_chunk_record(root, chunk, project_type_dict)
+        return build_python_chunk_record(
+            root, chunk, project_type_dict, route_index=python_route_index,
+        )
     if stack == "express":
         return build_express_chunk_record(root, chunk, project_type_dict)
     if stack in ("spring_boot", "java"):
@@ -112,6 +114,11 @@ def extract_repo_with_reuse(
         from .angular.extract import build_selector_index
         angular_selector_index = build_selector_index(root)
 
+    python_route_index = None
+    if any(c.stack == "python" for c in result.chunks):
+        from .python.extract import build_python_route_index
+        python_route_index = build_python_route_index(root)
+
     records: list[dict] = []
     reused_count = 0
     reanalyzed_count = 0
@@ -129,6 +136,7 @@ def extract_repo_with_reuse(
             root, chunk, project_type_dict, package_json_dir,
             base_url, module_path, uses_fiber, current_hash,
             angular_selector_index=angular_selector_index,
+            python_route_index=python_route_index,
         )
 
         if github_owner and github_repo:

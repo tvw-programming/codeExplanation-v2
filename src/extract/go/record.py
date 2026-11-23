@@ -114,14 +114,15 @@ def build_backend_go_chunk_record(
 
     side_effects_out = [{"type": kind, "description": f"Detected at line {line}"} for kind, line in side_effects]
 
-    routes_out = [
-        {
+    routes_out = []
+    for r in routes:
+        entry = {
             "path": r.path,
             "method": r.method,
             "type": r.static_or_dynamic,
             "routingLibrary": r.routing_library,
             "protected": r.protected,
-            "assumed": r.assumed,
+            "assumed": r.assumed if r.path_resolved is not False else True,
             "handler": r.handler,
             "notes": r.note,
             "routerVar": r.router_var,
@@ -143,8 +144,11 @@ def build_backend_go_chunk_record(
                 )
             ],
         }
-        for r in routes
-    ]
+        if r.path_resolved is not None:
+            entry["pathResolved"] = r.path_resolved
+        if r.prefix_chain:
+            entry["prefixChain"] = r.prefix_chain
+        routes_out.append(entry)
 
     middleware_out = [
         {
@@ -175,7 +179,7 @@ def build_backend_go_chunk_record(
         {
             "var": var,
             "parent": parent,
-            "prefix": prefix,
+            "prefix": prefix,  # None when Group(...) used a non-literal expression
         }
         for var, (parent, prefix) in sorted(group_parents.items())
     ]

@@ -61,7 +61,11 @@ from src.extract.common import content_hash
 #  15 - Python honesty: in-file Django view/CBV HTTP methods; Flask
 #       Blueprint(url_prefix=); in-file include_router/register_blueprint
 #       literal mounts; non-literal mounts → assumed.
-EXTRACTOR_VERSION = 15
+#  17 - Shared route-prefix resolver (PrefixGraph); FastAPI include_router
+#       + Django include() cross-file join on unique literal resolution;
+#       Go Fiber groups via shared resolver (no assumed "app" root);
+#       routes may carry pathResolved / prefixChain.
+EXTRACTOR_VERSION = 17
 
 
 def output_path_for(output_root: Path, file_path: str) -> Path:

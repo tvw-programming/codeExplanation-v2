@@ -29,7 +29,7 @@ from .common import read_lines
 
 def _build_record(
     root, chunk, project_type, project_type_dict, package_json_dir, base_url,
-    module_path, uses_fiber, *, angular_selector_index=None,
+    module_path, uses_fiber, *, angular_selector_index=None, python_route_index=None,
 ):
     stack = chunk.stack
     if stack == "react":
@@ -41,7 +41,9 @@ def _build_record(
     if stack == "go":
         return build_backend_go_chunk_record(root, chunk, project_type_dict, module_path, uses_fiber)
     if stack == "python":
-        return build_python_chunk_record(root, chunk, project_type_dict)
+        return build_python_chunk_record(
+            root, chunk, project_type_dict, route_index=python_route_index,
+        )
     if stack == "express":
         return build_express_chunk_record(root, chunk, project_type_dict)
     if stack in ("spring_boot", "java"):
@@ -105,12 +107,18 @@ def extract_repo(root: str | Path, project_type: ProjectType) -> list[dict]:
         from .angular.extract import build_selector_index
         angular_selector_index = build_selector_index(root)
 
+    python_route_index = None
+    if any(c.stack == "python" for c in result.chunks):
+        from .python.extract import build_python_route_index
+        python_route_index = build_python_route_index(root)
+
     records: list[dict] = []
     for chunk in result.chunks:
         records.append(_build_record(
             root, chunk, project_type, project_type_dict,
             package_json_dir, base_url, module_path, uses_fiber,
             angular_selector_index=angular_selector_index,
+            python_route_index=python_route_index,
         ))
 
     _apply_feature_mapping(records, result.chunks, base_url)
