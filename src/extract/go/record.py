@@ -37,10 +37,12 @@ def build_backend_go_chunk_record(
     text = "\n".join(lines)
     imports = go.extract_imports(text, module_path)
     structs = go.extract_structs(text)
+    interfaces = go.extract_interfaces(text)
     functions = go.extract_functions(text)
     side_effects = go.extract_side_effects(text)
     routes = go.extract_routes(text, uses_fiber)
     middleware = go.extract_middleware(text)
+    mw_factories = go.extract_middleware_factories(text)
     group_parents, fiber_roots = go.extract_route_groups(text)
 
     framework_or_library = _resolve_go_framework_or_library(imports)
@@ -55,6 +57,8 @@ def build_backend_go_chunk_record(
             "truncated": fn.snippet.truncated,
             "continuationNote": fn.snippet.continuation_note,
             "secretsRedacted": fn.snippet.secrets_redacted,
+            "typeParams": fn.type_params,
+            "returnsFiberHandler": fn.returns_fiber_handler,
         }
         for fn in functions
     ]
@@ -73,7 +77,11 @@ def build_backend_go_chunk_record(
     data_models_out = [
         {
             "name": s.name,
+            "kind": "struct",
+            "typeParams": s.type_params,
             "fields": [{"name": n, "type": t} for n, t in s.fields],
+            "methods": [],
+            "embedded": [],
             "file": chunk.file_path,
             "codeSnippet": s.snippet.text,
             "truncated": s.snippet.truncated,
@@ -82,6 +90,27 @@ def build_backend_go_chunk_record(
         }
         for s in structs
     ]
+    # Interfaces are data models with methods only — never invent which
+    # concrete type satisfies them (no Impl edges from this extractor).
+    for iface in interfaces:
+        data_models_out.append({
+            "name": iface.name,
+            "kind": "interface",
+            "typeParams": iface.type_params,
+            "fields": [],
+            "methods": [{"name": n, "signature": sig} for n, sig in iface.methods],
+            "embedded": list(iface.embedded),
+            "file": chunk.file_path,
+            "codeSnippet": iface.snippet.text,
+            "truncated": iface.snippet.truncated,
+            "continuationNote": iface.snippet.continuation_note,
+            "secretsRedacted": iface.snippet.secrets_redacted,
+            "assumed": False,
+            "notes": (
+                "Interface method set only; concrete implementors are not "
+                "inferred (Go satisfaction is implicit)."
+            ),
+        })
 
     side_effects_out = [{"type": kind, "description": f"Detected at line {line}"} for kind, line in side_effects]
 
@@ -131,6 +160,17 @@ def build_backend_go_chunk_record(
         for mw in middleware
     ]
 
+    middleware_factories_out = [
+        {
+            "name": fac.name,
+            "line": fac.line,
+            "receiver": fac.receiver,
+            "assumed": fac.assumed,
+            "notes": fac.note,
+        }
+        for fac in mw_factories
+    ]
+
     route_groups_out = [
         {
             "var": var,
@@ -151,6 +191,15 @@ def build_backend_go_chunk_record(
         notes.append(
             "Route protection is inferred from local .Use() / Group(..., mw) calls on this "
             "router or its ancestor groups only; verify before relying on it."
+        )
+    if any(m.get("kind") == "interface" for m in data_models_out):
+        notes.append(
+            "Interface types list method signatures only; implementors are not inferred."
+        )
+    if middleware_factories_out:
+        notes.append(
+            "fiber.Handler-returning funcs are listed as middlewareFactories; "
+            "route attachment from the definition alone is assumed/skipped."
         )
     if any(fn["secretsRedacted"] for fn in important_functions) or any(s["secretsRedacted"] for s in data_models_out):
         notes.append("A possible secret was detected and redacted from one or more code snippets in this "
@@ -181,6 +230,7 @@ def build_backend_go_chunk_record(
         "dataModels": data_models_out,
         "routes": routes_out,
         "middleware": middleware_out,
+        "middlewareFactories": middleware_factories_out,
         "routeGroups": route_groups_out,
         "usesFiber": uses_fiber,
         "confidence": confidence,

@@ -19,7 +19,7 @@ too_large → no fence (Q5). Never invent edges.
 | **Angular** | `package.json` + Angular deps | `flowchart TD` selector tree + confirmed template mounts | Sequence when flows exist | Empty `@Component` / no edges → unavailable; unmatched tags skipped |
 | **Vue / Solid / Qwik** | FE deps in `package.json` | `flowchart TD` mounts when present | Sequence when flows present | Thin extractors; missing mounts → skip |
 | **JavaScript** | `package.json` without concrete FE | `flowchart TD` (`module_graph`) | Sequence when call/lifecycle edges exist | No import/call edges |
-| **Go Fiber** | `go.mod` + Fiber import | `flowchart TD` (`route_tree`) | Sequence middleware→handler | No routes; unresolved cross-file prefixes stay **assumed** |
+| **Go Fiber** | `go.mod` + Fiber import | `flowchart TD` (`route_tree`) | Sequence middleware→handler | No routes; unresolved prefixes / non-literal `Add` / `Route()` closures skipped or **assumed**; no Impl edges from interfaces |
 | **Express** | `express` in `package.json` | `flowchart TD` (`route_tree`, incl. `route().get/post`) | Sequence middleware→handler | No routes/edges |
 | **Python** | `requirements.txt` / `pyproject.toml` / `setup.py` | `flowchart TD` route or module graph | Sequence when flows exist | No edges; in-file `APIRouter(prefix=)` composed; Django `path()` literals with method `UNKNOWN`; `include()` mounts assumed (`fidelity: syntax`) |
 | **Spring Boot** | Maven/Gradle + spring-boot | `flowchart TD` (`di_graph` by injection type / Lombok/setter/@Inject) | Sequence when flows exist | No inject edges; never draw Impl from imports alone; bare `@RequestMapping`→ALL; placeholder paths assumed |
@@ -32,7 +32,7 @@ Dispatch: `src/detect/project_type.py` → `src/extract/<stack>/` →
 `architecture.md` + `interactive.json`.
 
 Hardening notes + layout: Project store
-`docs/extractor-hardening-plan.md`. `EXTRACTOR_VERSION` **12**.
+`docs/extractor-hardening-plan.md`. `EXTRACTOR_VERSION` **13**.
 
 ## Honesty / confidence in diagrams
 

@@ -51,7 +51,10 @@ from src.extract.common import content_hash
 #  12 - Spring honesty: bare @RequestMapping → ALL (not silent GET);
 #       multi method=/path arrays; ${}/#{} assumed; setter/@Inject DI;
 #       multi-ctor assumed; Spring Data repo interfaces (no Impl invent).
-EXTRACTOR_VERSION = 12
+#  13 - Go Fiber honesty: generics on funcs/structs/interfaces;
+#       interface method sets (no Impl edges); fiber.Handler factories;
+#       All()/literal Add() routes; Route() closures still skipped.
+EXTRACTOR_VERSION = 13
 
 
 def output_path_for(output_root: Path, file_path: str) -> Path:

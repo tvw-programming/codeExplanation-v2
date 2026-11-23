@@ -1,4 +1,4 @@
-"""Spring Boot extractor honesty enrichments (EXTRACTOR_VERSION 12)."""
+"""Spring Boot extractor honesty enrichments (landed at EXTRACTOR_VERSION 12; current may be higher)."""
 
 from __future__ import annotations
 
@@ -14,7 +14,7 @@ FIX = Path(__file__).resolve().parent / "fixtures"
 
 
 def test_extractor_version_is_12():
-    assert EXTRACTOR_VERSION == 12
+    assert EXTRACTOR_VERSION == 13
 
 
 def test_bare_request_mapping_is_all_not_get():
@@ -201,7 +201,7 @@ def test_fixture_controller_builds_di_graph(tmp_path: Path):
     record = build_spring_chunk_record(
         tmp_path, chunk, {"frontend": None, "backend": ["spring_boot"]},
     )
-    assert record["extractorVersion"] == 12
+    assert record["extractorVersion"] == 13
     assert record["springTypes"]
     assert record["springTypes"][0]["kind"] == "class"
     assert is_present(record["visualAvailability"]["componentTree"])

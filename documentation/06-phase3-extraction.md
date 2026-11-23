@@ -1,6 +1,6 @@
 # Phase 3 — Extraction Into the JSON Structure
 
-Status: multi-stack extractors shipped (`EXTRACTOR_VERSION = 12`).
+Status: multi-stack extractors shipped (`EXTRACTOR_VERSION = 13`).
 Regex ceilings and remaining gaps:
 [`14-stack-support-validation.md`](./14-stack-support-validation.md)
 (banner) and [`17-multi-stack-visuals.md`](./17-multi-stack-visuals.md).
@@ -15,10 +15,12 @@ confidence 0.95/high.
 React-style mount path for Vue). Empty / low-fidelity extractions set
 `visualAvailability: unavailable` and `visualGraph: null` — graphs are
 never invented. Nested Fiber group prefixes **are** composed in-file.
-Go generics, interfaces, and closure middleware are still missed.
-Angular uses `angular_extractor.py` (not the React builder); no
-`@Component` → unavailable visuals. Python uses stdlib `ast`. Spring DI
-is by type. Express is a real backend stack.
+Go Fiber extracts generics, interface method sets (no Impl edges),
+`fiber.Handler` middleware factories, and `All()` / literal `Add()`
+routes; `app.Route(...)` closures stay skipped. Angular uses
+`angular_extractor.py` (not the React builder); no `@Component` →
+unavailable visuals. Python uses stdlib `ast`. Spring DI is by type.
+Express is a real backend stack.
 
 ## What this phase delivers
 
@@ -166,7 +168,7 @@ itself, flagged, is the only option that is both complete and honest.
 | Field | Where | Notes |
 |---|---|---|
 | `fileDescription` | record | File header comment; FileCard purpose |
-| `extractorVersion` | record | Currently `12` (`mirror_store.EXTRACTOR_VERSION`); reuse invalidates on mismatch even if bytes match |
+| `extractorVersion` | record | Currently `13` (`mirror_store.EXTRACTOR_VERSION`); reuse invalidates on mismatch even if bytes match |
 | `secretsRedacted` | each snippet | Set by `trim_snippet()` |
 | `eventHandlers[].lineRange` | `[line, line]` at the bind site | `visual_cues.py` includes `eventHandlers` in `CUE_SOURCE_FIELDS` — 08 used to say handlers have no range |
 | Function-context keys on `importantFunctions` | `function_context.py` | `description`, `descriptionSource`, `exported`, `calledBy`, `calls`, `params`, `raisesError`, `isAsync`, `reactHooks`, `apiCalls`, `sideEffects`, `lineCount` |

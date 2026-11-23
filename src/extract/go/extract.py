@@ -2,6 +2,19 @@
 
 Regex-based static analysis — see common.py's module docstring for the
 scope decision. Record assembly lives in record.py.
+
+Honesty (Fiber enrichments):
+- Generics: type params on funcs/structs/interfaces are captured; no
+  invented constraints beyond the literal text.
+- Interfaces: method *names/signatures* only — never invent which
+  concrete type satisfies an interface (no Impl edges).
+- Closure middleware factories: funcs returning fiber.Handler are
+  listed as factories; application sites stay assumed when only the
+  definition is visible.
+- All()/Add(): All → one method=ALL node; Add only when method strings
+  are literals — otherwise skip (never invent verbs).
+- app.Route(prefix, func(r){...}) is skipped (regex cannot scope the
+  closure parameter safely).
 """
 
 from __future__ import annotations
@@ -14,11 +27,19 @@ from ..common import trim_snippet, CodeSnippet
 IMPORT_BLOCK_RE = re.compile(r"import\s*\(\s*(?P<body>.*?)\s*\)", re.DOTALL)
 IMPORT_LINE_RE = re.compile(r'"(?P<path>[^"]+)"')
 
-STRUCT_RE = re.compile(r"type\s+(?P<name>\w+)\s+struct\s*\{")
+STRUCT_RE = re.compile(
+    r"type\s+(?P<name>\w+)(?:\s*\[(?P<typeparams>[^\]]*)\])?\s+struct\s*\{"
+)
 
-FUNC_RE = re.compile(
-    r"func\s+(?:\((?P<receiver>[^)]*)\)\s+)?(?P<name>\w+)\s*\((?P<params>[^)]*)\)"
-    r"\s*(?P<returns>(?:\([^)]*\)|[\w\*\[\]\.]+)?)\s*\{",
+INTERFACE_RE = re.compile(
+    r"type\s+(?P<name>\w+)(?:\s*\[(?P<typeparams>[^\]]*)\])?\s+interface\s*\{"
+)
+
+# Start of a named func/method — params are balanced separately so nested
+# `func(T)` in the parameter list does not truncate the match.
+FUNC_START_RE = re.compile(
+    r"func\s+(?:\((?P<receiver>[^)]*)\)\s+)?(?P<name>\w+)"
+    r"(?:\s*\[(?P<typeparams>[^\]]*)\])?\s*\("
 )
 
 # Fiber route group: `v1 := app.Group("/api/v1")` or similar.
@@ -41,6 +62,19 @@ ROUTE_REGISTER_RE = re.compile(
     r"(?P<quote>['\"])(?P<path>[^'\"]*)(?P=quote)\s*,\s*(?P<handler>[\w.]+)"
 )
 
+# All(path, handler) — every HTTP method at the exact path (not Use prefix).
+ROUTE_ALL_RE = re.compile(
+    r"(?P<var>\w+)\.All\(\s*(?P<quote>['\"])(?P<path>[^'\"]*)(?P=quote)\s*,\s*(?P<handler>[\w.]+)"
+)
+
+# Add([]string{"GET","POST"}, path, handler) — only string-literal methods.
+# Note: must not stop at the empty `[]` of `[]string{...}`.
+ROUTE_ADD_RE = re.compile(
+    r"(?P<var>\w+)\.Add\(\s*"
+    r"(?P<methods>\[\](?:string|any)\s*\{[^}]*\}|\[[^\]]*\])\s*,\s*"
+    r"(?P<quote>['\"])(?P<path>[^'\"]*)(?P=quote)\s*,\s*(?P<handler>[\w.]+)"
+)
+
 SIDE_EFFECT_PATTERNS = [
     # pgx/sql-style calls — matched against the real alumni-web repository,
     # which uses .Query/.QueryRow/.Exec/.Begin, not ORM-style .Save()/.Create().
@@ -48,6 +82,13 @@ SIDE_EFFECT_PATTERNS = [
     (re.compile(r"\blog(ger)?\.\w+\("), "log"),
     (re.compile(r"\bos\.(WriteFile|Create|Remove)\("), "file_write"),
 ]
+
+# Interface method line: Name(args) returns — or embedded interface name alone.
+INTERFACE_METHOD_RE = re.compile(
+    r"^(?P<name>\w+)\s*\((?P<params>.*)\)\s*(?P<returns>.*)$"
+)
+INTERFACE_EMBED_RE = re.compile(r"^(?P<name>\*?[\w.]+)(?:\s*\[.*\])?$")
+
 
 # Go standard library packages have no dot in their import path.
 def _is_stdlib(path: str) -> bool:
@@ -67,6 +108,18 @@ class ExtractedGoStruct:
     fields: list[tuple[str, str]]   # (name, type)
     line_range: tuple[int, int]
     snippet: CodeSnippet
+    type_params: str | None = None
+
+
+@dataclass
+class ExtractedGoInterface:
+    """Interface type — methods only; never which concrete type implements it."""
+    name: str
+    methods: list[tuple[str, str]]  # (name, signature line)
+    embedded: list[str]             # embedded interface type names (not expanded)
+    line_range: tuple[int, int]
+    snippet: CodeSnippet
+    type_params: str | None = None
 
 
 @dataclass
@@ -76,6 +129,19 @@ class ExtractedGoFunction:
     line_range: tuple[int, int]
     snippet: CodeSnippet
     receiver: str | None
+    type_params: str | None = None
+    returns: str | None = None
+    returns_fiber_handler: bool = False
+
+
+@dataclass
+class ExtractedMiddlewareFactory:
+    """A function/method that returns fiber.Handler (closure middleware idiom)."""
+    name: str
+    line: int
+    receiver: str | None
+    assumed: bool
+    note: str
 
 
 @dataclass
@@ -125,6 +191,28 @@ def _find_matching_brace_end_line(text: str, open_brace_offset: int) -> int:
     return _line_of(text, n - 1)
 
 
+def _find_matching_paren_end(text: str, open_paren_offset: int) -> int | None:
+    """Index of the ')' matching the '(' at open_paren_offset, or None."""
+    depth = 0
+    i = open_paren_offset
+    n = len(text)
+    while i < n:
+        c = text[i]
+        if c == "(":
+            depth += 1
+        elif c == ")":
+            depth -= 1
+            if depth == 0:
+                return i
+        i += 1
+    return None
+
+
+def _returns_fiber_handler(returns: str) -> bool:
+    """True when the declared return clause mentions fiber.Handler."""
+    return "fiber.Handler" in (returns or "")
+
+
 def extract_module_path(go_mod_text: str) -> str | None:
     m = re.search(r"^module\s+(\S+)", go_mod_text, re.MULTILINE)
     return m.group(1) if m else None
@@ -155,6 +243,7 @@ def extract_structs(text: str) -> list[ExtractedGoStruct]:
     structs: list[ExtractedGoStruct] = []
     for m in STRUCT_RE.finditer(text):
         name = m.group("name")
+        type_params = (m.group("typeparams") or "").strip() or None
         start_line = _line_of(text, m.start())
         end_line = _find_matching_brace_end_line(text, m.end() - 1)
         body_lines = lines[start_line:end_line - 1]
@@ -163,21 +252,82 @@ def extract_structs(text: str) -> list[ExtractedGoStruct]:
             stripped = raw.strip()
             if not stripped or stripped.startswith("//"):
                 continue
+            # Named fields only — embedded types (no field name) are skipped
+            # rather than inventing a name.
             fm = re.match(r"(?P<fname>\w+)\s+(?P<ftype>[\w\*\[\]\.]+)", stripped)
             if fm:
                 fields.append((fm.group("fname"), fm.group("ftype")))
         snippet = trim_snippet(lines, start_line, end_line)
-        structs.append(ExtractedGoStruct(name=name, fields=fields, line_range=(start_line, end_line), snippet=snippet))
+        structs.append(ExtractedGoStruct(
+            name=name,
+            fields=fields,
+            line_range=(start_line, end_line),
+            snippet=snippet,
+            type_params=type_params,
+        ))
     return structs
+
+
+def extract_interfaces(text: str) -> list[ExtractedGoInterface]:
+    """Interface declarations with method signatures; no Impl satisfaction edges."""
+    lines = text.splitlines()
+    out: list[ExtractedGoInterface] = []
+    for m in INTERFACE_RE.finditer(text):
+        name = m.group("name")
+        type_params = (m.group("typeparams") or "").strip() or None
+        start_line = _line_of(text, m.start())
+        end_line = _find_matching_brace_end_line(text, m.end() - 1)
+        body_lines = lines[start_line:end_line - 1]
+        methods: list[tuple[str, str]] = []
+        embedded: list[str] = []
+        for raw in body_lines:
+            stripped = raw.strip().rstrip(";").strip()
+            if not stripped or stripped.startswith("//"):
+                continue
+            # Strip trailing line comment.
+            if "//" in stripped:
+                stripped = stripped.split("//", 1)[0].strip()
+            if not stripped:
+                continue
+            mm = INTERFACE_METHOD_RE.match(stripped)
+            if mm:
+                methods.append((mm.group("name"), stripped))
+                continue
+            em = INTERFACE_EMBED_RE.match(stripped)
+            if em:
+                embedded.append(em.group("name"))
+                # Do not expand embedded methods — that would invent edges.
+        snippet = trim_snippet(lines, start_line, end_line)
+        out.append(ExtractedGoInterface(
+            name=name,
+            methods=methods,
+            embedded=embedded,
+            line_range=(start_line, end_line),
+            snippet=snippet,
+            type_params=type_params,
+        ))
+    return out
 
 
 def extract_functions(text: str) -> list[ExtractedGoFunction]:
     lines = text.splitlines()
     functions: list[ExtractedGoFunction] = []
-    for m in FUNC_RE.finditer(text):
+    for m in FUNC_START_RE.finditer(text):
         name = m.group("name")
+        receiver = m.group("receiver")
+        type_params = (m.group("typeparams") or "").strip() or None
+        open_paren = m.end() - 1
+        close_paren = _find_matching_paren_end(text, open_paren)
+        if close_paren is None:
+            continue
+        rest = text[close_paren + 1:close_paren + 1 + 400]
+        brace = rest.find("{")
+        if brace < 0:
+            continue
+        returns = rest[:brace].strip() or None
+        brace_offset = close_paren + 1 + brace
         start_line = _line_of(text, m.start())
-        end_line = _find_matching_brace_end_line(text, m.end() - 1)
+        end_line = _find_matching_brace_end_line(text, brace_offset)
         signature = lines[start_line - 1].strip()
         snippet = trim_snippet(lines, start_line, end_line)
         functions.append(ExtractedGoFunction(
@@ -185,9 +335,37 @@ def extract_functions(text: str) -> list[ExtractedGoFunction]:
             signature=signature,
             line_range=(start_line, end_line),
             snippet=snippet,
-            receiver=m.group("receiver"),
+            receiver=receiver,
+            type_params=type_params,
+            returns=returns,
+            returns_fiber_handler=_returns_fiber_handler(returns or ""),
         ))
     return functions
+
+
+def extract_middleware_factories(text: str) -> list[ExtractedMiddlewareFactory]:
+    """Funcs/methods that return fiber.Handler — the closure-middleware idiom.
+
+    Presence of the factory is certain from the signature; *where* it is
+    applied may be another file, so assumed=True and we never invent
+    route attachments from the definition alone.
+    """
+    out: list[ExtractedMiddlewareFactory] = []
+    for fn in extract_functions(text):
+        if not fn.returns_fiber_handler:
+            continue
+        out.append(ExtractedMiddlewareFactory(
+            name=fn.name,
+            line=fn.line_range[0],
+            receiver=fn.receiver,
+            assumed=True,
+            note=(
+                "Returns fiber.Handler (closure middleware factory). "
+                "Application via .Use / Group may be in another file; "
+                "not attached to routes from this definition alone."
+            ),
+        ))
+    return out
 
 
 def extract_side_effects(text: str) -> list[tuple[str, int]]:
@@ -364,6 +542,31 @@ def _resolve_group_prefix(
     return full, current in roots
 
 
+def _parse_add_method_literals(methods_expr: str) -> list[str] | None:
+    """Parse Add([]string{...}) / Add([...]) method literals. None → skip."""
+    inner = methods_expr.strip()
+    # Prefer composite-literal body inside {...}; fall back to [ ... ].
+    brace = re.search(r"\{([^}]*)\}", inner)
+    if brace:
+        body = brace.group(1).strip()
+    elif inner.startswith("[") and inner.endswith("]"):
+        body = inner[1:-1].strip()
+    else:
+        return None
+    if not body:
+        return None
+    literals = re.findall(r'''(["'])(\w+)\1''', body)
+    if not literals:
+        return None
+    rebuilt_check = body
+    for quote, meth in literals:
+        rebuilt_check = rebuilt_check.replace(f"{quote}{meth}{quote}", "", 1)
+    rebuilt_check = re.sub(r"[\s,]", "", rebuilt_check)
+    if rebuilt_check:
+        return None  # identifier / expression — never invent
+    return [meth.upper() for _q, meth in literals]
+
+
 def extract_routes(text: str, uses_fiber: bool) -> list[ExtractedRoute]:
     """Resolve Fiber route groups and registrations into full paths.
 
@@ -378,6 +581,10 @@ def extract_routes(text: str, uses_fiber: bool) -> list[ExtractedRoute]:
     substring match read that as evidence auth was present. Always
     marked assumed=True regardless of the result, since this is still
     file-local and not real call-graph analysis.
+
+    All() emits one method=ALL node (Fiber registers every verb). Add()
+    emits one node per *literal* method string; non-literal method slices
+    are skipped. app.Route(...) closure groups are skipped.
     """
     # var -> (parent var, this group's own prefix segment)
     group_parents: dict[str, tuple[str, str]] = {}
@@ -415,39 +622,90 @@ def extract_routes(text: str, uses_fiber: bool) -> list[ExtractedRoute]:
                 break
         return False
 
-    routes: list[ExtractedRoute] = []
-    for m in ROUTE_REGISTER_RE.finditer(text):
-        var = m.group("var")
+    def _prefix_for(var: str) -> tuple[str, bool]:
         prefix = group_prefixes.get(var, "" if var in roots else None)
-        # Unresolved either because the variable is unknown here, or
-        # because its chain ran off into another file.
         prefix_assumed = prefix is None or var in unresolved_groups
-        prefix = prefix or ""
+        return (prefix or ""), prefix_assumed
 
-        path = prefix.rstrip("/") + m.group("path")
-        is_dynamic = ":" in m.group("path")
+    def _make_route(
+        *,
+        var: str,
+        method: str,
+        path_suffix: str,
+        handler: str,
+        offset: int,
+        extra_notes: list[str] | None = None,
+    ) -> ExtractedRoute:
+        prefix, prefix_assumed = _prefix_for(var)
+        path = prefix.rstrip("/") + path_suffix
+        is_dynamic = ":" in path_suffix
         protected = _var_or_ancestor_protected(var)
-        notes = []
+        notes = list(extra_notes or [])
         if prefix_assumed:
-            notes.append("Route group prefix for this variable could not be resolved; path may be incomplete.")
+            notes.append(
+                "Route group prefix for this variable could not be resolved; "
+                "path may be incomplete."
+            )
         notes.append(
             "Protected status is inferred only from .Use() / Group(..., mw) calls on this router "
             "or its ancestor groups in this file, matched by an 'auth'/'jwt' substring in the call "
             "— not real call-graph analysis, and it can miss auth applied elsewhere or misread an "
             "unrelated call. Verify before relying on it."
         )
-        routes.append(ExtractedRoute(
-            method=m.group("method").upper(),
+        return ExtractedRoute(
+            method=method,
             path=path,
-            handler=m.group("handler"),
+            handler=handler,
             static_or_dynamic="dynamic" if is_dynamic else "static",
             routing_library="gofiber" if uses_fiber else "unknown",
             protected=protected,
             assumed=True,
             note=" ".join(notes),
             router_var=var,
-            line=_line_of(text, m.start()),
+            line=_line_of(text, offset),
+        )
+
+    routes: list[ExtractedRoute] = []
+    for m in ROUTE_REGISTER_RE.finditer(text):
+        routes.append(_make_route(
+            var=m.group("var"),
+            method=m.group("method").upper(),
+            path_suffix=m.group("path"),
+            handler=m.group("handler"),
+            offset=m.start(),
         ))
+
+    for m in ROUTE_ALL_RE.finditer(text):
+        routes.append(_make_route(
+            var=m.group("var"),
+            method="ALL",
+            path_suffix=m.group("path"),
+            handler=m.group("handler"),
+            offset=m.start(),
+            extra_notes=[
+                "Fiber All() registers every HTTP method at this exact path; "
+                "emitted as one ALL node rather than inventing per-verb edges."
+            ],
+        ))
+
+    for m in ROUTE_ADD_RE.finditer(text):
+        methods = _parse_add_method_literals(m.group("methods"))
+        if methods is None:
+            # Non-literal method list — skip rather than invent verbs.
+            continue
+        for method in methods:
+            routes.append(_make_route(
+                var=m.group("var"),
+                method=method,
+                path_suffix=m.group("path"),
+                handler=m.group("handler"),
+                offset=m.start(),
+                extra_notes=[
+                    "Method taken from a string literal in Add([]string{...}); "
+                    "non-literal Add method slices are skipped."
+                ],
+            ))
+
     return routes
 
 
