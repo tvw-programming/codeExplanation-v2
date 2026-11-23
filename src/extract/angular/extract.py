@@ -8,9 +8,11 @@ Honesty: never invent mounts from unmatched custom tags or from
 `imports: [...]` alone. Duplicate selectors → skip (ambiguous). Dynamic
 `*ngFor` / `@for` contexts → assumed when a confirmed match exists.
 
-Template-bundle chunking (EXTRACTOR_VERSION 20): clear same-dir
-``templateUrl`` siblings pair class+html as one chunk unit; orphan
-``.html`` files are never claimed without evidence.
+Template-bundle chunking (EXTRACTOR_VERSION 21): clear relative
+``templateUrl`` siblings (including ``../`` / nested paths) pair
+class+html as one chunk unit when the path uniquely resolves under the
+repo root; absolute / ``node_modules`` / URL templates stay out of
+scope. Orphan ``.html`` files are never claimed without evidence.
 """
 
 from __future__ import annotations
@@ -241,46 +243,60 @@ def resolve_template_url_sibling(
     component_file: str,
     template_url: str | None,
 ) -> str | None:
-    """Repo-relative ``.html`` path when ``templateUrl`` is a clear same-dir sibling.
+    """Repo-relative ``.html`` path when ``templateUrl`` uniquely resolves.
 
-    Honesty: only ``./file.html`` or ``file.html`` (no ``..``, no absolute /
-    URL). File must exist. Used for class+html bundle chunking — never invent
-    ownership of an orphan template.
+    Honesty: relative paths only (``./x.html``, ``x.html``, ``../x.html``,
+    nested ``./a/b.html``). File must exist under ``root``. Absolute paths,
+    URLs, and anything that resolves into ``node_modules`` are out of scope.
+    Used for class+html bundle chunking — never invent ownership of an orphan
+    template.
     """
     if not template_url:
         return None
     tu = template_url.strip()
     if not tu or "://" in tu or tu.startswith("/") or tu.startswith("\\"):
         return None
+    # Windows drive / UNC — out of scope.
+    if len(tu) >= 2 and tu[1] == ":":
+        return None
     rel = Path(tu)
-    if ".." in rel.parts or rel.is_absolute():
+    if rel.is_absolute():
         return None
     if rel.suffix.lower() not in {".html", ".htm"}:
         return None
+    # Reject empty / dot-only segments that are not ``.`` / ``..``.
+    for part in rel.parts:
+        if part in {".", ".."}:
+            continue
+        if not part or part.startswith("node_modules"):
+            return None
     root = Path(root)
+    root_resolved = root.resolve()
     base = (root / component_file).parent
-    candidate = (base / rel).resolve()
     try:
-        candidate.relative_to(root.resolve())
+        candidate = (base / rel).resolve()
+    except (OSError, RuntimeError):
+        return None
+    try:
+        rel_out = candidate.relative_to(root_resolved)
     except ValueError:
+        return None
+    if "node_modules" in rel_out.parts:
         return None
     if not candidate.is_file():
         return None
     # Prefer posix-style repo-relative path.
-    return candidate.relative_to(root.resolve()).as_posix()
+    return rel_out.as_posix()
 
 
 def load_template_sibling(root: Path, file_path: str, template_url: str | None) -> str | None:
-    if not template_url:
+    sib = resolve_template_url_sibling(root, file_path, template_url)
+    if not sib:
         return None
-    base = (root / file_path).parent
-    candidate = (base / template_url).resolve()
     try:
-        if candidate.is_file():
-            return candidate.read_text(encoding="utf-8", errors="ignore")
+        return (Path(root) / sib).read_text(encoding="utf-8", errors="ignore")
     except OSError:
         return None
-    return None
 
 
 def pair_angular_template_bundles(
@@ -289,7 +305,7 @@ def pair_angular_template_bundles(
 ) -> list[tuple[str, list[str]]]:
     """Group Angular feature files into (primary, members) bundles.
 
-    A ``.ts``/``.js`` component with a clear same-dir ``templateUrl`` sibling
+    A ``.ts``/``.js`` component with a clear relative ``templateUrl`` sibling
     that appears in ``files`` keeps class+html together. Orphan ``.html``
     files with no proven owner stay their own one-file bundle (no invent).
     """

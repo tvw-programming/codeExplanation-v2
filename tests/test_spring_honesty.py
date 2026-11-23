@@ -13,8 +13,8 @@ from src.visual.availability import is_present
 FIX = Path(__file__).resolve().parent / "fixtures"
 
 
-def test_extractor_version_is_18():
-    assert EXTRACTOR_VERSION == 20
+def test_extractor_version_is_21():
+    assert EXTRACTOR_VERSION == 21
 
 
 def test_bare_request_mapping_is_all_not_get():
@@ -201,7 +201,7 @@ def test_fixture_controller_builds_di_graph(tmp_path: Path):
     record = build_spring_chunk_record(
         tmp_path, chunk, {"frontend": None, "backend": ["spring_boot"]},
     )
-    assert record["extractorVersion"] == 20
+    assert record["extractorVersion"] == 21
     assert record["springTypes"]
     assert record["springTypes"][0]["kind"] == "class"
     assert is_present(record["visualAvailability"]["componentTree"])
