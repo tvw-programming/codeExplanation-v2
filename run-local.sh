@@ -511,8 +511,17 @@ sync_manifest_phase_style() {
     echo "No pipeline.config.yaml — cannot sync video.phaseStyle into manifests." >&2
     return 1
   fi
+
+  # PyYAML lives in the project venv (requirements.txt), not necessarily on
+  # system python3 — same interpreter as run_backend_pilot.py in step 2.
+  local VENV_PY="$PROJECT_ROOT/.venv/bin/python"
+  if [ ! -x "$VENV_PY" ]; then
+    echo "Project .venv is missing — step 2 creates it and installs dependencies." >&2
+    return 1
+  fi
+
   log "[5/5] Video: syncing video.phaseStyle from pipeline.config.yaml into chunk manifests"
-  if ! python3 scripts/sync_manifest_phase_style.py; then
+  if ! (cd "$PROJECT_ROOT" && "$VENV_PY" scripts/sync_manifest_phase_style.py); then
     echo "Could not sync phaseStyle into Remotion manifests." >&2
     return 1
   fi
