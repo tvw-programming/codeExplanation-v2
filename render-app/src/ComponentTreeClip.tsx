@@ -156,6 +156,8 @@ export const ComponentTreeClip: React.FC<{
         <EnterFrom
           direction={patterns.l2Direction}
           fillBelowHeader
+          durationInFrames={26}
+          distancePx={96}
         >
           {diagram}
         </EnterFrom>

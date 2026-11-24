@@ -1,7 +1,9 @@
 export {
   HONESTY_TICKER_LABELS,
+  bulletItemMotion,
   bulletItemOpacity,
   bulletRevealFrames,
+  easeOutCubic,
   card3dTransform,
   enterOffsets,
   enterProgress,
@@ -10,6 +12,7 @@ export {
   type Card3dTransform,
   type EnterDirection,
   type EnterOffsets,
+  type BulletItemMotion,
   type HonestyTickerLabel,
   type Split7030Columns,
 } from "./layoutMath";

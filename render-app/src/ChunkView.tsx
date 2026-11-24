@@ -534,6 +534,9 @@ export const ChunkView: React.FC<{
 
       {fancyL3 ? (
         <Split7030
+          asideChrome
+          asideTitle="Narration beats"
+          accentColor={ACCENT}
           main={codePanel}
           aside={
             segments.length > 0 ? (

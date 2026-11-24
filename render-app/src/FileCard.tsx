@@ -418,7 +418,7 @@ export const FileCard: React.FC<{
         }}
       >
         {useFancyEnter ? (
-          <EnterFrom direction={patterns.l2Direction} durationInFrames={20}>
+          <EnterFrom direction={patterns.l2Direction} durationInFrames={28} distancePx={88}>
             {cardBody}
           </EnterFrom>
         ) : (

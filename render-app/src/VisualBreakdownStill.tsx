@@ -91,7 +91,7 @@ export const VisualBreakdownStill: React.FC<{
             mx: "auto",
           }}
         >
-          <Card3D variant="panel" durationInFrames={22}>
+          <Card3D variant="panel" durationInFrames={32} startFrame={4}>
             <Box sx={{ px: 2, py: 1.25, textAlign: "center" }}>
               <Typography sx={{ color: CEV_FG_MUTED, fontSize: 14 }}>
                 <Box component="span" sx={{ color: accent, fontWeight: 600 }}>

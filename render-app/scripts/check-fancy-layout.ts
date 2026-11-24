@@ -4,6 +4,7 @@
  */
 import assert from "node:assert/strict";
 import {
+  bulletItemMotion,
   bulletRevealFrames,
   card3dTransform,
   enterOffsets,
@@ -122,6 +123,16 @@ for (const row of matrixRowKeys()) {
   assert.equal(resolveFancyPatterns("fancy", "fileCard", "express").l4, false);
   assert.equal(resolveFancyPatterns("fancy", "visualBreakdown", "spring").l4, true);
   assert.equal(resolveFancyPatterns("fancy", "componentTree", "react").l4, false);
+}
+
+// --- L3 bullets slide in from the rail ---
+{
+  const hidden = bulletItemMotion(0, 12, 10, false, 36);
+  assert.equal(hidden.opacity, 0);
+  assert.ok(hidden.translateXPx > 30);
+  const shown = bulletItemMotion(40, 12, 10, false, 36);
+  assert.equal(shown.opacity, 1);
+  assert.ok(Math.abs(shown.translateXPx) < 0.5);
 }
 
 // --- L4 card3d settles shallow (readable) ---

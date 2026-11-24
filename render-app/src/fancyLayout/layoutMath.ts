@@ -41,6 +41,12 @@ function clamp01(t: number): number {
   return Math.min(1, Math.max(0, t));
 }
 
+/** Ease-out for readable motion that stays visible longer near the start. */
+export function easeOutCubic(t: number): number {
+  const u = clamp01(t);
+  return 1 - (1 - u) ** 3;
+}
+
 /** Progress 0→1 across [start, start+duration]. */
 export function enterProgress(
   frame: number,
@@ -63,7 +69,8 @@ export function enterOffsets(
   startFrame = 0,
   reducedMotion = false,
 ): EnterOffsets {
-  const progress = enterProgress(frame, durationFrames, startFrame);
+  const linear = enterProgress(frame, durationFrames, startFrame);
+  const progress = reducedMotion ? linear : easeOutCubic(linear);
   const opacity = reducedMotion
     ? frame >= startFrame
       ? 1
@@ -128,15 +135,42 @@ export function bulletRevealFrames(
 }
 
 /** Per-item opacity for L3 bullets; reduced motion shows all at once. */
+function bulletRevealProgress(
+  frame: number,
+  revealFrame: number,
+  fadeFrames: number,
+  reducedMotion: boolean,
+): number {
+  if (reducedMotion) return frame >= revealFrame ? 1 : 0;
+  if (frame < revealFrame) return 0;
+  return clamp01((frame - revealFrame) / Math.max(1, fadeFrames));
+}
+
 export function bulletItemOpacity(
   frame: number,
   revealFrame: number,
   fadeFrames: number,
   reducedMotion = false,
 ): number {
-  if (reducedMotion) return frame >= revealFrame ? 1 : 0;
-  if (frame < revealFrame) return 0;
-  return clamp01((frame - revealFrame) / Math.max(1, fadeFrames));
+  const linear = bulletRevealProgress(frame, revealFrame, fadeFrames, reducedMotion);
+  return reducedMotion ? linear : easeOutCubic(linear);
+}
+
+export type BulletItemMotion = { opacity: number; translateXPx: number };
+
+/** L3 bullet fade + slide from the right rail (into the 30% column). */
+export function bulletItemMotion(
+  frame: number,
+  revealFrame: number,
+  fadeFrames: number,
+  reducedMotion = false,
+  slidePx = 32,
+): BulletItemMotion {
+  const linear = bulletRevealProgress(frame, revealFrame, fadeFrames, reducedMotion);
+  const progress = reducedMotion ? linear : easeOutCubic(linear);
+  const opacity = progress;
+  const translateXPx = reducedMotion ? 0 : (1 - progress) * slidePx;
+  return { opacity, translateXPx };
 }
 
 export type Card3dTransform = {
@@ -164,8 +198,8 @@ export function card3dTransform(
       opacity: frame >= startFrame ? 1 : 0,
     };
   }
-  const progress = enterProgress(frame, durationFrames, startFrame);
-  const easeOut = 1 - (1 - progress) * (1 - progress);
+  const progress = easeOutCubic(enterProgress(frame, durationFrames, startFrame));
+  const easeOut = progress;
   return {
     rotateXDeg: 11 * (1 - easeOut) + 1.5 * easeOut,
     rotateYDeg: -10 * (1 - easeOut),
