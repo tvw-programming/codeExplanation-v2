@@ -17,9 +17,10 @@ Preferences: Q1–Q6 locked. Plan: store
 | ChunkView | Code + beats | `## Evidence` line refs |
 | VisualBreakdownStill | End still + TTS | `## Interactive` + Mermaid fallback |
 
-**Remotion wins video** (measured-beat highlight, brand chrome).  
-**Mermaid wins docs** (diffable, pasteable, often clearer for ordered
-lifecycle detail). Live Mermaid.js is **not** loaded in Remotion.
+**Remotion wins timing** (measured-beat TTS, brand chrome).  
+**Mermaid strings** (from the same `visualGraph` / `lifecycleFlows` export as
+docs) render to SVG inside tree, lifecycle, and breakdown clips when
+`mermaidInVideo` is on the staged `bundle.json`. Q1 order is unchanged.
 
 ## Artifacts
 

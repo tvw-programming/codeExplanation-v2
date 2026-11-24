@@ -392,4 +392,22 @@ def _build_visual_clip_fields(record: dict, output_dir: Path) -> dict:
         # structure graph still appears when TTS is down.
         fields["breakdownNarration"] = breakdown_narration or _silent_clip_narration(3000)
 
+    # Reuse interactive.json Mermaid strings in Remotion (no invented edges).
+    from src.visual.diagram_selection import select_diagram_plan
+    from src.visual.mermaid_export import export_lifecycle_mermaid, export_mermaid
+
+    plan = select_diagram_plan(record)
+    if plan.get("video", {}).get("mermaid_in_video"):
+        fields["mermaidInVideo"] = True
+        graph = record.get("visualGraph")
+        if graph and is_present(avail.get("componentTree")):
+            m_text, _ = export_mermaid(graph)
+            if m_text:
+                fields["mermaid"] = m_text
+        flows = record.get("lifecycleFlows") or []
+        if flows and is_present(avail.get("lifecycleFlow")):
+            l_text, _ = export_lifecycle_mermaid(flows)
+            if l_text:
+                fields["mermaidLifecycle"] = l_text
+
     return fields

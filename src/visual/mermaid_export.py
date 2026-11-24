@@ -1,6 +1,7 @@
-"""Mermaid fallback for small graphs (≤ ~40 nodes) and lifecycle sequences.
+"""Mermaid export for small graphs (≤ ~40 nodes) and lifecycle sequences.
 
-Docs/chat only — Remotion video keeps custom JSX (measured-beat TTS).
+Same strings feed docs, chat, and Remotion video frames (Mermaid.js → SVG).
+Remotion still uses measured-beat TTS (Q4); Q1 order unchanged.
 Never invent edges; assumed facts become dashed arrows or Notes.
 """
 

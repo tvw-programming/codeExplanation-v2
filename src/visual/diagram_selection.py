@@ -1,7 +1,7 @@
 """Diagram selection / sequencing for video vs docs surfaces.
 
-Encodes mermaid-sequence-decision.md: Remotion owns FullVideo (Q1);
-Mermaid owns docs/chat exports. Never invents edges; skips unavailable.
+Encodes mermaid-sequence-decision.md: Q1 FullVideo order unchanged;
+Mermaid text renders inside clips when exported. Never invents edges.
 """
 
 from __future__ import annotations
@@ -74,14 +74,14 @@ def select_diagram_plan(record: dict) -> dict:
     if interactive_ok or structure_ok:
         docs_sections.append("interactive")
 
-    # Video: Remotion always; Mermaid never inserts slots.
+    # Video: Q1 Remotion slots unchanged; Mermaid strings render inside tree/lifecycle/breakdown.
     video_segments = {
         "card": True,  # gated later by fileOverview / narration in render path
         "tree": structure_ok,  # also needs treeNarration at render time
         "lifecycle": lifecycle_ok,
         "code": True,
         "breakdown": interactive_ok or structure_ok,
-        "mermaid_in_video": False,
+        "mermaid_in_video": structure_ok or lifecycle_ok,
     }
 
     return {

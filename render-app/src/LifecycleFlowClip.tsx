@@ -19,6 +19,7 @@ import {
   videoAccent,
   videoLabelColor,
 } from "./visualTheme";
+import { MermaidDiagram } from "./MermaidDiagram";
 import { HEADER_HEIGHT } from "./treeLayout";
 
 export type LifecycleStep = {
@@ -57,6 +58,9 @@ export const LifecycleFlowClip: React.FC<{
   filePath?: string | null;
   phaseStyle?: PhaseStyleMode;
   stackId?: string | null;
+  mermaidInVideo?: boolean;
+  mermaidLifecycle?: string | null;
+  mermaidLifecycleSkipReason?: string | null;
 }> = ({
   chunkDir,
   flows,
@@ -66,6 +70,9 @@ export const LifecycleFlowClip: React.FC<{
   filePath,
   phaseStyle = "classic",
   stackId,
+  mermaidInVideo = false,
+  mermaidLifecycle = null,
+  mermaidLifecycleSkipReason = null,
 }) => {
   const frame = useCurrentFrame();
   const theme = visualTheme || themeForStack("react");
@@ -89,6 +96,7 @@ export const LifecycleFlowClip: React.FC<{
   };
   const patterns = resolveFancyPatterns(phaseStyle, "lifecycle", stackKey, honesty);
   const tickerLabel = patterns.l1 ? honestyTickerLabel(honesty) : null;
+  const useMermaid = Boolean(mermaidInVideo && mermaidLifecycle);
 
   const stepRevealFrame = (index: number): number => {
     const beatIndex = index + 1;
@@ -108,7 +116,12 @@ export const LifecycleFlowClip: React.FC<{
         titleFallback={flow?.title || "handler"}
       />
 
-      {/* Center the flowchart in the remaining viewport (below header). */}
+      {useMermaid ? (
+        <MermaidDiagram
+          source={mermaidLifecycle!}
+          skipReason={mermaidLifecycleSkipReason}
+        />
+      ) : (
       <Box
         sx={{
           position: "absolute",
@@ -207,6 +220,7 @@ export const LifecycleFlowClip: React.FC<{
           })}
         </Box>
       </Box>
+      )}
 
       {tickerLabel ? (
         <TickerBar label={tickerLabel} showFromFrame={6} hideAtFrame={null} />

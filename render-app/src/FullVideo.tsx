@@ -72,6 +72,11 @@ type ChunkVisuals = {
   visualGraph: VisualGraph | null;
   visualTheme: VisualTheme | null;
   securityFlags: SecurityFlag[];
+  mermaidInVideo: boolean;
+  mermaid: string | null;
+  mermaidLifecycle: string | null;
+  mermaidSkipReason: string | null;
+  mermaidLifecycleSkipReason: string | null;
 };
 
 // ---------- shared loader ----------
@@ -90,6 +95,11 @@ async function loadChunks(chunkIds: string[], chunkDirPrefix: string) {
         visualTheme?: VisualTheme;
         securityFlags?: SecurityFlag[];
         lifecycleFlows?: LifecycleFlow[];
+        mermaidInVideo?: boolean;
+        mermaid?: string | null;
+        mermaidLifecycle?: string | null;
+        mermaidSkipReason?: string | null;
+        mermaidLifecycleSkipReason?: string | null;
       };
       // Q5: a visual segment counts only when both its narration and
       // the thing it draws are present — chapterFramesFor() applies
@@ -106,6 +116,11 @@ async function loadChunks(chunkIds: string[], chunkDirPrefix: string) {
         visualGraph: bundle.visualGraph ?? null,
         visualTheme: bundle.visualTheme ?? null,
         securityFlags: bundle.securityFlags ?? [],
+        mermaidInVideo: Boolean(bundle.mermaidInVideo),
+        mermaid: bundle.mermaid ?? null,
+        mermaidLifecycle: bundle.mermaidLifecycle ?? null,
+        mermaidSkipReason: bundle.mermaidSkipReason ?? null,
+        mermaidLifecycleSkipReason: bundle.mermaidLifecycleSkipReason ?? null,
       };
       const overview = bundle.fileOverview ?? null;
       return {
@@ -212,6 +227,9 @@ const VideoBody: React.FC<VideoProps> = ({
                   filePath={overview?.filePath}
                   phaseStyle={phaseStyle.componentTree}
                   stackId={stackId}
+                  mermaidInVideo={v.mermaidInVideo}
+                  mermaid={v.mermaid}
+                  mermaidSkipReason={v.mermaidSkipReason}
                 />
               </Series.Sequence>,
             );
@@ -229,6 +247,9 @@ const VideoBody: React.FC<VideoProps> = ({
                   filePath={overview?.filePath}
                   phaseStyle={phaseStyle.lifecycle}
                   stackId={stackId}
+                  mermaidInVideo={v.mermaidInVideo}
+                  mermaidLifecycle={v.mermaidLifecycle}
+                  mermaidLifecycleSkipReason={v.mermaidLifecycleSkipReason}
                 />
               </Series.Sequence>,
             );
@@ -258,6 +279,9 @@ const VideoBody: React.FC<VideoProps> = ({
                   securityFlags={v.securityFlags}
                   phaseStyle={phaseStyle.visualBreakdown}
                   stackId={stackId}
+                  mermaidInVideo={v.mermaidInVideo}
+                  mermaid={v.mermaid}
+                  mermaidSkipReason={v.mermaidSkipReason}
                 />
               </Series.Sequence>,
             );
