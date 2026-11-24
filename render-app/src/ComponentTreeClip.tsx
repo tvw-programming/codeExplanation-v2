@@ -1,17 +1,30 @@
 import { AbsoluteFill, Audio, staticFile, useCurrentFrame } from "remotion";
 import Box from "@mui/material/Box";
-import { DiagramHeader } from "./DiagramHeader";
+import { DiagramHeader, shortFilePath } from "./DiagramHeader";
 import { MermaidDiagram } from "./MermaidDiagram";
 import { VisualGraphDiagram } from "./VisualGraphDiagram";
 import type { PhaseStyleMode } from "./phaseStyle";
 import { EnterFrom, TickerBar } from "./fancyLayout";
+import {
+  BroadcastDiagramFrame,
+  describeVisualGraph,
+  graphBroadcastMode,
+  honestyCrawlText,
+} from "./fancyLayout/broadcast";
 import {
   honestyTickerLabel,
   resolveFancyPatterns,
   type HonestyHints,
 } from "./fancyLayout/phaseLayoutMatrix";
 import { resolveMatrixStackKey } from "./fancyLayout/stackResolve";
-import { contentBandHeight } from "./fancyLayout/zones";
+import {
+  COMPOSITION_WIDTH,
+  LEFT_PAD,
+  RIGHT_SAFE,
+  contentBandHeight,
+  contentBandHeightBroadcast,
+} from "./fancyLayout/zones";
+import { split6040Widths } from "./fancyLayout/broadcast/layoutMode";
 import { treeDiagramRevealFrame } from "./clipNarration";
 
 const COMPOSITION_HEIGHT = 720;
@@ -20,6 +33,7 @@ import {
   CEV_FG_PRIMARY,
   type VisualTheme,
   themeForStack,
+  videoAccent,
 } from "./visualTheme";
 
 export type VisualNode = {
@@ -148,10 +162,30 @@ export const ComponentTreeClip: React.FC<{
   };
   const patterns = resolveFancyPatterns(phaseStyle, "componentTree", stackKey, honesty);
   const tickerLabel = patterns.l1 ? honestyTickerLabel(honesty) : null;
-  const diagramHeight = patterns.l2
-    ? contentBandHeight(COMPOSITION_HEIGHT)
-    : COMPOSITION_HEIGHT;
   const useMermaid = Boolean(mermaidInVideo && mermaid);
+  const fancy = phaseStyle === "fancy";
+  const accent = videoAccent(theme);
+  const description = describeVisualGraph(visualGraph, { securityFlags });
+  const layoutMode = graphBroadcastMode(visualGraph, { forceBand: useMermaid });
+  const liveMode = narration?.beats?.length ? "LIVE" : "REPLAY";
+  const pathShort = shortFilePath(filePath) || rootLabel;
+  const crawl = honestyCrawlText({
+    stack: theme.stack,
+    pathShort,
+    honestyKeyword: description.honestyKeyword,
+    extraFact: description.facts[0]?.label,
+  });
+
+  const diagramHeight = fancy
+    ? contentBandHeightBroadcast(COMPOSITION_HEIGHT)
+    : patterns.l2
+      ? contentBandHeight(COMPOSITION_HEIGHT)
+      : COMPOSITION_HEIGHT;
+  const innerWidth = COMPOSITION_WIDTH - LEFT_PAD - RIGHT_SAFE;
+  const railMainWidth = split6040Widths(innerWidth, 20).leftWidth;
+  const diagramWidth =
+    fancy && layoutMode === "rail" && !useMermaid ? railMainWidth : 1280;
+
   const diagram = useMermaid ? (
     <MermaidDiagram source={mermaid!} skipReason={mermaidSkipReason} />
   ) : (
@@ -159,9 +193,30 @@ export const ComponentTreeClip: React.FC<{
       visualGraph={visualGraph}
       theme={theme}
       securityFlags={securityFlags}
+      width={diagramWidth}
       height={diagramHeight}
     />
   );
+
+  const wrappedDiagram =
+    showDiagram && patterns.l2 ? (
+      <EnterFrom
+        direction={patterns.l2Direction}
+        fillBelowHeader={!fancy}
+        durationInFrames={26}
+        distancePx={96}
+        startFrame={diagramRevealFrame}
+        style={
+          fancy
+            ? { position: "absolute", inset: 0, width: "100%", height: "100%" }
+            : undefined
+        }
+      >
+        {diagram}
+      </EnterFrom>
+    ) : showDiagram ? (
+      diagram
+    ) : null;
 
   return (
     <AbsoluteFill style={{ backgroundColor: CEV_BG_VIDEO }}>
@@ -170,45 +225,45 @@ export const ComponentTreeClip: React.FC<{
         filePath={filePath}
         eyebrow={eyebrowFor(visualGraph.kind)}
         titleFallback={rootLabel}
+        segmentTag={fancy ? description.segmentTag : null}
+        liveMode={fancy ? liveMode : null}
       />
 
-      {showDiagram ? (
-        patterns.l2 ? (
-          <EnterFrom
-            direction={patterns.l2Direction}
-            fillBelowHeader
-            durationInFrames={26}
-            distancePx={96}
-            startFrame={diagramRevealFrame}
-          >
-            {diagram}
-          </EnterFrom>
-        ) : (
-          diagram
-        )
-      ) : null}
-
-      {activeBeat?.spoken ? (
-        <Box
-          sx={{
-            position: "absolute",
-            left: 28,
-            right: 120,
-            bottom: 20,
-            color: CEV_FG_PRIMARY,
-            fontSize: 16,
-            lineHeight: 1.35,
-            maxHeight: 52,
-            overflow: "hidden",
-          }}
-        >
-          {activeBeat.spoken}
-        </Box>
-      ) : null}
-
-      {tickerLabel ? (
-        <TickerBar label={tickerLabel} showFromFrame={6} hideAtFrame={null} />
-      ) : null}
+      {fancy ? (
+        <BroadcastDiagramFrame
+          mode={layoutMode}
+          description={description}
+          diagram={wrappedDiagram}
+          pathShort={pathShort}
+          accentColor={accent}
+          crawlText={crawl}
+          showCrawl={Boolean(tickerLabel || description.honestyKeyword)}
+        />
+      ) : (
+        <>
+          {wrappedDiagram}
+          {activeBeat?.spoken ? (
+            <Box
+              sx={{
+                position: "absolute",
+                left: 28,
+                right: 120,
+                bottom: 20,
+                color: CEV_FG_PRIMARY,
+                fontSize: 16,
+                lineHeight: 1.35,
+                maxHeight: 52,
+                overflow: "hidden",
+              }}
+            >
+              {activeBeat.spoken}
+            </Box>
+          ) : null}
+          {tickerLabel ? (
+            <TickerBar label={tickerLabel} showFromFrame={6} hideAtFrame={null} />
+          ) : null}
+        </>
+      )}
 
       {narration?.audio ? (
         <Audio src={staticFile(`${chunkDir}/${narration.audio}`)} />

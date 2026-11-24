@@ -18,6 +18,12 @@ export const TICKER_BOTTOM_INSET = 10;
 /** Extra bottom reserve when a clip stacks L1 on top of captions. */
 export const TICKER_EXTRA_RESERVE = TICKER_BAR_HEIGHT + TICKER_BOTTOM_INSET;
 
+/** Broadcast lower-third / description band height (news nameplate + facts). */
+export const LOWER_THIRD_ZONE = 108;
+
+/** Dual-pane gutter for docs-twin / 60–40 rail. */
+export const DUAL_PANE_GUTTER = 20;
+
 /** Usable vertical band between header and caption (no L1). */
 export function contentBandHeight(frameHeight: number): number {
   return frameHeight - HEADER_HEIGHT - CAPTION_ZONE;
@@ -26,4 +32,9 @@ export function contentBandHeight(frameHeight: number): number {
 /** Usable vertical band when L1 ticker may show. */
 export function contentBandHeightWithTicker(frameHeight: number): number {
   return frameHeight - HEADER_HEIGHT - CAPTION_ZONE - TICKER_EXTRA_RESERVE;
+}
+
+/** Content band when broadcast bottom description occupies the caption zone. */
+export function contentBandHeightBroadcast(frameHeight: number): number {
+  return frameHeight - HEADER_HEIGHT - LOWER_THIRD_ZONE;
 }
