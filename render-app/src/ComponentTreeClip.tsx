@@ -10,6 +10,9 @@ import {
   type HonestyHints,
 } from "./fancyLayout/phaseLayoutMatrix";
 import { resolveMatrixStackKey } from "./fancyLayout/stackResolve";
+import { contentBandHeight } from "./fancyLayout/zones";
+
+const COMPOSITION_HEIGHT = 720;
 import {
   CEV_BG_VIDEO,
   CEV_FG_PRIMARY,
@@ -128,11 +131,15 @@ export const ComponentTreeClip: React.FC<{
   };
   const patterns = resolveFancyPatterns(phaseStyle, "componentTree", stackKey, honesty);
   const tickerLabel = patterns.l1 ? honestyTickerLabel(honesty) : null;
+  const diagramHeight = patterns.l2
+    ? contentBandHeight(COMPOSITION_HEIGHT)
+    : COMPOSITION_HEIGHT;
   const diagram = (
     <VisualGraphDiagram
       visualGraph={visualGraph}
       theme={theme}
       securityFlags={securityFlags}
+      height={diagramHeight}
     />
   );
 
@@ -146,7 +153,12 @@ export const ComponentTreeClip: React.FC<{
       />
 
       {patterns.l2 ? (
-        <EnterFrom direction={patterns.l2Direction}>{diagram}</EnterFrom>
+        <EnterFrom
+          direction={patterns.l2Direction}
+          fillBelowHeader
+        >
+          {diagram}
+        </EnterFrom>
       ) : (
         diagram
       )}

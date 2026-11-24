@@ -197,11 +197,13 @@ export function resolveFancyPatterns(
   }
   const row = MATRIX[stackKey] ?? MATRIX.react;
   const c = row[part];
+  // D = default on in fancy mode; A = optional pattern also on in fancy
+  // (honesty-gated L1 still uses markOn so we never invent callout text).
   return {
     l1: markOn(c.L1, hints, part),
-    l2: c.L2 === "D",
+    l2: c.L2 === "D" || c.L2 === "A",
     l2Direction: c.L2Direction ?? DEFAULT_L2[part],
-    l3: c.L3 === "D" || (c.L3 === "A" && Boolean(hints?.hasAssumed)),
+    l3: c.L3 === "D" || c.L3 === "A",
     l4: c.L4 === "D" || c.L4 === "A",
   };
 }

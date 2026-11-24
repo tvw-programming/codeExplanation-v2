@@ -55,9 +55,9 @@ video:
   fps: 30
   resolution: "1280x720"
   phaseStyle:
-    fileCard: classic            # classic | fancy — default classic when omitted
-    componentTree: classic
-    lifecycle: classic
-    chunkView: classic
-    visualBreakdown: classic
-    architectureDocs: classic    # docs cutaway only; not a FullVideo slot
+    fileCard: fancy              # classic | fancy — default classic when omitted
+    componentTree: fancy
+    lifecycle: fancy
+    chunkView: fancy
+    visualBreakdown: fancy
+    architectureDocs: fancy      # docs cutaway only; not a FullVideo slot

@@ -101,6 +101,10 @@ for (const direction of ["left", "top", "right"] as const) {
   assert.equal(reactTree.l2Direction, "left");
   const springChunk = resolveFancyPatterns("fancy", "chunkView", "spring");
   assert.equal(springChunk.l3, true);
+  const expressChunk = resolveFancyPatterns("fancy", "chunkView", "express");
+  assert.equal(expressChunk.l3, true, "L3A cells enable in fancy mode");
+  const vueLifecycle = resolveFancyPatterns("fancy", "lifecycle", "vue");
+  assert.equal(vueLifecycle.l2, true, "L2A cells enable in fancy mode");
 }
 
 // --- matrix shape ---

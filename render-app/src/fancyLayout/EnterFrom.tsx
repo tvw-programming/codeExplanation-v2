@@ -1,5 +1,6 @@
 import { useCurrentFrame } from "remotion";
 import { enterOffsets, type EnterDirection } from "./layoutMath";
+import { HEADER_HEIGHT } from "./zones";
 
 export type EnterFromProps = {
   direction: EnterDirection;
@@ -11,6 +12,12 @@ export type EnterFromProps = {
   /** Delay entrance relative to parent Sequence start. */
   startFrame?: number;
   reducedMotion?: boolean;
+  /**
+   * Position this wrapper below DiagramHeader so absolutely positioned
+   * children (e.g. VisualGraphDiagram's inset-0 SVG) size correctly.
+   * Without this, transform on the wrapper collapses the containing block.
+   */
+  fillBelowHeader?: boolean;
   style?: React.CSSProperties;
   className?: string;
 };
@@ -26,6 +33,7 @@ export const EnterFrom: React.FC<EnterFromProps> = ({
   distancePx = 56,
   startFrame = 0,
   reducedMotion = false,
+  fillBelowHeader = false,
   style,
   className,
 }) => {
@@ -39,10 +47,21 @@ export const EnterFrom: React.FC<EnterFromProps> = ({
     reducedMotion,
   );
 
+  const frameStyle: React.CSSProperties = fillBelowHeader
+    ? {
+        position: "absolute",
+        top: HEADER_HEIGHT,
+        left: 0,
+        right: 0,
+        bottom: 0,
+      }
+    : {};
+
   return (
     <div
       className={className}
       style={{
+        ...frameStyle,
         transform: `translate(${x}px, ${y}px)`,
         opacity,
         willChange: reducedMotion ? undefined : "transform, opacity",
