@@ -1,6 +1,7 @@
 import { AbsoluteFill, Audio, staticFile, useCurrentFrame } from "remotion";
 import Box from "@mui/material/Box";
 import { DiagramHeader } from "./DiagramHeader";
+import { MermaidDiagram } from "./MermaidDiagram";
 import { VisualGraphDiagram } from "./VisualGraphDiagram";
 import type { PhaseStyleMode } from "./phaseStyle";
 import { EnterFrom, TickerBar } from "./fancyLayout";
@@ -95,6 +96,9 @@ export const ComponentTreeClip: React.FC<{
   filePath?: string | null;
   phaseStyle?: PhaseStyleMode;
   stackId?: string | null;
+  mermaidInVideo?: boolean;
+  mermaid?: string | null;
+  mermaidSkipReason?: string | null;
 }> = ({
   chunkDir,
   visualGraph,
@@ -104,6 +108,9 @@ export const ComponentTreeClip: React.FC<{
   filePath,
   phaseStyle = "classic",
   stackId,
+  mermaidInVideo = false,
+  mermaid = null,
+  mermaidSkipReason = null,
 }) => {
   const frame = useCurrentFrame();
   const theme =
@@ -134,7 +141,10 @@ export const ComponentTreeClip: React.FC<{
   const diagramHeight = patterns.l2
     ? contentBandHeight(COMPOSITION_HEIGHT)
     : COMPOSITION_HEIGHT;
-  const diagram = (
+  const useMermaid = Boolean(mermaidInVideo && mermaid);
+  const diagram = useMermaid ? (
+    <MermaidDiagram source={mermaid!} skipReason={mermaidSkipReason} />
+  ) : (
     <VisualGraphDiagram
       visualGraph={visualGraph}
       theme={theme}

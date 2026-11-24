@@ -64,6 +64,30 @@ def test_export_lifecycle_mermaid_sequence_and_assumed_notes():
     assert export_lifecycle_mermaid(None)[1] == "empty"
 
 
+def test_build_visual_clip_fields_embeds_mermaid_strings(tmp_path):
+    from src.render.render_pipeline import _build_visual_clip_fields
+
+    record = {
+        "chunkId": "demo",
+        "filePath": "src/Demo.tsx",
+        "stack": "react",
+        "visualAvailability": {
+            "componentTree": "available",
+            "lifecycleFlow": "unavailable",
+            "interactiveBreakdown": "available",
+        },
+        "visualGraph": {
+            "nodes": [{"id": "n1", "label": "A"}, {"id": "n2", "label": "B"}],
+            "edges": [{"from": "n1", "to": "n2", "kind": "mounts"}],
+        },
+        "lifecycleFlows": [],
+    }
+    fields = _build_visual_clip_fields(record, tmp_path)
+    assert fields.get("mermaidInVideo") is True
+    assert fields.get("mermaid") and "flowchart TD" in fields["mermaid"]
+    assert "visualGraph" in fields
+
+
 def test_select_diagram_plan_preserves_q1_order_and_skips():
     record = {
         "visualAvailability": {
@@ -80,7 +104,7 @@ def test_select_diagram_plan_preserves_q1_order_and_skips():
     }
     plan = select_diagram_plan(record)
     assert plan["videoChapterOrder"] == list(VIDEO_CHAPTER_ORDER)
-    assert plan["video"]["mermaid_in_video"] is False
+    assert plan["video"]["mermaid_in_video"] is True
     assert plan["preferRemotionForVideo"] is True
     assert "flowchart_td" in plan["docsDiagrams"]
     assert "sequence" not in plan["docsDiagrams"]

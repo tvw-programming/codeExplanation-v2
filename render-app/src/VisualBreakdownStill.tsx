@@ -11,6 +11,7 @@ import {
 } from "./fancyLayout/phaseLayoutMatrix";
 import { resolveMatrixStackKey } from "./fancyLayout/stackResolve";
 import { DiagramHeader } from "./DiagramHeader";
+import { MermaidDiagram } from "./MermaidDiagram";
 import { VisualGraphDiagram, edgeSummaryLabel } from "./VisualGraphDiagram";
 import {
   CEV_BG_VIDEO,
@@ -43,6 +44,9 @@ export const VisualBreakdownStill: React.FC<{
   securityFlags?: SecurityFlag[];
   phaseStyle?: PhaseStyleMode;
   stackId?: string | null;
+  mermaidInVideo?: boolean;
+  mermaid?: string | null;
+  mermaidSkipReason?: string | null;
 }> = ({
   chunkDir,
   visualGraph,
@@ -52,6 +56,9 @@ export const VisualBreakdownStill: React.FC<{
   securityFlags = [],
   phaseStyle = "classic",
   stackId,
+  mermaidInVideo = false,
+  mermaid = null,
+  mermaidSkipReason = null,
 }) => {
   const isRouteTree = visualGraph.kind === "route_tree";
   const theme = visualTheme || themeForStack(isRouteTree ? "go" : "react");
@@ -66,6 +73,7 @@ export const VisualBreakdownStill: React.FC<{
   };
   const patterns = resolveFancyPatterns(phaseStyle, "visualBreakdown", stackKey, honesty);
   const tickerLabel = patterns.l1 ? honestyTickerLabel(honesty) : null;
+  const useMermaid = Boolean(mermaidInVideo && mermaid);
 
   return (
     <AbsoluteFill style={{ backgroundColor: CEV_BG_VIDEO }}>
@@ -75,11 +83,15 @@ export const VisualBreakdownStill: React.FC<{
         eyebrow="Structure graph"
         titleFallback={name}
       />
-      <VisualGraphDiagram
-        visualGraph={visualGraph}
-        theme={theme}
-        securityFlags={securityFlags}
-      />
+      {useMermaid ? (
+        <MermaidDiagram source={mermaid!} skipReason={mermaidSkipReason} />
+      ) : (
+        <VisualGraphDiagram
+          visualGraph={visualGraph}
+          theme={theme}
+          securityFlags={securityFlags}
+        />
+      )}
       {patterns.l4 ? (
         <Box
           sx={{
