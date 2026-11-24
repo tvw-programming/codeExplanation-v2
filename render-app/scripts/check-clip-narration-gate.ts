@@ -9,12 +9,21 @@ import {
   treeDiagramRevealFrame,
 } from "../src/clipNarration";
 
-assert.equal(resolvePhaseStyleFromManifest(null).componentTree, "fancy");
-assert.equal(resolvePhaseStyleFromManifest({}).visualBreakdown, "fancy");
+for (const key of [
+  "fileCard",
+  "componentTree",
+  "lifecycle",
+  "chunkView",
+  "visualBreakdown",
+] as const) {
+  assert.equal(resolvePhaseStyleFromManifest(null)[key], "fancy", key);
+}
 assert.equal(
   resolvePhaseStyleFromManifest({ componentTree: "classic" }).componentTree,
   "classic",
 );
+assert.equal(resolvePhaseStyleFromManifest({ chunkView: "classic" }).chunkView, "classic");
+assert.equal(resolvePhaseStyleFromManifest({ chunkView: "classic" }).fileCard, "fancy");
 
 const measured = {
   durationMs: 5000,

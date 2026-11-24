@@ -11,17 +11,17 @@ export type ResolvedPhaseStyle = {
   architectureDocs: PhaseStyleMode;
 };
 
-/** Structure clips default to fancy so diagram gate + L3 bullets work without config. */
+/** All FullVideo clip phases default to fancy (structure, motion, L3 breakdown). */
 export const DEFAULT_PHASE_STYLE: ResolvedPhaseStyle = {
-  fileCard: "classic",
+  fileCard: "fancy",
   componentTree: "fancy",
-  lifecycle: "classic",
-  chunkView: "classic",
+  lifecycle: "fancy",
+  chunkView: "fancy",
   visualBreakdown: "fancy",
-  architectureDocs: "classic",
+  architectureDocs: "fancy",
 };
 
-/** Merge manifest phaseStyle with defaults; only explicit ``classic`` opts structure out. */
+/** Merge manifest phaseStyle with defaults; only explicit ``classic`` opts out. */
 export function resolvePhaseStyleFromManifest(
   partial: Partial<ResolvedPhaseStyle> | null | undefined,
 ): ResolvedPhaseStyle {
@@ -30,7 +30,7 @@ export function resolvePhaseStyleFromManifest(
     return base;
   }
   const pick = (key: keyof ResolvedPhaseStyle): PhaseStyleMode =>
-    partial[key] === "classic" ? "classic" : partial[key] === "fancy" ? "fancy" : base[key];
+    partial[key] === "classic" ? "classic" : "fancy";
   return {
     fileCard: pick("fileCard"),
     componentTree: pick("componentTree"),

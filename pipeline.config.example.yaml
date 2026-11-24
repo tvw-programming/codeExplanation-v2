@@ -55,7 +55,7 @@ video:
   fps: 30
   resolution: "1280x720"
   phaseStyle:
-    fileCard: fancy              # classic | fancy — default classic when omitted
+    fileCard: fancy              # classic | fancy — default fancy when omitted
     componentTree: fancy
     lifecycle: fancy
     chunkView: fancy

@@ -1,6 +1,6 @@
 """Resolve and validate video.phaseStyle from pipeline.config.yaml.
 
-Every phase defaults to ``classic`` unless explicitly set to ``fancy``.
+Every phase defaults to ``fancy`` unless explicitly set to ``classic``.
 """
 
 from __future__ import annotations
@@ -22,25 +22,17 @@ ALLOWED_PHASE_STYLE_VALUES: Final[frozenset[str]] = frozenset({"classic", "fancy
 PHASE_STYLE_KEY_ORDER: Final[tuple[str, ...]] = tuple(sorted(PHASE_STYLE_KEYS))
 
 DEFAULT_PHASE_STYLE: Final[dict[str, str]] = {
-    key: "classic" for key in PHASE_STYLE_KEY_ORDER
+    key: "fancy" for key in PHASE_STYLE_KEY_ORDER
 }
-
-# Structure clips (tree gate + breakdown L3) opt into fancy when omitted in config.
-STRUCTURE_PHASE_STYLE_DEFAULT_FANCY: Final[frozenset[str]] = frozenset({
-    "componentTree",
-    "visualBreakdown",
-})
 
 
 def resolve_phase_style(raw: dict | None) -> dict[str, str]:
-    """Return a fully resolved phaseStyle map (missing keys → classic).
+    """Return a fully resolved phaseStyle map (missing keys → fancy).
 
     Reads ``video.phaseStyle`` from the loaded config dict. Unknown keys or
-  invalid values raise ``ValueError`` (fail closed; ``load_config`` maps to ``ConfigError``).
+    invalid values raise ``ValueError`` (fail closed; ``load_config`` maps to ``ConfigError``).
     """
     resolved = dict(DEFAULT_PHASE_STYLE)
-    for key in STRUCTURE_PHASE_STYLE_DEFAULT_FANCY:
-        resolved[key] = "fancy"
 
     if not raw:
         return resolved
