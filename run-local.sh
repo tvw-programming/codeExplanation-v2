@@ -535,7 +535,22 @@ run_video_render() {
     exit 1
   fi
 
+  local VENV_PY="$PROJECT_ROOT/.venv/bin/python"
+  if [ ! -x "$VENV_PY" ]; then
+    VENV_PY="$(command -v python3 || true)"
+  fi
+  if [ -z "$VENV_PY" ]; then
+    echo "python3 is required for phaseStyle sync and clip narration repair." >&2
+    exit 1
+  fi
+
   sync_manifest_phase_style || exit 1
+
+  log "[5/5] Video: repairing tree/breakdown clip beats on staged chunks (if needed)"
+  if ! (cd "$PROJECT_ROOT" && "$VENV_PY" scripts/repair_staged_clip_narration.py); then
+    echo "Could not repair staged clip narration." >&2
+    exit 1
+  fi
 
   mkdir -p "$OUTPUT_DIR"
 

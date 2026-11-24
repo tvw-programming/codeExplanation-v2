@@ -80,8 +80,10 @@ def test_visual_clips_survive_tts_failure(tmp_path: Path):
 
     assert fields.get("visualGraph", {}).get("kind") == "route_tree"
     assert fields.get("treeNarration")
-    assert fields["treeNarration"]["ttsEngine"] == "none"
+    assert fields["treeNarration"]["alignmentSource"] in ("estimated-beats", "silent-hold")
     assert fields["treeNarration"]["durationMs"] >= 1000
+    if fields["treeNarration"]["alignmentSource"] == "estimated-beats":
+        assert fields["treeNarration"]["beats"][0].get("speechEndMs", 0) > 0
     assert fields.get("lifecycleNarration")
     assert fields.get("breakdownNarration")
     assert fields.get("lifecycleFlows")

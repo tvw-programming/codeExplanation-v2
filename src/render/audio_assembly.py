@@ -68,6 +68,31 @@ def pad_with_silence(source: Path, destination: Path, pause_ms: int) -> Path:
     return destination
 
 
+def silence_wav(duration_ms: int, destination: Path, sample_rate: int = 22050) -> Path:
+    """Write a silent PCM WAV of the given length (clip TTS estimate fallback)."""
+    if duration_ms <= 0:
+        raise AudioAssemblyError("silence_wav: duration_ms must be positive")
+    seconds = f"{duration_ms / 1000:.3f}"
+    result = subprocess.run(
+        [
+            "ffmpeg", "-y", "-loglevel", "error",
+            "-f", "lavfi", "-i", f"anullsrc=r={sample_rate}:cl=mono",
+            "-t", seconds,
+            "-c:a", "pcm_s16le", str(destination),
+        ],
+        capture_output=True,
+        text=True,
+        timeout=120,
+        check=False,
+    )
+    if result.returncode != 0 or not destination.is_file():
+        raise AudioAssemblyError(
+            f"ffmpeg could not write {duration_ms}ms of silence: "
+            f"{result.stderr.strip()[:300]}"
+        )
+    return destination
+
+
 def concat_wavs(parts: list[Path], destination: Path) -> Path:
     if not parts:
         raise AudioAssemblyError("No audio parts to join.")

@@ -14,9 +14,31 @@ export type MeasuredBeat = {
 };
 
 export type NarrationWithBeats = {
-  durationMs: number;
+  durationMs?: number;
+  audio?: string;
+  alignmentSource?: string;
   beats?: MeasuredBeat[];
 };
+
+/** Clip has beat timing usable for diagram gating / L3 breakdown (not silent-hold). */
+export function hasClipMeasuredBeats(
+  narration: NarrationWithBeats | null | undefined,
+): boolean {
+  if (!narration) return false;
+  if (narration.alignmentSource === "silent-hold") return false;
+  const beats = narration.beats;
+  if (!beats?.length) return false;
+  const first = beats[0];
+  if (typeof first.speechEndMs === "number" && first.speechEndMs > 0) return true;
+  if (
+    typeof first.endMs === "number" &&
+    typeof first.startMs === "number" &&
+    first.endMs > first.startMs
+  ) {
+    return true;
+  }
+  return false;
+}
 
 /** End of spoken audio for beat 0 (not including pause_after padding). */
 export function firstBeatSpeechEndMs(

@@ -27,6 +27,7 @@ import {
 
 // Timing lives in segmentTiming.ts (shared with the viewer's segment
 // index) and is re-exported here for existing importers.
+import { hasClipMeasuredBeats } from "./clipNarration";
 import { BREAKDOWN_HOLD_SECONDS, FPS } from "./segmentTiming";
 import { bulletRevealFrames, split7030Widths } from "./fancyLayout/layoutMath";
 import {
@@ -85,10 +86,14 @@ export const VisualBreakdownStill: React.FC<{
   const patterns = resolveFancyPatterns(phaseStyle, "visualBreakdown", stackKey, honesty);
   const tickerLabel = patterns.l1 ? honestyTickerLabel(honesty) : null;
   const useMermaid = Boolean(mermaidInVideo && mermaid);
-  const fancyL3 = patterns.l3 && visualGraph.kind === "component_tree";
+  const teachingBullets =
+    visualGraph.kind === "component_tree" ? structureBulletsFromGraph(visualGraph) : [];
+  const fancyL3 =
+    visualGraph.kind === "component_tree" &&
+    teachingBullets.length >= 5 &&
+    (patterns.l3 || hasClipMeasuredBeats(narration));
   const omitEdgeId = fancyL3 ? duplicateMountEdgeToOmit(visualGraph) : null;
   const omitEdgeIds = omitEdgeId ? [omitEdgeId] : [];
-  const teachingBullets = fancyL3 ? structureBulletsFromGraph(visualGraph) : [];
   const accent = videoAccent(theme);
   const activeBeatIndex = (narration?.beats || []).findIndex(
     (b) =>

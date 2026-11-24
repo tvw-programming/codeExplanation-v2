@@ -25,6 +25,12 @@ DEFAULT_PHASE_STYLE: Final[dict[str, str]] = {
     key: "classic" for key in PHASE_STYLE_KEY_ORDER
 }
 
+# Structure clips (tree gate + breakdown L3) opt into fancy when omitted in config.
+STRUCTURE_PHASE_STYLE_DEFAULT_FANCY: Final[frozenset[str]] = frozenset({
+    "componentTree",
+    "visualBreakdown",
+})
+
 
 def resolve_phase_style(raw: dict | None) -> dict[str, str]:
     """Return a fully resolved phaseStyle map (missing keys → classic).
@@ -32,18 +38,22 @@ def resolve_phase_style(raw: dict | None) -> dict[str, str]:
     Reads ``video.phaseStyle`` from the loaded config dict. Unknown keys or
   invalid values raise ``ValueError`` (fail closed; ``load_config`` maps to ``ConfigError``).
     """
+    resolved = dict(DEFAULT_PHASE_STYLE)
+    for key in STRUCTURE_PHASE_STYLE_DEFAULT_FANCY:
+        resolved[key] = "fancy"
+
     if not raw:
-        return dict(DEFAULT_PHASE_STYLE)
+        return resolved
 
     video = raw.get("video")
     if video is None:
-        return dict(DEFAULT_PHASE_STYLE)
+        return resolved
     if not isinstance(video, dict):
         raise ValueError("video must be a mapping when present")
 
     phase_raw = video.get("phaseStyle")
     if phase_raw is None:
-        return dict(DEFAULT_PHASE_STYLE)
+        return resolved
     if not isinstance(phase_raw, dict):
         raise ValueError("video.phaseStyle must be a mapping")
 
@@ -52,7 +62,6 @@ def resolve_phase_style(raw: dict | None) -> dict[str, str]:
         names = ", ".join(sorted(unknown))
         raise ValueError(f"Unknown phaseStyle keys: {names}")
 
-    resolved = dict(DEFAULT_PHASE_STYLE)
     for key, value in phase_raw.items():
         if value not in ALLOWED_PHASE_STYLE_VALUES:
             raise ValueError(

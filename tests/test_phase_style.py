@@ -10,17 +10,21 @@ from src.config.load_config import ConfigError, load_config
 from src.config.phase_style import (
     DEFAULT_PHASE_STYLE,
     PHASE_STYLE_KEYS,
+    STRUCTURE_PHASE_STYLE_DEFAULT_FANCY,
     combined_manifest_payload,
     resolve_phase_style,
     stack_manifest_payload,
 )
 
 
-def test_resolve_phase_style_defaults_all_classic():
-    assert resolve_phase_style({}) == DEFAULT_PHASE_STYLE
-    assert resolve_phase_style({"video": {}}) == DEFAULT_PHASE_STYLE
-    assert resolve_phase_style(None) == DEFAULT_PHASE_STYLE
-    assert all(v == "classic" for v in resolve_phase_style({}).values())
+def test_resolve_phase_style_defaults_structure_fancy():
+    resolved = resolve_phase_style({})
+    for key in STRUCTURE_PHASE_STYLE_DEFAULT_FANCY:
+        assert resolved[key] == "fancy", key
+    for key in PHASE_STYLE_KEYS - STRUCTURE_PHASE_STYLE_DEFAULT_FANCY:
+        assert resolved[key] == "classic", key
+    assert resolve_phase_style({"video": {}}) == resolved
+    assert resolve_phase_style(None) == resolved
 
 
 def test_resolve_phase_style_partial_explicit_only():
@@ -32,7 +36,9 @@ def test_resolve_phase_style_partial_explicit_only():
         },
     })
     assert resolved["fileCard"] == "fancy"
-    for key in PHASE_STYLE_KEYS - {"fileCard"}:
+    assert resolved["componentTree"] == "fancy"
+    assert resolved["visualBreakdown"] == "fancy"
+    for key in PHASE_STYLE_KEYS - {"fileCard"} - STRUCTURE_PHASE_STYLE_DEFAULT_FANCY:
         assert resolved[key] == "classic", key
 
 
@@ -81,6 +87,8 @@ def test_load_config_surfaces_phase_style_on_dataclass(tmp_path):
     config = load_config(path)
     assert config.phase_style["lifecycle"] == "fancy"
     assert config.phase_style["fileCard"] == "classic"
+    assert config.phase_style["componentTree"] == "fancy"
+    assert config.phase_style["visualBreakdown"] == "fancy"
 
 
 def test_load_config_phase_style_validation_fails_closed(tmp_path):
@@ -115,6 +123,7 @@ def test_manifest_payloads_embed_resolved_phase_style():
     stack = stack_manifest_payload("react", ["c1"], style)
     assert stack["phaseStyle"] == style
     assert stack["phaseStyle"]["visualBreakdown"] == "fancy"
+    assert stack["phaseStyle"]["componentTree"] == "fancy"
     assert stack["phaseStyle"]["chunkView"] == "classic"
 
     combined = combined_manifest_payload(["c1"], {"react": ["c1"]}, style)
