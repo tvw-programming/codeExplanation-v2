@@ -11,24 +11,26 @@ export type ResolvedPhaseStyle = {
   architectureDocs: PhaseStyleMode;
 };
 
+/** Structure clips default to fancy so diagram gate + L3 bullets work without config. */
 export const DEFAULT_PHASE_STYLE: ResolvedPhaseStyle = {
   fileCard: "classic",
-  componentTree: "classic",
+  componentTree: "fancy",
   lifecycle: "classic",
   chunkView: "classic",
-  visualBreakdown: "classic",
+  visualBreakdown: "fancy",
   architectureDocs: "classic",
 };
 
-/** Merge manifest phaseStyle with defaults; only explicit ``fancy`` opts in. */
+/** Merge manifest phaseStyle with defaults; only explicit ``classic`` opts structure out. */
 export function resolvePhaseStyleFromManifest(
   partial: Partial<ResolvedPhaseStyle> | null | undefined,
 ): ResolvedPhaseStyle {
+  const base = { ...DEFAULT_PHASE_STYLE };
   if (!partial) {
-    return { ...DEFAULT_PHASE_STYLE };
+    return base;
   }
   const pick = (key: keyof ResolvedPhaseStyle): PhaseStyleMode =>
-    partial[key] === "fancy" ? "fancy" : "classic";
+    partial[key] === "classic" ? "classic" : partial[key] === "fancy" ? "fancy" : base[key];
   return {
     fileCard: pick("fileCard"),
     componentTree: pick("componentTree"),

@@ -265,6 +265,20 @@ def _stage_all_chunks(
         )
         print(f"[backend]   -> {PROJECT_MANIFEST}")
 
+    if staged_by_stack:
+        try:
+            import subprocess
+
+            repair = REPO_ROOT / "scripts" / "repair_staged_clip_narration.py"
+            if repair.is_file():
+                subprocess.run(
+                    [sys.executable, str(repair)],
+                    cwd=REPO_ROOT,
+                    check=False,
+                )
+        except OSError:
+            pass
+
     return staged_by_stack
 
 

@@ -419,8 +419,36 @@ def clip_narration_needs_repair(narration: dict | None) -> bool:
     first = beats[0] if isinstance(beats[0], dict) else {}
     speech_end = first.get("speechEndMs")
     if not isinstance(speech_end, (int, float)) or speech_end <= 0:
+        # Legacy bundles only have endMs on beat 0
+        start = first.get("startMs")
+        end = first.get("endMs")
+        if (
+            isinstance(start, (int, float))
+            and isinstance(end, (int, float))
+            and end > start
+        ):
+            return False
         return True
     return False
+
+
+def breakdown_narration_needs_repair(
+    graph: dict | None,
+    chunk_meta: dict,
+    narration: dict | None,
+) -> bool:
+    """True when breakdown clip is silent, unmeasured, or pre-#41 one-line teaser."""
+    if clip_narration_needs_repair(narration):
+        return True
+    if not graph or graph.get("kind") != "component_tree":
+        return False
+    from src.narrate.breakdown_script import build_breakdown_beats
+
+    expected = build_breakdown_beats(graph, chunk_meta)
+    if len(expected) < 3:
+        return False
+    actual = len((narration or {}).get("beats") or [])
+    return actual < len(expected)
 
 
 def _build_visual_clip_fields(record: dict, output_dir: Path) -> dict:

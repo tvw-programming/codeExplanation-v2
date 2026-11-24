@@ -21,6 +21,7 @@ from src.narrate.breakdown_script import build_breakdown_beats  # noqa: E402
 from src.narrate.tree_script import build_tree_beats  # noqa: E402
 from src.render.render_pipeline import (  # noqa: E402
     _clip_narration_from_beats,
+    breakdown_narration_needs_repair,
     clip_narration_needs_repair,
 )
 from src.visual.availability import is_present  # noqa: E402
@@ -32,6 +33,11 @@ def _chunk_dirs() -> list[Path]:
     if not CHUNKS_DIR.is_dir():
         return []
     found: list[Path] = []
+    for bundle_path in CHUNKS_DIR.glob("*/bundle.json"):
+        parent = bundle_path.parent
+        if parent.parent == CHUNKS_DIR and parent.name != "chunks":
+            # FullVideo flat layout: chunks/<chunkId>/bundle.json
+            found.append(parent)
     for bundle_path in CHUNKS_DIR.glob("*/*/bundle.json"):
         found.append(bundle_path.parent)
     legacy = CHUNKS_DIR / "sample-chunk"
@@ -98,8 +104,8 @@ def repair_chunk(chunk_dir: Path) -> tuple[bool, list[str]]:
             changed = True
 
     breakdown = record.get("breakdownNarration")
-    if is_present(avail.get("interactiveBreakdown")) and clip_narration_needs_repair(
-        breakdown,
+    if is_present(avail.get("interactiveBreakdown")) and breakdown_narration_needs_repair(
+        graph, chunk_meta, breakdown,
     ):
         beats = build_breakdown_beats(graph, chunk_meta)
         rebuilt = _clip_narration_from_beats(
