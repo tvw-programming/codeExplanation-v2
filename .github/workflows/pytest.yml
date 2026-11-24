@@ -29,6 +29,11 @@ jobs:
         with:
           python-version: "3.12"
           cache: pip
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install system deps (ffmpeg for TTS/audio assembly tests)
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
       - name: Install deps
         run: pip install -r requirements.txt
       - name: Pytest (CEV_TREE_SITTER=1; regex fallback authoritative)

@@ -5,12 +5,18 @@ import type { ClipNarration, SecurityFlag, VisualGraph } from "./ComponentTreeCl
 import type { PhaseStyleMode } from "./phaseStyle";
 import { AnimatedBulletList, Card3D, Split7030, TickerBar } from "./fancyLayout";
 import {
+  BroadcastDiagramFrame,
+  describeVisualGraph,
+  graphBroadcastMode,
+  honestyCrawlText,
+} from "./fancyLayout/broadcast";
+import {
   honestyTickerLabel,
   resolveFancyPatterns,
   type HonestyHints,
 } from "./fancyLayout/phaseLayoutMatrix";
 import { resolveMatrixStackKey } from "./fancyLayout/stackResolve";
-import { DiagramHeader } from "./DiagramHeader";
+import { DiagramHeader, shortFilePath } from "./DiagramHeader";
 import { MermaidDiagram } from "./MermaidDiagram";
 import { VisualGraphDiagram, edgeSummaryLabel } from "./VisualGraphDiagram";
 import {
@@ -32,9 +38,11 @@ import { bulletRevealFrames, split7030Widths } from "./fancyLayout/layoutMath";
 import {
   COMPOSITION_WIDTH,
   contentBandHeight,
+  contentBandHeightBroadcast,
   LEFT_PAD,
   RIGHT_SAFE,
 } from "./fancyLayout/zones";
+import { BROADCAST } from "./fancyLayout/broadcast/broadcastTheme";
 
 export {
   BREAKDOWN_HOLD_SECONDS,
@@ -87,11 +95,12 @@ export const VisualBreakdownStill: React.FC<{
   const useMermaid = Boolean(mermaidInVideo && mermaid);
   const teachingBullets =
     visualGraph.kind === "component_tree" ? structureBulletsFromGraph(visualGraph) : [];
+  const fancy = phaseStyle === "fancy";
   /** L3 structure rail is pedagogy from visualGraph — not gated on phaseStyle or beats. */
   const structureL3 =
     visualGraph.kind === "component_tree" && teachingBullets.length >= 5;
-  const fancyL3 = structureL3;
-  const omitEdgeId = fancyL3 ? duplicateMountEdgeToOmit(visualGraph) : null;
+  const fancyL3 = !fancy && structureL3;
+  const omitEdgeId = structureL3 ? duplicateMountEdgeToOmit(visualGraph) : null;
   const omitEdgeIds = omitEdgeId ? [omitEdgeId] : [];
   const accent = videoAccent(theme);
   const activeBeatIndex = (narration?.beats || []).findIndex(
@@ -100,13 +109,33 @@ export const VisualBreakdownStill: React.FC<{
       frame < Math.ceil(((b.endMs || 0) / 1000) * FPS),
   );
   const bulletReveal =
-    fancyL3 && teachingBullets.length > 0
+    (fancy || fancyL3) && teachingBullets.length > 0
       ? bulletRevealFrames(teachingBullets.length, 8, 7)
       : [];
 
+  const description = describeVisualGraph(visualGraph, {
+    securityFlags,
+    inspectMode: true,
+  });
+  const layoutMode = graphBroadcastMode(visualGraph, { forceBand: useMermaid });
+  const liveMode = narration?.beats?.length ? "LIVE" : "REPLAY";
+  const pathShort = shortFilePath(filePath) || name;
+  const crawl = honestyCrawlText({
+    stack: theme.stack,
+    pathShort,
+    honestyKeyword: description.honestyKeyword,
+    extraFact: edgeSummaryLabel(visualGraph),
+  });
+
   const innerWidth = COMPOSITION_WIDTH - LEFT_PAD - RIGHT_SAFE;
-  const l3MainWidth = split7030Widths(innerWidth, 20, 0.7).leftWidth;
-  const diagramHeight = contentBandHeight(720);
+  const l3MainWidth = split7030Widths(
+    innerWidth,
+    20,
+    fancy ? BROADCAST.railMainFraction : 0.7,
+  ).leftWidth;
+  const diagramHeight = fancy
+    ? contentBandHeightBroadcast(720)
+    : contentBandHeight(720);
 
   const diagram = useMermaid ? (
     <MermaidDiagram source={mermaid!} skipReason={mermaidSkipReason} />
@@ -117,8 +146,16 @@ export const VisualBreakdownStill: React.FC<{
         theme={theme}
         securityFlags={securityFlags}
         omitEdgeIds={omitEdgeIds}
-        width={fancyL3 ? l3MainWidth : 1280}
-        height={fancyL3 ? diagramHeight : 720}
+        width={
+          fancy
+            ? layoutMode === "rail"
+              ? l3MainWidth
+              : 1280
+            : fancyL3
+              ? l3MainWidth
+              : 1280
+        }
+        height={fancy || fancyL3 ? diagramHeight : 720}
       />
     </Box>
   );
@@ -169,8 +206,28 @@ export const VisualBreakdownStill: React.FC<{
         filePath={filePath}
         eyebrow="Structure graph"
         titleFallback={name}
+        segmentTag={fancy ? description.segmentTag : null}
+        liveMode={fancy ? liveMode : null}
       />
-      {fancyL3 && teachingBullets.length >= 5 ? (
+      {fancy ? (
+        <BroadcastDiagramFrame
+          mode={layoutMode}
+          description={description}
+          diagram={diagram}
+          pathShort={pathShort}
+          accentColor={accent}
+          crawlText={crawl}
+          showCrawl={Boolean(tickerLabel || description.honestyKeyword)}
+          teachingBullets={
+            structureL3 && layoutMode === "rail" ? teachingBullets : undefined
+          }
+          activeBulletIndex={
+            activeBeatIndex >= 0 && teachingBullets.length
+              ? activeBeatIndex % teachingBullets.length
+              : null
+          }
+        />
+      ) : fancyL3 && teachingBullets.length >= 5 ? (
         <Split7030
           asideChrome
           asideTitle="Structure"
@@ -188,8 +245,8 @@ export const VisualBreakdownStill: React.FC<{
       ) : (
         diagram
       )}
-      {!fancyL3 ? summaryFooter : null}
-      {tickerLabel ? (
+      {!fancy && !fancyL3 ? summaryFooter : null}
+      {!fancy && tickerLabel ? (
         <TickerBar label={tickerLabel} showFromFrame={8} hideAtFrame={null} />
       ) : null}
 

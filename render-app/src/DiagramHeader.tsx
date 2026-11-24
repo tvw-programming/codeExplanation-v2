@@ -7,6 +7,7 @@ import {
   type VisualTheme,
 } from "./visualTheme";
 import { HEADER_HEIGHT } from "./treeLayout";
+import { LiveBadge } from "./fancyLayout/broadcast/LiveBadge";
 
 /** Shorten long paths the way FileCard does. */
 export function shortFilePath(path: string | null | undefined): string {
@@ -26,10 +27,28 @@ export const DiagramHeader: React.FC<{
   filePath?: string | null;
   eyebrow?: string;
   titleFallback?: string;
-}> = ({ theme, filePath, eyebrow, titleFallback }) => {
+  /** Optional segment tag shown beside the eyebrow (broadcast fancy). */
+  segmentTag?: string | null;
+  /** Show LIVE / REPLAY chip (broadcast fancy). */
+  liveMode?: "LIVE" | "REPLAY" | null;
+  reducedMotion?: boolean;
+}> = ({
+  theme,
+  filePath,
+  eyebrow,
+  titleFallback,
+  segmentTag,
+  liveMode = null,
+  reducedMotion = false,
+}) => {
   const pathLabel = shortFilePath(filePath) || titleFallback || theme.stack;
   const barTint = `${theme.onDark || theme.primary}33`;
   const underline = theme.onDark || theme.primary;
+  const eyebrowText = segmentTag
+    ? eyebrow
+      ? `${segmentTag} · ${eyebrow}`
+      : segmentTag
+    : eyebrow;
 
   return (
     <Box
@@ -50,7 +69,7 @@ export const DiagramHeader: React.FC<{
       }}
     >
       <Box sx={{ minWidth: 0, flex: 1 }}>
-        {eyebrow ? (
+        {eyebrowText ? (
           <Typography
             sx={{
               color: CEV_FG_MUTED,
@@ -60,7 +79,7 @@ export const DiagramHeader: React.FC<{
               textTransform: "uppercase",
             }}
           >
-            {eyebrow}
+            {eyebrowText}
           </Typography>
         ) : null}
         <Typography
@@ -78,6 +97,11 @@ export const DiagramHeader: React.FC<{
           {pathLabel}
         </Typography>
       </Box>
+      {liveMode ? (
+        <Box sx={{ mr: 1.5, flexShrink: 0 }}>
+          <LiveBadge mode={liveMode} reducedMotion={reducedMotion} />
+        </Box>
+      ) : null}
       <StackLogo theme={theme} inset={10} height={24} />
     </Box>
   );
