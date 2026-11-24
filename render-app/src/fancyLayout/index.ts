@@ -2,10 +2,12 @@ export {
   HONESTY_TICKER_LABELS,
   bulletItemOpacity,
   bulletRevealFrames,
+  card3dTransform,
   enterOffsets,
   enterProgress,
   split7030Widths,
   tickerOpacity,
+  type Card3dTransform,
   type EnterDirection,
   type EnterOffsets,
   type HonestyTickerLabel,
@@ -32,6 +34,7 @@ export {
   AnimatedBulletList,
   type AnimatedBulletListProps,
 } from "./AnimatedBulletList";
+export { Card3D, type Card3DProps } from "./Card3D";
 
 export {
   honestyTickerLabel,

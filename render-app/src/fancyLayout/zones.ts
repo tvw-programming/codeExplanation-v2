@@ -1,5 +1,5 @@
 /**
- * Safe-zone constants for fancy layout primitives (L1–L3).
+ * Safe-zone constants for fancy layout primitives (L1–L4).
  * Keep in sync with treeLayout.ts header/caption reserves.
  */
 import { CAPTION_ZONE, HEADER_HEIGHT, LEFT_PAD, RIGHT_SAFE } from "../treeLayout";

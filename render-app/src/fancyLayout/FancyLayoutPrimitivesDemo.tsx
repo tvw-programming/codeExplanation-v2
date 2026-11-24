@@ -1,11 +1,12 @@
 /**
- * Studio-only composition to preview L1–L3 in isolation (not used in FullVideo).
+ * Studio-only composition to preview L1–L4 in isolation (not used in FullVideo).
  */
 import { AbsoluteFill, Composition } from "remotion";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { CEV_BG_VIDEO } from "../visualTheme";
 import { AnimatedBulletList } from "./AnimatedBulletList";
+import { Card3D } from "./Card3D";
 import { EnterFrom } from "./EnterFrom";
 import { Split7030 } from "./Split7030";
 import { TickerBar } from "./TickerBar";
@@ -38,16 +39,18 @@ const FancyLayoutPrimitivesScene: React.FC = () => {
           </EnterFrom>
         }
         aside={
-          <EnterFrom direction="right" startFrame={4}>
-            <AnimatedBulletList
-              items={[
-                "Mounts only when extractor proves them",
-                "Assumed edges stay dashed",
-                "Measured-beat TTS unchanged",
-              ]}
-              activeIndex={1}
-            />
-          </EnterFrom>
+          <Card3D variant="panel" startFrame={2}>
+            <EnterFrom direction="right" startFrame={4}>
+              <AnimatedBulletList
+                items={[
+                  "Mounts only when extractor proves them",
+                  "Assumed edges stay dashed",
+                  "Measured-beat TTS unchanged",
+                ]}
+                activeIndex={1}
+              />
+            </EnterFrom>
+          </Card3D>
         }
       />
       <TickerBar label="assumed" showFromFrame={12} hideAtFrame={100} />

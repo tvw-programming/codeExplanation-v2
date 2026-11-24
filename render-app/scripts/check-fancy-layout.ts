@@ -1,10 +1,11 @@
 /**
- * Invariants for fancy layout primitives (L1–L3 math).
+ * Invariants for fancy layout primitives (L1–L4 math).
  * Run: npx --yes tsx scripts/check-fancy-layout.ts
  */
 import assert from "node:assert/strict";
 import {
   bulletRevealFrames,
+  card3dTransform,
   enterOffsets,
   split7030Widths,
   tickerOpacity,
@@ -90,6 +91,7 @@ for (const direction of ["left", "top", "right"] as const) {
   assert.equal(off.l1, false);
   assert.equal(off.l2, false);
   assert.equal(off.l3, false);
+  assert.equal(off.l4, false);
 }
 
 // --- matrix: fancy enables defaults ---
@@ -106,7 +108,30 @@ for (const row of matrixRowKeys()) {
   for (const part of matrixPhaseParts()) {
     const p = resolveFancyPatterns("fancy", part, row);
     assert.ok(typeof p.l1 === "boolean");
+    assert.ok(typeof p.l4 === "boolean");
   }
+}
+
+// --- L4 matrix: only fileCard / visualBreakdown on select stacks ---
+{
+  assert.equal(resolveFancyPatterns("fancy", "fileCard", "react").l4, true);
+  assert.equal(resolveFancyPatterns("fancy", "fileCard", "express").l4, false);
+  assert.equal(resolveFancyPatterns("fancy", "visualBreakdown", "spring").l4, true);
+  assert.equal(resolveFancyPatterns("fancy", "componentTree", "react").l4, false);
+}
+
+// --- L4 card3d settles shallow (readable) ---
+{
+  const start = card3dTransform(0, 28, 0, false);
+  assert.ok(Math.abs(start.rotateYDeg) > 3, "initial tilt");
+  const end = card3dTransform(80, 28, 0, false);
+  assert.ok(Math.abs(end.rotateXDeg) < 3);
+  assert.ok(Math.abs(end.rotateYDeg) < 1);
+  assert.equal(end.opacity, 1);
+  const rm = card3dTransform(0, 28, 0, true);
+  assert.equal(rm.rotateXDeg, 0);
+  assert.equal(rm.rotateYDeg, 0);
+  assert.equal(rm.translateZPx, 0);
 }
 
 console.log("ok fancy-layout invariants");
