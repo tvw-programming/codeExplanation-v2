@@ -12,6 +12,7 @@ import {
 } from "./fancyLayout/phaseLayoutMatrix";
 import { resolveMatrixStackKey } from "./fancyLayout/stackResolve";
 import { contentBandHeight } from "./fancyLayout/zones";
+import { treeDiagramRevealFrame } from "./clipNarration";
 
 const COMPOSITION_HEIGHT = 720;
 import {
@@ -50,7 +51,13 @@ export type ClipNarration = {
   audio: string;
   durationMs: number;
   ttsEngine?: string;
-  beats?: Array<{ id?: string; spoken?: string; startMs?: number; endMs?: number }>;
+  beats?: Array<{
+    id?: string;
+    spoken?: string;
+    startMs?: number;
+    endMs?: number;
+    speechEndMs?: number;
+  }>;
 };
 
 export type SecurityFlag = {
@@ -127,6 +134,9 @@ export const ComponentTreeClip: React.FC<{
         frame < Math.floor(((b.endMs || 0) / 1000) * FPS),
     ) || null;
 
+  const diagramRevealFrame = treeDiagramRevealFrame(narration);
+  const showDiagram = frame >= diagramRevealFrame;
+
   const stackKey = resolveMatrixStackKey(stackId ?? theme.stack);
   const honesty: HonestyHints = {
     hasAssumed:
@@ -162,18 +172,21 @@ export const ComponentTreeClip: React.FC<{
         titleFallback={rootLabel}
       />
 
-      {patterns.l2 ? (
-        <EnterFrom
-          direction={patterns.l2Direction}
-          fillBelowHeader
-          durationInFrames={26}
-          distancePx={96}
-        >
-          {diagram}
-        </EnterFrom>
-      ) : (
-        diagram
-      )}
+      {showDiagram ? (
+        patterns.l2 ? (
+          <EnterFrom
+            direction={patterns.l2Direction}
+            fillBelowHeader
+            durationInFrames={26}
+            distancePx={96}
+            startFrame={diagramRevealFrame}
+          >
+            {diagram}
+          </EnterFrom>
+        ) : (
+          diagram
+        )
+      ) : null}
 
       {activeBeat?.spoken ? (
         <Box

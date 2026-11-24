@@ -100,7 +100,7 @@ const MATRIX: Record<string, StackRow> = {
     componentTree: cell("A", "D", "-", "-", "left"),
     lifecycle: cell("A", "D", "-", "-", "right"),
     chunkView: cell("A", "-", "D", "-"),
-    visualBreakdown: cell("A", "-", "-", "A"),
+    visualBreakdown: cell("A", "-", "A", "A"),
   },
   vue: {
     fileCard: cell("A", "D", "-", "A", "top"),

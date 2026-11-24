@@ -36,17 +36,23 @@ export const VisualGraphDiagram: React.FC<{
   securityFlags?: SecurityFlag[];
   width?: number;
   height?: number;
+  /** Hide specific edge ids (clarity only — does not remove nodes). */
+  omitEdgeIds?: string[];
 }> = ({
   visualGraph,
   theme,
   securityFlags = [],
   width = 1280,
   height = 720,
+  omitEdgeIds = [],
 }) => {
+  const omit = new Set(omitEdgeIds);
   const laid = layoutTree(visualGraph, width, height);
   const byId = new Map(laid.map((n) => [n.id, n]));
   const structureKinds = drawableStructureKinds();
-  const structure = (visualGraph.edges || []).filter((e) => structureKinds.has(e.kind));
+  const structure = (visualGraph.edges || []).filter(
+    (e) => structureKinds.has(e.kind) && !omit.has(e.id),
+  );
   const mwEdges = (visualGraph.edges || []).filter((e) => e.kind === "middleware_before");
   const flagged = new Set(securityFlags.flatMap((f) => f.nodeIds || []));
   const labelColor = videoLabelColor(theme);
