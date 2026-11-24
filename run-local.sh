@@ -506,6 +506,18 @@ run_segment_index() {
 # ---------------------------------------------------------------------
 # 5) Render the pipeline's output to a real video file at a fixed path
 # ---------------------------------------------------------------------
+sync_manifest_phase_style() {
+  if [ ! -f pipeline.config.yaml ]; then
+    echo "No pipeline.config.yaml — cannot sync video.phaseStyle into manifests." >&2
+    return 1
+  fi
+  log "[5/5] Video: syncing video.phaseStyle from pipeline.config.yaml into chunk manifests"
+  if ! python3 scripts/sync_manifest_phase_style.py; then
+    echo "Could not sync phaseStyle into Remotion manifests." >&2
+    return 1
+  fi
+}
+
 run_video_render() {
   if [ ! -f render-app/public/chunks/manifest.json ]; then
     echo "No rendered chunks are staged at render-app/public/chunks/ —" >&2
@@ -513,6 +525,8 @@ run_video_render() {
     echo "something to render." >&2
     exit 1
   fi
+
+  sync_manifest_phase_style || exit 1
 
   mkdir -p "$OUTPUT_DIR"
 

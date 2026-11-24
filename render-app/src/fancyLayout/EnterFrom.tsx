@@ -29,8 +29,8 @@ export type EnterFromProps = {
 export const EnterFrom: React.FC<EnterFromProps> = ({
   direction,
   children,
-  durationInFrames = 18,
-  distancePx = 56,
+  durationInFrames = 22,
+  distancePx = 80,
   startFrame = 0,
   reducedMotion = false,
   fillBelowHeader = false,

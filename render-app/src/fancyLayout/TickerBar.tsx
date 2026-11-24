@@ -74,8 +74,9 @@ export const TickerBar: React.FC<TickerBarProps> = ({
           px: 2,
           py: 0.5,
           borderRadius: "6px",
-          border: `1px solid ${accentColor}55`,
-          bgcolor: "rgba(15, 20, 25, 0.92)",
+          border: `1px solid ${accentColor}70`,
+          bgcolor: "rgba(12, 17, 24, 0.96)",
+          boxShadow: `0 4px 20px rgba(0,0,0,0.45), 0 0 0 1px ${accentColor}22`,
         }}
       >
         <Typography

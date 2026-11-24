@@ -205,7 +205,8 @@ export const LifecycleFlowClip: React.FC<{
                   <EnterFrom
                     direction={patterns.l2Direction}
                     startFrame={stepRevealFrame(i)}
-                    durationInFrames={16}
+                    durationInFrames={20}
+                    distancePx={72}
                   >
                     {pill}
                   </EnterFrom>
