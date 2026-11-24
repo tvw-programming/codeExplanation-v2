@@ -147,18 +147,18 @@ video:
   fps: 30
   resolution: "1280x720"
   phaseStyle:
-    fileCard: classic            # classic | fancy
-    componentTree: classic
-    lifecycle: classic
-    chunkView: classic
-    visualBreakdown: classic
-    architectureDocs: classic
+    fileCard: fancy              # classic | fancy (see pipeline.config.example.yaml)
+    componentTree: fancy
+    lifecycle: fancy
+    chunkView: fancy
+    visualBreakdown: fancy
+    architectureDocs: fancy
 ```
 
 | Field | Meaning |
 |---|---|
 | `fps` / `resolution` | Unused. Remotion hardcodes **30 fps** and **1280×720**; `highlight_config.py` defaults `fps=30`. |
-| `phaseStyle` | Loaded by `src/config/phase_style.py` into `PipelineConfig.phase_style`. **Every key defaults to `classic`** when omitted. Values must be `classic` or `fancy` only; unknown keys fail closed. Staging (`scripts/run_backend_pilot.py`) embeds the resolved map on `render-app/public/chunks/manifest.json` and per-stack manifests. `FullVideo` / `StackVideo` pass each key into the matching clip; `classic` keeps today's layout; `fancy` is reserved for later L1–L4 matrix work. |
+| `phaseStyle` | Loaded by `src/config/phase_style.py` into `PipelineConfig.phase_style`. **Every key defaults to `classic`** when omitted. Values must be `classic` or `fancy` only; unknown keys fail closed. Staging (`scripts/run_backend_pilot.py`) embeds the resolved map on `render-app/public/chunks/manifest.json` and per-stack manifests. `FullVideo` / `StackVideo` pass each key into the matching clip; `classic` keeps today's layout; `fancy` enables §2.4 L1–L4 patterns per tech×part matrix. Re-run staging after changing phaseStyle so manifests pick up the new map. |
 
 ## Piper voice cache
 
