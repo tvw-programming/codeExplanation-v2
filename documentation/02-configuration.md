@@ -158,7 +158,7 @@ video:
 | Field | Meaning |
 |---|---|
 | `fps` / `resolution` | Unused. Remotion hardcodes **30 fps** and **1280×720**; `highlight_config.py` defaults `fps=30`. |
-| `phaseStyle` | Loaded by `src/config/phase_style.py` into `PipelineConfig.phase_style`. **Every key defaults to `classic`** when omitted. Values must be `classic` or `fancy` only; unknown keys fail closed. Staging (`scripts/run_backend_pilot.py`) embeds the resolved map on `render-app/public/chunks/manifest.json` and per-stack manifests. `FullVideo` / `StackVideo` pass each key into the matching clip; `classic` keeps today's layout; `fancy` enables §2.4 L1–L4 patterns per tech×part matrix. Re-run staging after changing phaseStyle so manifests pick up the new map. |
+| `phaseStyle` | Loaded by `src/config/phase_style.py` into `PipelineConfig.phase_style`. **Every key defaults to `classic`** when omitted. Values must be `classic` or `fancy` only; unknown keys fail closed. Staging (`scripts/run_backend_pilot.py`) embeds the resolved map on `render-app/public/chunks/manifest.json` and per-stack manifests. Before every Remotion render, `run-local.sh` also runs `scripts/sync_manifest_phase_style.py` so a **render-only** rerun picks up `video.phaseStyle` edits without re-staging chunks. `FullVideo` / `StackVideo` read the map at render time via `calculateMetadata`; `classic` keeps today's layout; `fancy` enables §2.4 L1–L4 patterns per tech×part matrix. DiagramHeader branding is unrelated—fancy motion is ticker, entrances, 70/30 split, and 3D cards on the clip body. |
 
 ## Piper voice cache
 

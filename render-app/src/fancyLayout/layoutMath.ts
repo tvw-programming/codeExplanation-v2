@@ -167,9 +167,9 @@ export function card3dTransform(
   const progress = enterProgress(frame, durationFrames, startFrame);
   const easeOut = 1 - (1 - progress) * (1 - progress);
   return {
-    rotateXDeg: 9 * (1 - easeOut) + 1.25 * easeOut,
-    rotateYDeg: -7 * (1 - easeOut),
-    translateZPx: Math.round(14 * easeOut),
+    rotateXDeg: 11 * (1 - easeOut) + 1.5 * easeOut,
+    rotateYDeg: -10 * (1 - easeOut),
+    translateZPx: Math.round(22 * easeOut),
     opacity: clamp01(progress * 1.15),
   };
 }
