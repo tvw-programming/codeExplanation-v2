@@ -30,7 +30,12 @@ export const FILE_CARD_TAIL_SECONDS = 0.6;
 // ---- ComponentTreeClip ----
 export const TREE_TAIL_SECONDS = 0.4;
 export const TREE_MIN_SECONDS = 3;
+/** Classic / silent tree cap; measured-beat trees may run longer (see treeFramesFor). */
 export const TREE_MAX_SECONDS = 8;
+/** Full measured-beat tree audio + post-reveal dwell (ProfilePage-class graphs). */
+export const TREE_MAX_MEASURED_SECONDS = 18;
+/** Minimum diagram visibility after first-beat speech ends. */
+export const TREE_POST_REVEAL_SECONDS = 2.5;
 
 // ---- LifecycleFlowClip ----
 export const LIFECYCLE_MIN_SECONDS = 4;
@@ -43,11 +48,16 @@ export const BREAKDOWN_HOLD_SECONDS = 2;
 export const BREAKDOWN_MIN_SECONDS = 3;
 /** Allow spoken audio + hold without clamping the hold away. */
 export const BREAKDOWN_MAX_SECONDS = 12;
+/** Measured-beat breakdown with L3 bullets may run longer. */
+export const BREAKDOWN_MAX_MEASURED_SECONDS = 22;
 
 /** The minimum shape each frame-count function needs. The real bundle
  *  types live beside their components; keeping these structural means
  *  this module stays free of component imports. */
-export type TimedNarration = { durationMs: number } | null | undefined;
+export type TimedNarration =
+  | { durationMs: number; beats?: Array<{ speechEndMs?: number }> }
+  | null
+  | undefined;
 
 export type TimingBundle = {
   chunkId?: string;
@@ -82,9 +92,19 @@ export function cardFramesFor(narration: TimedNarration): number {
 
 export function treeFramesFor(narration: TimedNarration): number {
   if (!narration) return 0;
-  const spoken = (narration.durationMs || 0) / 1000 + TREE_TAIL_SECONDS;
-  const clamped = Math.min(TREE_MAX_SECONDS, Math.max(TREE_MIN_SECONDS, spoken));
-  return Math.ceil(clamped * FPS);
+  const spokenSec = (narration.durationMs || 0) / 1000 + TREE_TAIL_SECONDS;
+  const measured = (narration.beats?.length ?? 0) > 0;
+  let seconds = Math.max(TREE_MIN_SECONDS, spokenSec);
+  if (measured) {
+    const speechEndMs = narration.beats?.[0]?.speechEndMs;
+    if (typeof speechEndMs === "number" && speechEndMs > 0) {
+      seconds = Math.max(seconds, speechEndMs / 1000 + TREE_POST_REVEAL_SECONDS);
+    }
+    seconds = Math.min(TREE_MAX_MEASURED_SECONDS, seconds);
+  } else {
+    seconds = Math.min(TREE_MAX_SECONDS, seconds);
+  }
+  return Math.ceil(seconds * FPS);
 }
 
 export function lifecycleFramesFor(narration: TimedNarration): number {
@@ -97,8 +117,10 @@ export function lifecycleFramesFor(narration: TimedNarration): number {
 export function breakdownFramesFor(narration: TimedNarration): number {
   if (!narration) return 0;
   const spoken = (narration.durationMs || 0) / 1000;
+  const measured = (narration.beats?.length ?? 0) > 0;
   const total = Math.max(BREAKDOWN_MIN_SECONDS, spoken + BREAKDOWN_HOLD_SECONDS);
-  return Math.ceil(Math.min(BREAKDOWN_MAX_SECONDS, total) * FPS);
+  const cap = measured ? BREAKDOWN_MAX_MEASURED_SECONDS : BREAKDOWN_MAX_SECONDS;
+  return Math.ceil(Math.min(cap, total) * FPS);
 }
 
 // ===================================================================

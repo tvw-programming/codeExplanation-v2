@@ -332,7 +332,7 @@ def _build_visual_clip_fields(record: dict, output_dir: Path) -> dict:
     with a silent min-duration hold so Go Fiber (and other) chunks that have
     graphs are not dropped from the video.
     """
-    from src.narrate.breakdown_script import script_breakdown_teaser
+    from src.narrate.breakdown_script import build_breakdown_beats
     from src.narrate.lifecycle_script import build_lifecycle_beats
     from src.narrate.tree_script import build_tree_beats
     from src.visual.availability import is_present
@@ -383,10 +383,13 @@ def _build_visual_clip_fields(record: dict, output_dir: Path) -> dict:
             fields["visualTheme"] = theme
         if "securityFlags" not in fields:
             fields["securityFlags"] = record.get("securityFlags") or []
-        breakdown_beats = script_breakdown_teaser({
-            "filePath": record.get("filePath"),
-            "chunkId": record.get("chunkId"),
-        })
+        breakdown_beats = build_breakdown_beats(
+            record.get("visualGraph"),
+            {
+                "filePath": record.get("filePath"),
+                "chunkId": record.get("chunkId"),
+            },
+        )
         breakdown_narration = _synthesize_clip_beats(breakdown_beats, output_dir, "breakdown")
         # Prefer measured-beat audio (Q3/Q4); fall back to silent hold so the
         # structure graph still appears when TTS is down.
