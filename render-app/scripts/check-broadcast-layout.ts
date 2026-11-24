@@ -7,16 +7,19 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import type { VisualGraph } from "../src/ComponentTreeClip";
 import type { LifecycleFlow } from "../src/LifecycleFlowClip";
+// Import pure modules only — do not pull the broadcast barrel (React components).
+import { BROADCAST } from "../src/fancyLayout/broadcast/broadcastTheme";
 import {
-  BROADCAST,
-  chooseBroadcastLayout,
   describeLifecycleFlow,
   describeVisualGraph,
-  graphWidestRowFootprintRatio,
   honestyCrawlText,
+} from "../src/fancyLayout/broadcast/diagramDescription";
+import {
+  chooseBroadcastLayout,
+  graphWidestRowFootprintRatio,
   lifecycleFootprintRatio,
   split6040Widths,
-} from "../src/fancyLayout/broadcast";
+} from "../src/fancyLayout/broadcast/layoutMode";
 import { COMPOSITION_WIDTH, LEFT_PAD, RIGHT_SAFE } from "../src/fancyLayout/zones";
 
 const repoRoot = resolve(import.meta.dirname, "../..");
