@@ -41,6 +41,7 @@ from .tts import TTSError, synthesize
 RENDER_APP_DIR = Path(__file__).resolve().parents[2] / "render-app"
 
 ALIGNMENT_MEASURED = "measured-beats"
+ALIGNMENT_ESTIMATED = "estimated-beats"
 
 
 def _synthesize_beats(script: NarrationScript, output_dir: Path) -> tuple[list[dict], Path]:
@@ -323,6 +324,133 @@ def _silent_clip_narration(duration_ms: int) -> dict:
     }
 
 
+def _estimate_ms_per_word() -> float:
+    from src.render.tts import ESPEAK_DEFAULT_WORDS_PER_MINUTE
+
+    return 60_000 / ESPEAK_DEFAULT_WORDS_PER_MINUTE
+
+
+def _estimated_clip_narration(
+    beats: list[dict],
+    output_dir: Path,
+    stem: str,
+    *,
+    wav_name: str | None = None,
+) -> dict | None:
+    """Timing + beat metadata when clip TTS is down — gates diagram / L3 bullets.
+
+    Writes a silent track so Remotion Audio keeps wall-clock alignment.
+    """
+    from src.narrate.function_narration import speakable
+    from .audio_assembly import silence_wav
+
+    if not beats:
+        return None
+
+    beat_meta: list[dict] = []
+    cursor_ms = 0
+    ms_per_word = _estimate_ms_per_word()
+
+    for beat in beats:
+        spoken = speakable(beat.get("spoken") or "")
+        if not spoken:
+            continue
+        words = max(1, len(spoken.split()))
+        speech_ms = max(400, round(words * ms_per_word))
+        pause = int(beat.get("pause_after_ms") or 0)
+        beat_meta.append({
+            "id": beat.get("id"),
+            "summary": beat.get("summary"),
+            "spoken": spoken,
+            "startMs": cursor_ms,
+            "speechEndMs": cursor_ms + speech_ms,
+            "endMs": cursor_ms + speech_ms + pause,
+            "lineRange": beat.get("lineRange"),
+        })
+        cursor_ms += speech_ms + pause
+
+    if not beat_meta:
+        return None
+
+    wav_name = wav_name or f"{stem}.wav"
+    wav_path = output_dir / wav_name
+    try:
+        silence_wav(max(1, cursor_ms), wav_path)
+    except AudioAssemblyError:
+        wav_name = ""
+
+    return {
+        "audio": wav_name,
+        "durationMs": max(1, cursor_ms),
+        "ttsEngine": "estimate",
+        "beats": beat_meta,
+        "alignmentSource": ALIGNMENT_ESTIMATED,
+    }
+
+
+def _clip_narration_from_beats(
+    beats: list[dict],
+    output_dir: Path,
+    stem: str,
+    *,
+    min_hold_ms: int = 3000,
+) -> dict | None:
+    """Measured TTS when possible; estimated beats + silent audio otherwise."""
+    if not beats:
+        return _silent_clip_narration(min_hold_ms)
+    synthesized = _synthesize_clip_beats(beats, output_dir, stem)
+    if synthesized:
+        return synthesized
+    estimated = _estimated_clip_narration(beats, output_dir, stem)
+    if estimated:
+        return estimated
+    return _silent_clip_narration(min_hold_ms)
+
+
+def clip_narration_needs_repair(narration: dict | None) -> bool:
+    """True when staged clip meta cannot drive diagram gating or L3 sync."""
+    if not narration or not isinstance(narration, dict):
+        return True
+    if narration.get("alignmentSource") == "silent-hold":
+        return True
+    beats = narration.get("beats")
+    if not beats:
+        return True
+    first = beats[0] if isinstance(beats[0], dict) else {}
+    speech_end = first.get("speechEndMs")
+    if not isinstance(speech_end, (int, float)) or speech_end <= 0:
+        # Legacy bundles only have endMs on beat 0
+        start = first.get("startMs")
+        end = first.get("endMs")
+        if (
+            isinstance(start, (int, float))
+            and isinstance(end, (int, float))
+            and end > start
+        ):
+            return False
+        return True
+    return False
+
+
+def breakdown_narration_needs_repair(
+    graph: dict | None,
+    chunk_meta: dict,
+    narration: dict | None,
+) -> bool:
+    """True when breakdown clip is silent, unmeasured, or pre-#41 one-line teaser."""
+    if clip_narration_needs_repair(narration):
+        return True
+    if not graph or graph.get("kind") != "component_tree":
+        return False
+    from src.narrate.breakdown_script import build_breakdown_beats
+
+    expected = build_breakdown_beats(graph, chunk_meta)
+    if len(expected) < 3:
+        return False
+    actual = len((narration or {}).get("beats") or [])
+    return actual < len(expected)
+
+
 def _build_visual_clip_fields(record: dict, output_dir: Path) -> dict:
     """Tree / lifecycle / breakdown narration + graph payload for FullVideo.
 
@@ -360,9 +488,9 @@ def _build_visual_clip_fields(record: dict, output_dir: Path) -> dict:
         tree_beats = build_tree_beats(
             record["visualGraph"], stack, avail.get("componentTree") or "available",
         )
-        tree_narration = _synthesize_clip_beats(tree_beats, output_dir, "tree")
-        # Min hold matches TREE_MIN_SECONDS in ComponentTreeClip.
-        fields["treeNarration"] = tree_narration or _silent_clip_narration(3000)
+        fields["treeNarration"] = _clip_narration_from_beats(
+            tree_beats, output_dir, "tree", min_hold_ms=3000,
+        )
 
     if is_present(avail.get("lifecycleFlow")) and record.get("lifecycleFlows"):
         top = select_top_lifecycle_flows(record["lifecycleFlows"], n=2)
@@ -372,9 +500,9 @@ def _build_visual_clip_fields(record: dict, output_dir: Path) -> dict:
         life_beats: list[dict] = []
         for flow in top:
             life_beats.extend(build_lifecycle_beats(flow, stack))
-        life_narration = _synthesize_clip_beats(life_beats, output_dir, "lifecycle")
-        # Min hold matches LIFECYCLE_MIN_SECONDS.
-        fields["lifecycleNarration"] = life_narration or _silent_clip_narration(4000)
+        fields["lifecycleNarration"] = _clip_narration_from_beats(
+            life_beats, output_dir, "lifecycle", min_hold_ms=4000,
+        )
 
     if is_present(avail.get("interactiveBreakdown")) and record.get("visualGraph"):
         if "visualGraph" not in fields:
@@ -390,10 +518,9 @@ def _build_visual_clip_fields(record: dict, output_dir: Path) -> dict:
                 "chunkId": record.get("chunkId"),
             },
         )
-        breakdown_narration = _synthesize_clip_beats(breakdown_beats, output_dir, "breakdown")
-        # Prefer measured-beat audio (Q3/Q4); fall back to silent hold so the
-        # structure graph still appears when TTS is down.
-        fields["breakdownNarration"] = breakdown_narration or _silent_clip_narration(3000)
+        fields["breakdownNarration"] = _clip_narration_from_beats(
+            breakdown_beats, output_dir, "breakdown", min_hold_ms=3000,
+        )
 
     # Reuse interactive.json Mermaid strings in Remotion (no invented edges).
     from src.visual.diagram_selection import select_diagram_plan

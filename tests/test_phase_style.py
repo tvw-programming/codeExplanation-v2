@@ -16,24 +16,24 @@ from src.config.phase_style import (
 )
 
 
-def test_resolve_phase_style_defaults_all_classic():
-    assert resolve_phase_style({}) == DEFAULT_PHASE_STYLE
-    assert resolve_phase_style({"video": {}}) == DEFAULT_PHASE_STYLE
-    assert resolve_phase_style(None) == DEFAULT_PHASE_STYLE
-    assert all(v == "classic" for v in resolve_phase_style({}).values())
+def test_default_phase_style_all_fancy():
+    assert all(v == "fancy" for v in DEFAULT_PHASE_STYLE.values())
+    assert all(v == "fancy" for v in resolve_phase_style({}).values())
+    assert resolve_phase_style({"video": {}}) == resolve_phase_style({})
+    assert resolve_phase_style(None) == resolve_phase_style({})
 
 
 def test_resolve_phase_style_partial_explicit_only():
     resolved = resolve_phase_style({
         "video": {
             "phaseStyle": {
-                "fileCard": "fancy",
+                "chunkView": "classic",
             },
         },
     })
-    assert resolved["fileCard"] == "fancy"
-    for key in PHASE_STYLE_KEYS - {"fileCard"}:
-        assert resolved[key] == "classic", key
+    assert resolved["chunkView"] == "classic"
+    for key in PHASE_STYLE_KEYS - {"chunkView"}:
+        assert resolved[key] == "fancy", key
 
 
 def test_resolve_phase_style_rejects_unknown_key():
@@ -74,13 +74,14 @@ def test_load_config_surfaces_phase_style_on_dataclass(tmp_path):
       secret_scan_before_write: true
     video:
       phaseStyle:
-        lifecycle: fancy
+        lifecycle: classic
     """)
     path = tmp_path / "pipeline.config.yaml"
     path.write_text(content)
     config = load_config(path)
-    assert config.phase_style["lifecycle"] == "fancy"
-    assert config.phase_style["fileCard"] == "classic"
+    assert config.phase_style["lifecycle"] == "classic"
+    assert config.phase_style["fileCard"] == "fancy"
+    assert config.phase_style["componentTree"] == "fancy"
 
 
 def test_load_config_phase_style_validation_fails_closed(tmp_path):
@@ -110,12 +111,12 @@ def test_load_config_phase_style_validation_fails_closed(tmp_path):
 
 def test_manifest_payloads_embed_resolved_phase_style():
     style = resolve_phase_style({
-        "video": {"phaseStyle": {"visualBreakdown": "fancy"}},
+        "video": {"phaseStyle": {"chunkView": "classic"}},
     })
     stack = stack_manifest_payload("react", ["c1"], style)
     assert stack["phaseStyle"] == style
-    assert stack["phaseStyle"]["visualBreakdown"] == "fancy"
     assert stack["phaseStyle"]["chunkView"] == "classic"
+    assert stack["phaseStyle"]["visualBreakdown"] == "fancy"
 
     combined = combined_manifest_payload(["c1"], {"react": ["c1"]}, style)
     assert combined["phaseStyle"] == style

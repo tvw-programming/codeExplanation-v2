@@ -85,10 +85,14 @@ export const VisualBreakdownStill: React.FC<{
   const patterns = resolveFancyPatterns(phaseStyle, "visualBreakdown", stackKey, honesty);
   const tickerLabel = patterns.l1 ? honestyTickerLabel(honesty) : null;
   const useMermaid = Boolean(mermaidInVideo && mermaid);
-  const fancyL3 = patterns.l3 && visualGraph.kind === "component_tree";
+  const teachingBullets =
+    visualGraph.kind === "component_tree" ? structureBulletsFromGraph(visualGraph) : [];
+  /** L3 structure rail is pedagogy from visualGraph — not gated on phaseStyle or beats. */
+  const structureL3 =
+    visualGraph.kind === "component_tree" && teachingBullets.length >= 5;
+  const fancyL3 = structureL3;
   const omitEdgeId = fancyL3 ? duplicateMountEdgeToOmit(visualGraph) : null;
   const omitEdgeIds = omitEdgeId ? [omitEdgeId] : [];
-  const teachingBullets = fancyL3 ? structureBulletsFromGraph(visualGraph) : [];
   const accent = videoAccent(theme);
   const activeBeatIndex = (narration?.beats || []).findIndex(
     (b) =>

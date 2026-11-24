@@ -476,6 +476,22 @@ run_docs_server() {
   fi
 }
 
+repair_staged_clip_narration() {
+  if [ ! -d render-app/public/chunks ]; then
+    return 0
+  fi
+  local VENV_PY="$PROJECT_ROOT/.venv/bin/python"
+  if [ ! -x "$VENV_PY" ]; then
+    VENV_PY="$(command -v python3 || true)"
+  fi
+  if [ -z "$VENV_PY" ]; then
+    echo "python3 is required to repair tree/breakdown clip beats on staged bundles." >&2
+    return 1
+  fi
+  log "[staging] Repairing tree/breakdown clip beats on staged chunk bundles (if needed)"
+  (cd "$PROJECT_ROOT" && "$VENV_PY" scripts/repair_staged_clip_narration.py)
+}
+
 # ---------------------------------------------------------------------
 # 4) Index where each file appears inside its stack video
 #
@@ -532,6 +548,15 @@ run_video_render() {
     echo "No rendered chunks are staged at render-app/public/chunks/ —" >&2
     echo "run the backend step first without --no-render so there is" >&2
     echo "something to render." >&2
+    exit 1
+  fi
+
+  local VENV_PY="$PROJECT_ROOT/.venv/bin/python"
+  if [ ! -x "$VENV_PY" ]; then
+    VENV_PY="$(command -v python3 || true)"
+  fi
+  if [ -z "$VENV_PY" ]; then
+    echo "python3 is required for phaseStyle sync and clip narration repair." >&2
     exit 1
   fi
 
@@ -713,6 +738,9 @@ if [ "$RUN_WEB_SERVER" = "1" ]; then run_web_server; fi
 if [ "$RUN_BACKEND" = "1" ]; then run_backend; fi
 if [ "$RUN_NPM_INSTALL" = "1" ]; then run_npm_install; fi
 if [ "$RUN_DOCS_SERVER" = "1" ]; then run_docs_server; fi
+if [ "$RUN_BACKEND" = "1" ] || [ "$RUN_VIDEO_RENDER" = "1" ]; then
+  repair_staged_clip_narration || exit 1
+fi
 if [ "$RUN_SEGMENT_INDEX" = "1" ]; then run_segment_index; fi
 if [ "$RUN_VIDEO_RENDER" = "1" ]; then run_video_render; fi
 if [ "$RUN_VIDEO_RENDER" = "1" ]; then status_update --done; fi

@@ -37,8 +37,8 @@ def test_load_config_happy_path(tmp_path):
     assert config.chunking.small_max_lines == 200
     assert config.storage.required_fields == ["contentHash", "lastUpdated", "pullRequest"]
     assert config.security.secret_scan_before_write is True
-    assert config.phase_style["fileCard"] == "classic"
-    assert all(v == "classic" for v in config.phase_style.values())
+    assert config.phase_style["fileCard"] == "fancy"
+    assert all(v == "fancy" for v in config.phase_style.values())
 
 
 def test_resolve_source_uses_git_by_default(tmp_path):
