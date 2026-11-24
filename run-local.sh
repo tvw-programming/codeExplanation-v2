@@ -94,6 +94,29 @@ VIDEO_FPS=30
 # Empty means "render the whole video"; set by --preview.
 PREVIEW_SECONDS=""
 
+# Wait (briefly) for a TCP port to come free, and say who is holding it
+# if it does not. An interrupted run (Ctrl-C, a crashed terminal) can
+# leave a server behind; without this the next run just reports
+# "failed to start" and the reason is buried in a log file.
+wait_for_port_free() {
+  local port="$1"
+  local attempts=20   # ~5s
+
+  if ! command -v lsof >/dev/null 2>&1; then
+    sleep 1
+    return 0
+  fi
+
+  while [ "$attempts" -gt 0 ]; do
+    if [ -z "$(lsof -ti tcp:"$port" 2>/dev/null)" ]; then
+      return 0
+    fi
+    sleep 0.25
+    attempts=$((attempts - 1))
+  done
+  return 1
+}
+
 for arg in "$@"; do
   case "$arg" in
     --no-render)
@@ -136,11 +159,18 @@ for arg in "$@"; do
       ;;
     --stop-web)
       if [ -f "$WEB_PID_FILE" ] && kill -0 "$(cat "$WEB_PID_FILE")" 2>/dev/null; then
-        kill "$(cat "$WEB_PID_FILE")"
+        kill "$(cat "$WEB_PID_FILE")" 2>/dev/null || true
         rm -f "$WEB_PID_FILE"
         echo "Stopped the React viewer."
       else
+        rm -f "$WEB_PID_FILE"
         echo "No React viewer is running (per $WEB_PID_FILE)."
+      fi
+      # An interrupted run can orphan a server the pid file no longer
+      # knows about, which would block the next start.
+      if ! wait_for_port_free "$WEB_PORT"; then
+        echo "Something is still listening on port $WEB_PORT. Free it with:" >&2
+        echo "    lsof -ti tcp:$WEB_PORT | xargs kill" >&2
       fi
       exit 0
       ;;
@@ -169,6 +199,43 @@ for arg in "$@"; do
 done
 
 log() { printf '\n\033[1;36m==> %s\033[0m\n' "$1"; }
+
+# Install a package's node modules when they are missing OR out of date.
+#
+# Checking only for the node_modules directory is not enough: after a
+# `git pull` that adds a dependency, node_modules still exists, the
+# install is skipped, and the missing package surfaces much later as a
+# baffling build error (e.g. "Rollup failed to resolve import
+# \"mermaid\"" from the docs viewer). npm rewrites
+# node_modules/.package-lock.json on every install, so comparing it
+# against package.json / package-lock.json tells us whether what is on
+# disk still matches what is declared.
+ensure_node_modules() {
+  local dir="$1"
+  local label="$2"
+  local stamp="node_modules/.package-lock.json"
+
+  if ! command -v npm >/dev/null 2>&1; then
+    echo "npm (Node.js) is required but was not found on PATH." >&2
+    return 1
+  fi
+
+  cd "$dir" || return 1
+
+  if [ ! -d node_modules ]; then
+    echo "Installing $label's node modules (first run)..."
+    npm install
+  elif [ ! -f "$stamp" ] \
+    || [ package.json -nt "$stamp" ] \
+    || { [ -f package-lock.json ] && [ package-lock.json -nt "$stamp" ]; }; then
+    echo "$label's dependencies changed since the last install — running npm install..."
+    npm install
+  else
+    echo "$label's node modules are up to date — skipping."
+  fi
+
+  cd "$PROJECT_ROOT" || return 1
+}
 
 # Print the live frontend and docs-viewer URLs for this script's docs server.
 # Ports/paths on main: DOCS_PORT (default 4173), docs viewer at /docs-viewer/.
@@ -254,12 +321,12 @@ run_web_server() {
     return 0
   fi
 
-  cd "$PROJECT_ROOT/frontend"
-  if [ ! -d node_modules ]; then
-    echo "Installing the viewer's node modules (first run only)..."
-    npm install
+  if ! ensure_node_modules "$PROJECT_ROOT/frontend" "the viewer"; then
+    cd "$PROJECT_ROOT"
+    echo "Could not install the viewer's dependencies — skipping it." >&2
+    echo "Everything else still runs; re-run with --skip-web to silence this." >&2
+    return 0
   fi
-  cd "$PROJECT_ROOT"
 
   mkdir -p "$LOCAL_RUN_DIR"
 
@@ -267,11 +334,24 @@ run_web_server() {
   # one, so the port is free (vite is started with --strictPort: a
   # silently different port would make the URL printed here a lie).
   if [ -f "$WEB_PID_FILE" ] && kill -0 "$(cat "$WEB_PID_FILE")" 2>/dev/null; then
-    kill "$(cat "$WEB_PID_FILE")"
-    sleep 0.3
+    kill "$(cat "$WEB_PID_FILE")" 2>/dev/null || true
+  fi
+  rm -f "$WEB_PID_FILE"
+
+  if ! wait_for_port_free "$WEB_PORT"; then
+    echo "Port $WEB_PORT is still in use — most likely a viewer left behind by" >&2
+    echo "a run that was interrupted before it could stop one. Free it with:" >&2
+    echo "    lsof -ti tcp:$WEB_PORT | xargs kill" >&2
+    echo "or use a different port:  WEB_PORT=5175 ./run-local.sh" >&2
+    echo "Carrying on without the viewer; everything else is unaffected." >&2
+    return 0
   fi
 
-  ( cd "$PROJECT_ROOT/frontend" && exec npx vite --port "$WEB_PORT" --strictPort ) \
+  # Run vite's own binary rather than `npx vite`: npx stays alive as a
+  # parent process, so $! would be npx's pid and killing it can leave
+  # the real server holding the port. exec'ing the binary makes the pid
+  # we record the pid that --stop-web has to kill.
+  ( cd "$PROJECT_ROOT/frontend" && exec node_modules/.bin/vite --port "$WEB_PORT" --strictPort ) \
     > "$WEB_LOG_FILE" 2>&1 &
   echo $! > "$WEB_PID_FILE"
   sleep 1.5
@@ -280,7 +360,9 @@ run_web_server() {
     echo "Repo viewer running (background):  $APP_URL"
     echo "(stop it with: ./run-local.sh --stop-web)"
   else
-    echo "The repo viewer failed to start — see $WEB_LOG_FILE" >&2
+    echo "The repo viewer failed to start:" >&2
+    sed -n '1,6p' "$WEB_LOG_FILE" >&2
+    echo "(full log: $WEB_LOG_FILE)" >&2
     echo "Everything else still runs; re-run with --skip-web to silence this." >&2
   fi
 }
@@ -336,18 +418,7 @@ run_backend() {
 run_npm_install() {
   log "[3/5] Render app: installing render-app's node modules"
 
-  if ! command -v npm >/dev/null 2>&1; then
-    echo "npm (Node.js) is required but was not found on PATH." >&2
-    exit 1
-  fi
-
-  cd "$PROJECT_ROOT/render-app"
-  if [ ! -d node_modules ]; then
-    npm install
-  else
-    echo "node_modules already installed — skipping (delete render-app/node_modules to force a reinstall)."
-  fi
-  cd "$PROJECT_ROOT"
+  ensure_node_modules "$PROJECT_ROOT/render-app" "render-app"
 }
 
 # ---------------------------------------------------------------------
@@ -356,8 +427,27 @@ run_npm_install() {
 run_docs_server() {
   log "[3/5] Docs: building and serving the documentation viewer"
 
+  # A docs-viewer build failure must not take the run down with it:
+  # the expensive work (narration, the stack videos) and the repo
+  # viewer are unrelated to it, and `set -e` would otherwise abort the
+  # whole script over documentation that is not the point of the run.
+  # The static server still goes up — render-app/public is also what
+  # serves the staged chunks — it just carries a stale /docs-viewer/.
   cd "$PROJECT_ROOT/render-app"
-  npm run build:docs
+  if npm run build:docs; then
+    DOCS_BUILD_OK=1
+  else
+    DOCS_BUILD_OK=0
+    echo "" >&2
+    echo "The documentation viewer failed to build — carrying on without" >&2
+    echo "rebuilding it. $DOCS_VIEWER_URL will show the previous build," >&2
+    echo "or 404 if there has never been one. Everything else in this run" >&2
+    echo "is unaffected." >&2
+    echo "If the error above is an unresolved import, a dependency in" >&2
+    echo "render-app/package.json is not installed — run:" >&2
+    echo "    cd render-app && npm install" >&2
+    echo "" >&2
+  fi
   cd "$PROJECT_ROOT"
 
   mkdir -p "$LOCAL_RUN_DIR"
@@ -374,7 +464,11 @@ run_docs_server() {
   sleep 0.5
 
   if kill -0 "$(cat "$DOCS_PID_FILE")" 2>/dev/null; then
-    echo "Documentation server running (background)."
+    if [ "${DOCS_BUILD_OK:-1}" = "1" ]; then
+      echo "Documentation server running (background)."
+    else
+      echo "Documentation server running (background) — with a stale docs viewer."
+    fi
     print_local_urls
     echo "(stop it with: ./run-local.sh --stop-docs-server)"
   else
